@@ -1,3 +1,8 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1774341449
-icon.svg::CompressedTexture2D::9106257407315013062::1774341445::1774341450::1::::<><><>0<>0<>30761c29db9a7c15fb4160a55cdbe222<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+::res://::1774447613
+::res://assets/::1774443033
+과녁.png::CompressedTexture2D::7723362147914658655::1774442971::1774442972::1::::<><><>0<>0<>9d93bb7b64b174a3ce73f347443483be<>res://.godot/imported/과녁.png-2b2ed2a271e1144deef367ba7ea60ed4.ctex::
+::res://scenes/::1774445173
+game.tscn::PackedScene::8105288312645883185::1774445173::0::1::::<><><>0<>0<><>::uid://dibiv78oa14md::::res://assets/과녁.png<>uid://c47l8kl7bugy7::::res://scripts/gun_point.gd
+::res://scripts/::1774445168
+gun_point.gd::GDScript::6875105282820760536::1774445168::0::1::::<>TextureButton<><>0<>0<><>::

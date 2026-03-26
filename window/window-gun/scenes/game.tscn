@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://dnqi6c7d25jth"]
+
+[ext_resource type="PackedScene" uid="uid://be2ijsn4bnvdj" path="res://scenes/gun_point.tscn" id="1_uwrxv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ej7j1"]
+bg_color = Color(0.95987433, 0.92118317, 0.8007787, 1)
+
+[node name="Game" type="Control" unique_id=509220831]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="." unique_id=1116742002]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ej7j1")
+
+[node name="GunPoint" parent="." unique_id=962535481 instance=ExtResource("1_uwrxv")]
+layout_mode = 1

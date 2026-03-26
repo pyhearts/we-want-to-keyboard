@@ -1,0 +1,4 @@
+res://scenes/game.tscn
+res://scripts/gun_point.gd
+res://scripts/game.gd
+res://scenes/gun_point.tscn
