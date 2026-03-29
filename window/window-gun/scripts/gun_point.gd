@@ -5,9 +5,9 @@ var speed = 100
 
 var is_clone: bool = false 
 
-# 🌟 겹침 방지를 위한 변수들
-@export var prevent_overlap_count: int = 3 # 겹치지 않게 기억할 최근 노트의 개수
-@export var prevent_overlap_radius: float = 200.0 # 겹치지 않게 할 최소 이격 거리
+
+@export var prevent_overlap_count: int = 3 
+@export var prevent_overlap_radius: float = 200.0 
 
 @export var min_x: float = 200.0
 @export var max_x: float = 1400.0
