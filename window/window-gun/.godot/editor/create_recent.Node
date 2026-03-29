@@ -1,4 +1,6 @@
-TextureButton
-Panel
-Node2D
+Label
 VBoxContainer
+TextEdit
+Panel
+TextureButton
+Node2D

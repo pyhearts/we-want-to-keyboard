@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://be2ijsn4bnvdj"]
 
 [ext_resource type="Texture2D" uid="uid://dibiv78oa14md" path="res://assets/과녁.png" id="1_cwjeo"]
-[ext_resource type="Script" uid="uid://c47l8kl7bugy7" path="res://scripts/gun_point.gd" id="2_r2w7e"]
+[ext_resource type="Script" uid="uid://ngo16177o8ud" path="res://scripts/gun_point.gd" id="2_r2w7e"]
 
 [node name="GunPoint" type="Control" unique_id=962535481]
 layout_mode = 3
@@ -10,6 +10,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("2_r2w7e")
 
 [node name="Point" type="TextureButton" parent="." unique_id=1013239008]
 layout_mode = 0
@@ -20,4 +21,3 @@ offset_bottom = 1341.0
 scale = Vector2(0.2, 0.2)
 pivot_offset = Vector2(20, 90)
 texture_normal = ExtResource("1_cwjeo")
-script = ExtResource("2_r2w7e")
