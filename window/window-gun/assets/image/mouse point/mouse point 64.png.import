@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0nluta400uwg"
-path="res://.godot/imported/mouse point.png-cace179246e42d24903e22b9f14f9a42.ctex"
+uid="uid://b105qshtlkvw2"
+path="res://.godot/imported/mouse point 64.png-ea3b26c58cfa9b0b9bb39ce120313428.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/mouse point/mouse point.png"
-dest_files=["res://.godot/imported/mouse point.png-cace179246e42d24903e22b9f14f9a42.ctex"]
+source_file="res://assets/image/mouse point/mouse point 64.png"
+dest_files=["res://.godot/imported/mouse point 64.png-ea3b26c58cfa9b0b9bb39ce120313428.ctex"]
 
 [params]
 

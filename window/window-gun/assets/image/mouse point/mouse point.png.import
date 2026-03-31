@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b5h7ynn46ri4k"
-path="res://.godot/imported/과녁.png-2b2ed2a271e1144deef367ba7ea60ed4.ctex"
+uid="uid://b0nluta400uwg"
+path="res://.godot/imported/mouse point.png-dc191aeb67a07347faca584593503492.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/과녁.png"
-dest_files=["res://.godot/imported/과녁.png-2b2ed2a271e1144deef367ba7ea60ed4.ctex"]
+source_file="res://assets/image/mouse point/mouse point.png"
+dest_files=["res://.godot/imported/mouse point.png-dc191aeb67a07347faca584593503492.ctex"]
 
 [params]
 
