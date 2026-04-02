@@ -34,14 +34,14 @@ max_x = 700.0
 min_y = -300.0
 max_y = 350.0
 
-[node name="score" type="VBoxContainer" parent="." unique_id=177927237]
+[node name="stats" type="VBoxContainer" parent="." unique_id=177927237]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 23.0
 grow_horizontal = 2
 
-[node name="LabelScore" type="Label" parent="score" unique_id=526092494]
+[node name="LabelScore" type="Label" parent="stats" unique_id=526092494]
 layout_mode = 2
 theme_override_constants/outline_size = 10
 theme_override_fonts/font = ExtResource("3_lnu2h")

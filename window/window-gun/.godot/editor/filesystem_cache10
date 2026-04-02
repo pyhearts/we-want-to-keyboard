@@ -1,28 +1,28 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1774963103
-::res://assets/::1774963027
-::res://assets/fonts/::1774763670
-Pretendard-Black.otf::FontFile::6738690865253165418::1774763670::1774763670::1::::<><><>0<>0<>5fe971453759df0aacc977291aa740e1<>res://.godot/imported/Pretendard-Black.otf-e24b05473bd92daed72abca520244524.fontdata::
-Pretendard-Bold.otf::FontFile::3241708902818658160::1774763670::1774763670::1::::<><><>0<>0<>493f72e68fbd3c9ff868c9375f12bcfe<>res://.godot/imported/Pretendard-Bold.otf-4a691e6e36733770b88ad2bff83a9eb8.fontdata::
-Pretendard-ExtraBold.otf::FontFile::798060657278571577::1774763670::1774763670::1::::<><><>0<>0<>76de8093c5a74c8771ec65f1e527ebfa<>res://.godot/imported/Pretendard-ExtraBold.otf-ca4a6501f317da69092a210767f9480b.fontdata::
-Pretendard-ExtraLight.otf::FontFile::8310526872939137080::1774763670::1774763670::1::::<><><>0<>0<>79619b0bec2a1f5b946c30bf92c2a822<>res://.godot/imported/Pretendard-ExtraLight.otf-90db9faa87fdbad0fa70749bd7074f62.fontdata::
-Pretendard-Light.otf::FontFile::893982479096064030::1774763670::1774763670::1::::<><><>0<>0<>a2acc63ab56f9b2762b5dfa47be1932e<>res://.godot/imported/Pretendard-Light.otf-749fd57cc1ae5a2d8b726b0be40c2389.fontdata::
-Pretendard-Medium.otf::FontFile::3649033273983700100::1774763670::1774763670::1::::<><><>0<>0<>f2aba636a465a8d1c42634b5251c8a6e<>res://.godot/imported/Pretendard-Medium.otf-38b7e8428b68ea05158620404bacd677.fontdata::
-Pretendard-Regular.otf::FontFile::8796495392445952957::1774763670::1774763670::1::::<><><>0<>0<>68af030330476b6683ce1ef9be92a762<>res://.godot/imported/Pretendard-Regular.otf-375f78108183715aa325a9c9dc71177f.fontdata::
-Pretendard-SemiBold.otf::FontFile::8017452126757596110::1774763670::1774763670::1::::<><><>0<>0<>9d023e1bfc4df0e228fc945096a8ccf4<>res://.godot/imported/Pretendard-SemiBold.otf-b18e006bb23af1cf92c966e372cc15da.fontdata::
-Pretendard-Thin.otf::FontFile::3952888109508034875::1774763670::1774763670::1::::<><><>0<>0<>607541fb32fcfe71a3d1e57d2e085188<>res://.godot/imported/Pretendard-Thin.otf-3a506efce1e112c2415f59ade9f49059.fontdata::
-::res://assets/image/::1774963027
-과녁.png::CompressedTexture2D::4508523144180476764::1774963027::1774963104::1::::<><><>0<>0<>16f52b3e0e704fc7b91d7bb66e084a72<>res://.godot/imported/과녁.png-deb97bdf499dd7e02999be144abc951d.ctex::
-판정-원.png::CompressedTexture2D::1757454568938808694::1774963027::1774963104::1::::<><><>0<>0<>2e2964f5229d4395cb736eb7c11be5d4<>res://.godot/imported/판정-원.png-448705793022e16a7891314a49f3eff5.ctex::
-::res://assets/image/mouse point/::1774963027
-mouse point 64.png::CompressedTexture2D::4264791101731234043::1774963027::1774963104::1::::<><><>0<>0<>8557a4b29f47fbdedcb1c7be553c63a9<>res://.godot/imported/mouse point 64.png-ea3b26c58cfa9b0b9bb39ce120313428.ctex::
-mouse point.png::CompressedTexture2D::4168683287540911674::1774963027::1774963104::1::::<><><>0<>0<>713a659e6fa4d302cb4980c86faebbcb<>res://.godot/imported/mouse point.png-dc191aeb67a07347faca584593503492.ctex::
-::res://scenes/::1774963027
-circle_judgment_rect.gd::GDScript::2727314224647982185::1774963027::0::1::::<>TextureRect<><>0<>0<><>::
-game.tscn::PackedScene::8105288312645883185::1774793382::0::1::::<><><>0<>0<><>::uid://be2ijsn4bnvdj::::res://scenes/gun_point.tscn<>uid://ccg5fm80pgwiq::::res://scripts/game.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/label_score.gd
-gun_point.tscn::PackedScene::2723417032514379291::1774963027::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/과녁.png<>uid://ngo16177o8ud::::res://scripts/gun_point.gd<>uid://0blaxdoepjmc::::res://assets/image/판정-원.png<>uid://be4ep4vw3ir6h::::res://scenes/circle_judgment_rect.gd
-::res://scripts/::1774793382
-game.gd::GDScript::4927436442354083576::1774793382::0::1::::<>Control<><>0<>0<><>::
-global.gd::GDScript::5288415493149227183::1774772083::0::1::::<>Node<><>0<>0<><>::
-gun_point.gd::GDScript::925739372245092127::1774792889::0::1::::<>Control<><>0<>0<><>::
-label_score.gd::GDScript::840920046692643988::1774772284::0::1::::<>Label<><>0<>0<><>::
+::res://::1775110990
+::res://assets/::1774939321
+::res://assets/fonts/::1774938310
+Pretendard-Black.otf::FontFile::6738690865253165418::1774938280::1774938310::1::::<><><>0<>0<>5fe971453759df0aacc977291aa740e1<>res://.godot/imported/Pretendard-Black.otf-e24b05473bd92daed72abca520244524.fontdata::
+Pretendard-Bold.otf::FontFile::3241708902818658160::1774938280::1774938310::1::::<><><>0<>0<>493f72e68fbd3c9ff868c9375f12bcfe<>res://.godot/imported/Pretendard-Bold.otf-4a691e6e36733770b88ad2bff83a9eb8.fontdata::
+Pretendard-ExtraBold.otf::FontFile::798060657278571577::1774938280::1774938310::1::::<><><>0<>0<>76de8093c5a74c8771ec65f1e527ebfa<>res://.godot/imported/Pretendard-ExtraBold.otf-ca4a6501f317da69092a210767f9480b.fontdata::
+Pretendard-ExtraLight.otf::FontFile::8310526872939137080::1774938280::1774938310::1::::<><><>0<>0<>79619b0bec2a1f5b946c30bf92c2a822<>res://.godot/imported/Pretendard-ExtraLight.otf-90db9faa87fdbad0fa70749bd7074f62.fontdata::
+Pretendard-Light.otf::FontFile::893982479096064030::1774938280::1774938310::1::::<><><>0<>0<>a2acc63ab56f9b2762b5dfa47be1932e<>res://.godot/imported/Pretendard-Light.otf-749fd57cc1ae5a2d8b726b0be40c2389.fontdata::
+Pretendard-Medium.otf::FontFile::3649033273983700100::1774938280::1774938310::1::::<><><>0<>0<>f2aba636a465a8d1c42634b5251c8a6e<>res://.godot/imported/Pretendard-Medium.otf-38b7e8428b68ea05158620404bacd677.fontdata::
+Pretendard-Regular.otf::FontFile::8796495392445952957::1774938280::1774938310::1::::<><><>0<>0<>68af030330476b6683ce1ef9be92a762<>res://.godot/imported/Pretendard-Regular.otf-375f78108183715aa325a9c9dc71177f.fontdata::
+Pretendard-SemiBold.otf::FontFile::8017452126757596110::1774938280::1774938310::1::::<><><>0<>0<>9d023e1bfc4df0e228fc945096a8ccf4<>res://.godot/imported/Pretendard-SemiBold.otf-b18e006bb23af1cf92c966e372cc15da.fontdata::
+Pretendard-Thin.otf::FontFile::3952888109508034875::1774938280::1774938310::1::::<><><>0<>0<>607541fb32fcfe71a3d1e57d2e085188<>res://.godot/imported/Pretendard-Thin.otf-3a506efce1e112c2415f59ade9f49059.fontdata::
+::res://assets/image/::1774939351
+과녁.png::CompressedTexture2D::4508523144180476764::1774938280::1774939315::1::::<><><>0<>0<>16f52b3e0e704fc7b91d7bb66e084a72<>res://.godot/imported/과녁.png-deb97bdf499dd7e02999be144abc951d.ctex::
+판정-원.png::CompressedTexture2D::1757454568938808694::1774939351::1774939351::1::::<><><>0<>0<>2e2964f5229d4395cb736eb7c11be5d4<>res://.godot/imported/판정-원.png-448705793022e16a7891314a49f3eff5.ctex::
+::res://assets/image/mouse point/::1774939321
+mouse point 64.png::CompressedTexture2D::4264791101731234043::1774938280::1774939321::1::::<><><>0<>0<>8557a4b29f47fbdedcb1c7be553c63a9<>res://.godot/imported/mouse point 64.png-ea3b26c58cfa9b0b9bb39ce120313428.ctex::
+mouse point.png::CompressedTexture2D::4168683287540911674::1774938280::1774939321::1::::<><><>0<>0<>713a659e6fa4d302cb4980c86faebbcb<>res://.godot/imported/mouse point.png-dc191aeb67a07347faca584593503492.ctex::
+::res://scenes/::1775110975
+circle_judgment_rect.gd::GDScript::2727314224647982185::1775110975::0::1::::<>TextureRect<><>0<>0<><>::
+game.tscn::PackedScene::8105288312645883185::1774938280::0::1::::<><><>0<>0<><>::uid://be2ijsn4bnvdj::::res://scenes/gun_point.tscn<>uid://ccg5fm80pgwiq::::res://scripts/game.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/label_score.gd
+gun_point.tscn::PackedScene::2723417032514379291::1775110975::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/과녁.png<>uid://ngo16177o8ud::::res://scripts/gun_point.gd<>uid://0blaxdoepjmc::::res://assets/image/판정-원.png<>uid://be4ep4vw3ir6h::::res://scenes/circle_judgment_rect.gd
+::res://scripts/::1774938280
+game.gd::GDScript::4927436442354083576::1774938280::0::1::::<>Control<><>0<>0<><>::
+global.gd::GDScript::5288415493149227183::1774938280::0::1::::<>Node<><>0<>0<><>::
+gun_point.gd::GDScript::925739372245092127::1774938280::0::1::::<>Control<><>0<>0<><>::
+label_score.gd::GDScript::840920046692643988::1774938280::0::1::::<>Label<><>0<>0<><>::

@@ -19,4 +19,3 @@ func _input(event):
 		# 자식 노드가 정상적으로 존재하고, rng_point 함수를 가지고 있는지 확인한 후 실행합니다.
 		if gun_point and gun_point.has_method("rng_point"):
 			gun_point.rng_point()
-			print("자식 노드의 rng_point 함수가 실행되었습니다!")
