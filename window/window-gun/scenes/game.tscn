@@ -29,10 +29,10 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_ej7j1")
 [node name="GunPoint" parent="." unique_id=962535481 instance=ExtResource("1_uwrxv")]
 layout_mode = 1
 prevent_overlap_count = 5
-min_x = -700.0
-max_x = 700.0
+min_x = -500.0
+max_x = 1000.0
 min_y = -300.0
-max_y = 350.0
+max_y = 450.0
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=311181295]
 

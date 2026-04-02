@@ -22,6 +22,7 @@ Global="*uid://chl0ovxmbw07l"
 
 window/size/viewport_width=1600
 window/size/viewport_height=900
+window/size/mode=3
 mouse_cursor/custom_image="uid://b105qshtlkvw2"
 
 [input]

@@ -9,7 +9,7 @@ var is_clone: bool = false
 @export var prevent_overlap_count: int = 3 
 @export var prevent_overlap_radius: float = 200.0 
 
-@export var min_x: float = 200.0
+@export var min_x: float = 200.0 
 @export var max_x: float = 1400.0
 @export var min_y: float = 200.0
 @export var max_y: float = 700.0
