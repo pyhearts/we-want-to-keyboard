@@ -4,3 +4,4 @@ res://scripts/global.gd
 res://scripts/game.gd
 res://scenes/game.tscn
 res://scripts/gun_point.gd
+res://scripts/label_score.gd

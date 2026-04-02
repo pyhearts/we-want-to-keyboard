@@ -65,7 +65,7 @@ func activate_clone(new_pos: Vector2):
 			child.start_shrinking()
 			
 	# 타이머 시작: judgment_time + 0.2초 후 삭제
-	get_tree().create_timer(judgment_time + 0.2).timeout.connect(_on_time_out)
+	get_tree().create_timer(judgment_time + 0.3).timeout.connect(_on_time_out)
 
 func _on_time_out():
 	if is_instance_valid(self):
