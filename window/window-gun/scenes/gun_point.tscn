@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://b5h7ynn46ri4k" path="res://assets/image/과녁.png" id="1_cwjeo"]
 [ext_resource type="Script" uid="uid://ngo16177o8ud" path="res://scripts/gun_point.gd" id="2_r2w7e"]
 [ext_resource type="Texture2D" uid="uid://0blaxdoepjmc" path="res://assets/image/판정-원.png" id="3_xh8cv"]
-[ext_resource type="Script" uid="uid://be4ep4vw3ir6h" path="res://scenes/circle_judgment_rect.gd" id="4_5oldh"]
+[ext_resource type="Script" uid="uid://be4ep4vw3ir6h" path="res://scripts/circle_judgment_rect.gd" id="4_5oldh"]
 
 [node name="GunPoint" type="Control" unique_id=962535481]
 layout_mode = 3

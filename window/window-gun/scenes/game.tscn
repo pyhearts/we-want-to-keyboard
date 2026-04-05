@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://ccg5fm80pgwiq" path="res://scripts/game.gd" id="1_yqjtg"]
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="3_lnu2h"]
 [ext_resource type="Script" uid="uid://l8l3h3p5ygsy" path="res://scripts/label_score.gd" id="4_lbhrr"]
+[ext_resource type="Script" uid="uid://cq81px2t2a0k6" path="res://scripts/combo.gd" id="5_iywne"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ej7j1"]
 bg_color = Color(0.95987433, 0.92118317, 0.8007787, 1)
@@ -42,12 +43,23 @@ anchor_right = 1.0
 offset_bottom = 97.0
 grow_horizontal = 2
 
-[node name="LabelScore" type="Label" parent="CanvasLayer/stats" unique_id=526092494]
+[node name="Score" type="Label" parent="CanvasLayer/stats" unique_id=526092494]
 layout_mode = 2
 theme_override_constants/outline_size = 10
 theme_override_fonts/font = ExtResource("3_lnu2h")
 theme_override_font_sizes/font_size = 80
 text = "0"
-horizontal_alignment = 1
 vertical_alignment = 1
 script = ExtResource("4_lbhrr")
+
+[node name="Combo" type="Label" parent="CanvasLayer" unique_id=331619747]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 110.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.3854925, 0.38549247, 0.38549247, 1)
+theme_override_fonts/font = ExtResource("3_lnu2h")
+theme_override_font_sizes/font_size = 100
+text = "0"
+horizontal_alignment = 1
+script = ExtResource("5_iywne")
