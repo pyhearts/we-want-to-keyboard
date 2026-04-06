@@ -17,9 +17,6 @@ offset_bottom = -148.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_r2w7e")
-particle_min_amount = 20
-particle_max_amount = 100
-particle_offset = Vector2(-230, -90)
 
 [node name="Point" type="TextureButton" parent="." unique_id=1013239008]
 layout_mode = 0

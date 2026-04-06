@@ -13,6 +13,15 @@ extends Control
 @export var min_y: float = 200.0
 @export var max_y: float = 700.0
 
+@export_category("Particle Settings")
+@export var particle_min_amount: int = 15
+@export var particle_max_amount: int = 40
+@export var color_miss: Color = Color.GRAY
+@export var color_low_score: Color = Color(0.6, 0.8, 0.9)
+@export var color_high_score: Color = Color(0.0, 0.8, 1.0)
+@export var particle_offset: Vector2 = Vector2.ZERO
+@export var particle_lifetime: float = 0.6
+
 var speed = 100
 var is_clone: bool = false 
 var spawn_time_msec: int = 0 
@@ -20,7 +29,6 @@ var spawn_time_msec: int = 0
 @onready var point: TextureButton = $Point
 
 static var recent_positions: Array[Vector2] = []
-# 🌟 현재 화면에 존재하는 노트들을 생성 순서대로 저장하는 배열
 static var active_notes: Array[Control] = [] 
 
 func _ready():
@@ -63,7 +71,6 @@ func activate_clone(new_pos: Vector2):
 	
 	spawn_time_msec = Time.get_ticks_msec()
 	
-	# 🌟 생성된 노트를 활성화 배열에 추가하고 시각적 효과 업데이트
 	active_notes.append(self)
 	update_target_visuals()
 	
@@ -79,7 +86,8 @@ func _on_time_out():
 		Global.score += penalty_score
 		Global.combo = 0
 		
-		# 🌟 시간 초과된 노트는 배열에서 제거 후 다음 타겟 갱신
+		spawn_hit_particles("MISS", 0)
+		
 		active_notes.erase(self)
 		update_target_visuals()
 		queue_free()
@@ -87,16 +95,12 @@ func _on_time_out():
 func _on_point_pressed():
 	if not is_clone: return 
 	
-	# 안전장치: 이미 삭제 처리된 노드가 배열에 섞여있다면 필터링
 	active_notes = active_notes.filter(func(note): return is_instance_valid(note))
 	
 	var earned_score: int = 0
 	
-	# 🌟 순서 판정 로직
 	if active_notes.size() > 0 and active_notes[0] == self:
-		# 1. 올바른 순서로 눌렀을 때 (배열의 가장 첫 번째 요소일 때)
 		Global.combo += 1
-		
 		var time_alive: float = (Time.get_ticks_msec() - spawn_time_msec) / 1000.0
 		
 		if time_alive >= judgment_time:
@@ -105,24 +109,72 @@ func _on_point_pressed():
 			var step: int = int(time_alive / (judgment_time / 5.0))
 			earned_score = 50 + (step * 10)
 	else:
-		# 2. 잘못된 순서로 눌렀을 때 (배열의 첫 번째가 아닌 것을 눌렀을 때)
 		earned_score = 50
 	
-	# 점수 추가, 배열에서 자기 자신 제거, 시각적 효과 갱신 후 노드 삭제
 	Global.score += earned_score
+	
+	spawn_hit_particles("HIT", earned_score)
+	
 	active_notes.erase(self)
 	update_target_visuals()
 	self.queue_free()
 
-# 🌟 남은 노트들의 시각적 힌트를 업데이트하는 함수
+func spawn_hit_particles(type: String, score_val: int):
+	var particles = CPUParticles2D.new()
+	
+	# 기본 물리 설정
+	particles.emitting = false
+	particles.one_shot = true
+	particles.explosiveness = 0.9      # 한 번에 팍 터지는 느낌 강화
+	particles.lifetime = particle_lifetime
+	particles.spread = 180.0
+	particles.gravity = Vector2.ZERO
+	particles.initial_velocity_min = 120.0 # 속도 소폭 상향
+	particles.initial_velocity_max = 280.0
+	
+	# 🌟 [개선 1] 부드럽게 사라지는 투명도 설정 (ColorRamp)
+	var gradient = Gradient.new()
+	var base_color: Color
+	
+	if type == "MISS":
+		base_color = color_miss
+		particles.amount = max(1, particle_min_amount / 2)
+	else:
+		var weight: float = clamp(float(score_val - 50) / 50.0, 0.0, 1.0)
+		base_color = color_low_score.lerp(color_high_score, weight)
+		particles.amount = int(lerp(float(particle_min_amount), float(particle_max_amount), weight))
+	
+	# 그라데이션 설정: 시작(0.0)은 base_color, 끝(1.0)은 투명한 base_color
+	gradient.set_color(0, base_color)
+	gradient.set_color(1, Color(base_color.r, base_color.g, base_color.b, 0.0))
+	particles.color_ramp = gradient
+
+	# 🌟 [개선 2] 작아지면서 사라지는 크기 곡선 설정 (Scale Curve)
+	var curve = Curve.new()
+	curve.add_point(Vector2(0, 1.0))  # 시작 크기 100%
+	curve.add_point(Vector2(1, 0.0))  # 끝 크기 0%
+	particles.scale_amount_curve = curve
+	
+	# 기본 크기 값 (이 값에 곡선이 곱해짐)
+	particles.scale_amount_min = 5.0
+	particles.scale_amount_max = 10.0
+
+	# 위치 설정
+	get_parent().add_child(particles)
+	var center_pos = self.global_position + ((self.size * self.scale) / 2.0) + particle_offset
+	particles.global_position = center_pos
+	
+	particles.emitting = true
+	
+	# 파티클이 완전히 사라진 후 노드 삭제
+	get_tree().create_timer(particles.lifetime).timeout.connect(particles.queue_free)
+
 func update_target_visuals():
 	active_notes = active_notes.filter(func(note): return is_instance_valid(note))
 	
 	for i in range(active_notes.size()):
 		var note = active_notes[i]
 		if i == 0:
-			# 눌러야 할 1순위 타겟 (원래 색상, 불투명 100%)
 			note.modulate = Color(1.0, 1.0, 1.0, 1.0) 
 		else:
-			# 순서가 아직 오지 않은 대기 노트들 (어둡고 살짝 투명하게)
 			note.modulate = Color(0.5, 0.5, 0.5, 0.7)
