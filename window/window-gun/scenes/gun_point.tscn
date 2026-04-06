@@ -20,6 +20,8 @@ script = ExtResource("2_r2w7e")
 particle_min_amount = 20
 particle_max_amount = 100
 particle_offset = Vector2(-230, -90)
+center_offset = Vector2(-230, -90)
+connect_line_color = Color(0, 1, 1, 0.5019608)
 
 [node name="Point" type="TextureButton" parent="." unique_id=1013239008]
 layout_mode = 0

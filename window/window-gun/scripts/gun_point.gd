@@ -1,180 +1,127 @@
 extends Control
 
-@export_category("Timing & Score Settings")
-@export var judgment_time: float = 1.0       # 기본 대기 시간
-@export var perfect_margin: float = 0.3      # 원이 사라지기 전 100점을 받는 시간 (0.3초)
-@export var penalty_score: int = -70         # 시간 초과 시 감점
+@export var judgment_time := 1.0
+@export var perfect_margin := 0.3
+@export var penalty_score := -70
+@export var prevent_overlap_count := 3
+@export var prevent_overlap_radius := 200.0
+@export var min_x := 200.0; @export var max_x := 1400.0
+@export var min_y := 200.0; @export var max_y := 700.0
+@export var particle_min_amount := 15; @export var particle_max_amount := 40
+@export var color_miss := Color.GRAY
+@export var color_low_score := Color(0.6, 0.8, 0.9); @export var color_high_score := Color(0.0, 0.8, 1.0)
+@export var particle_offset := Vector2.ZERO
+@export var particle_lifetime := 0.6
+@export var center_offset := Vector2.ZERO
 
-@export_category("Spawn Settings")
-@export var prevent_overlap_count: int = 3 
-@export var prevent_overlap_radius: float = 200.0 
-@export var min_x: float = 200.0 
-@export var max_x: float = 1400.0
-@export var min_y: float = 200.0
-@export var max_y: float = 700.0
+# [추가됨] 선의 색상과 두께를 인스펙터에서 바꿀 수 있는 변수
+@export var connect_line_color := Color(1.0, 1.0, 1.0, 0.5)
+@export var connect_line_width := 4.0
 
-@export_category("Particle Settings")
-@export var particle_min_amount: int = 15
-@export var particle_max_amount: int = 40
-@export var color_miss: Color = Color.GRAY
-@export var color_low_score: Color = Color(0.6, 0.8, 0.9)
-@export var color_high_score: Color = Color(0.0, 0.8, 1.0)
-@export var particle_offset: Vector2 = Vector2.ZERO
-@export var particle_lifetime: float = 0.6
-
-var speed = 100
-var is_clone: bool = false 
-var spawn_time_msec: int = 0 
-
+var speed = 100; var is_clone := false; var spawn_time_msec := 0
 @onready var point: TextureButton = $Point
-
 static var recent_positions: Array[Vector2] = []
-static var active_notes: Array[Control] = [] 
+static var active_notes: Array[Control] = []
 
 func _ready():
-	self.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
-	if not is_clone:
-		self.hide() # 원본은 숨김 처리
-	
-	if point and not point.pressed.is_connected(_on_point_pressed):
+	mouse_filter = MOUSE_FILTER_IGNORE
+	if not is_clone: hide()
+	if point and not point.pressed.is_connected(_on_point_pressed): 
 		point.pressed.connect(_on_point_pressed)
+	
+	# [추가됨] 선이 Control 영역(Bounding Box) 밖으로 나가도 잘리지 않고 그려지도록 설정
+	clip_contents = false
 
 func rng_point():
-	var clone = self.duplicate()
-	var new_pos = Vector2.ZERO
-	var is_valid_pos = false
-	var max_attempts = 50 
-	
-	for attempt in range(max_attempts):
-		new_pos.x = randf_range(min_x, max_x)
-		new_pos.y = randf_range(min_y, max_y)
-		is_valid_pos = true
-		for past_pos in recent_positions:
-			if new_pos.distance_to(past_pos) < prevent_overlap_radius:
-				is_valid_pos = false
-				break 
-		if is_valid_pos:
-			break 
-			
+	var clone = duplicate(); var new_pos = Vector2.ZERO
+	for attempt in 50:
+		new_pos = Vector2(randf_range(min_x, max_x), randf_range(min_y, max_y))
+		if not recent_positions.any(func(p): return new_pos.distance_to(p) < prevent_overlap_radius): break
 	recent_positions.append(new_pos)
-	if recent_positions.size() > prevent_overlap_count:
-		recent_positions.pop_front()
-	
+	if recent_positions.size() > prevent_overlap_count: recent_positions.pop_front()
 	get_parent().call_deferred("add_child", clone)
 	clone.call_deferred("activate_clone", new_pos)
 
 func activate_clone(new_pos: Vector2):
-	is_clone = true
-	global_position = new_pos
-	self.show() 
-	
+	is_clone = true; global_position = new_pos; show()
 	spawn_time_msec = Time.get_ticks_msec()
-	
-	active_notes.append(self)
-	update_target_visuals()
-	
-	for child in get_children():
-		if child.has_method("start_shrinking"):
-			child.start_shrinking()
-			
-	var total_life_time = judgment_time + perfect_margin
-	get_tree().create_timer(total_life_time).timeout.connect(_on_time_out)
+	active_notes.append(self); update_target_visuals()
+	for c in get_children(): if c.has_method("start_shrinking"): c.start_shrinking()
+	get_tree().create_timer(judgment_time + perfect_margin).timeout.connect(_on_time_out)
 
 func _on_time_out():
-	if is_instance_valid(self):
-		Global.score += penalty_score
-		Global.combo = 0
-		
-		spawn_hit_particles("MISS", 0)
-		
-		active_notes.erase(self)
-		update_target_visuals()
-		queue_free()
+	if not is_instance_valid(self): return
+	Global.score += penalty_score; Global.combo = 0
+	spawn_hit_particles("MISS", 0)
+	active_notes.erase(self); update_target_visuals(); queue_free()
 
 func _on_point_pressed():
-	if not is_clone: return 
+	if not is_clone: return
+	active_notes = active_notes.filter(func(n): return is_instance_valid(n))
+	var earned_score := 50
 	
-	active_notes = active_notes.filter(func(note): return is_instance_valid(note))
-	
-	var earned_score: int = 0
-	
+	# [개선됨] 올바른 순서의 노트를 눌렀을 때만 콤보 증가, 틀린 순서면 콤보 초기화
 	if active_notes.size() > 0 and active_notes[0] == self:
 		Global.combo += 1
-		var time_alive: float = (Time.get_ticks_msec() - spawn_time_msec) / 1000.0
-		
-		if time_alive >= judgment_time:
-			earned_score = 100
-		else:
-			var step: int = int(time_alive / (judgment_time / 5.0))
-			earned_score = 50 + (step * 10)
+		var time_alive := (Time.get_ticks_msec() - spawn_time_msec) / 1000.0
+		earned_score = 100 if time_alive >= judgment_time else 50 + (int(time_alive / (judgment_time / 5.0)) * 10)
 	else:
-		earned_score = 50
-	
+		Global.combo = 0 # 순서가 틀린 노트를 눌렀을 때의 페널티 처리
+		
 	Global.score += earned_score
-	
 	spawn_hit_particles("HIT", earned_score)
+	active_notes.erase(self); update_target_visuals(); queue_free()
+
+# [추가됨] Godot의 기본 그리기 함수 오버라이드
+func _draw():
+	if not is_clone: return
 	
-	active_notes.erase(self)
-	update_target_visuals()
-	self.queue_free()
+	var my_index = active_notes.find(self)
+	# 배열 내에 존재하고, 마지막 노트가 아니라면 다음 노트와 선을 연결
+	if my_index != -1 and my_index < active_notes.size() - 1:
+		var next_note = active_notes[my_index + 1]
+		if is_instance_valid(next_note):
+			# [수정됨] 내 노드의 기본 중심점에 오프셋 변수를 더하여 새로운 중심점을 계산합니다.
+			var my_center_local = (size / 2.0) + center_offset
+			
+			# [수정됨] 다음 노트 역시 자신의 중심점에 오프셋을 더한 뒤, 스케일을 곱해 글로벌 좌표를 계산합니다.
+			var next_offset_center = (next_note.size / 2.0) + next_note.center_offset
+			var next_center_global = next_note.global_position + (next_offset_center * next_note.scale)
+			
+			# 글로벌 좌표를 내 로컬 좌표로 변환
+			var next_center_local = get_global_transform().affine_inverse() * next_center_global
+			
+			# 계산된 새로운 중심점들을 사용하여 선 그리기
+			draw_line(my_center_local, next_center_local, connect_line_color, connect_line_width, true)
 
 func spawn_hit_particles(type: String, score_val: int):
-	var particles = CPUParticles2D.new()
+	var p = CPUParticles2D.new()
+	p.emitting = false; p.one_shot = true; p.explosiveness = 0.9; p.lifetime = particle_lifetime
+	p.spread = 180.0; p.gravity = Vector2.ZERO; p.initial_velocity_min = 120.0; p.initial_velocity_max = 280.0
 	
-	# 기본 물리 설정
-	particles.emitting = false
-	particles.one_shot = true
-	particles.explosiveness = 0.9      # 한 번에 팍 터지는 느낌 강화
-	particles.lifetime = particle_lifetime
-	particles.spread = 180.0
-	particles.gravity = Vector2.ZERO
-	particles.initial_velocity_min = 120.0 # 속도 소폭 상향
-	particles.initial_velocity_max = 280.0
-	
-	# 🌟 [개선 1] 부드럽게 사라지는 투명도 설정 (ColorRamp)
-	var gradient = Gradient.new()
-	var base_color: Color
-	
+	var c: Color
 	if type == "MISS":
-		base_color = color_miss
-		particles.amount = max(1, particle_min_amount / 2)
+		c = color_miss; p.amount = max(1, particle_min_amount / 2)
 	else:
-		var weight: float = clamp(float(score_val - 50) / 50.0, 0.0, 1.0)
-		base_color = color_low_score.lerp(color_high_score, weight)
-		particles.amount = int(lerp(float(particle_min_amount), float(particle_max_amount), weight))
+		var w = clamp((score_val - 50) / 50.0, 0.0, 1.0)
+		c = color_low_score.lerp(color_high_score, w)
+		p.amount = int(lerp(float(particle_min_amount), float(particle_max_amount), w))
 	
-	# 그라데이션 설정: 시작(0.0)은 base_color, 끝(1.0)은 투명한 base_color
-	gradient.set_color(0, base_color)
-	gradient.set_color(1, Color(base_color.r, base_color.g, base_color.b, 0.0))
-	particles.color_ramp = gradient
-
-	# 🌟 [개선 2] 작아지면서 사라지는 크기 곡선 설정 (Scale Curve)
-	var curve = Curve.new()
-	curve.add_point(Vector2(0, 1.0))  # 시작 크기 100%
-	curve.add_point(Vector2(1, 0.0))  # 끝 크기 0%
-	particles.scale_amount_curve = curve
+	var g = Gradient.new()
+	g.set_color(0, c); g.set_color(1, Color(c.r, c.g, c.b, 0.0)); p.color_ramp = g
 	
-	# 기본 크기 값 (이 값에 곡선이 곱해짐)
-	particles.scale_amount_min = 5.0
-	particles.scale_amount_max = 10.0
-
-	# 위치 설정
-	get_parent().add_child(particles)
-	var center_pos = self.global_position + ((self.size * self.scale) / 2.0) + particle_offset
-	particles.global_position = center_pos
+	var cv = Curve.new(); cv.add_point(Vector2(0, 1.0)); cv.add_point(Vector2(1, 0.0))
+	p.scale_amount_curve = cv; p.scale_amount_min = 5.0; p.scale_amount_max = 10.0
 	
-	particles.emitting = true
-	
-	# 파티클이 완전히 사라진 후 노드 삭제
-	get_tree().create_timer(particles.lifetime).timeout.connect(particles.queue_free)
+	get_parent().add_child(p)
+	p.global_position = global_position + ((size * scale) / 2.0) + particle_offset
+	p.emitting = true
+	get_tree().create_timer(p.lifetime).timeout.connect(p.queue_free)
 
 func update_target_visuals():
-	active_notes = active_notes.filter(func(note): return is_instance_valid(note))
-	
-	for i in range(active_notes.size()):
+	active_notes = active_notes.filter(func(n): return is_instance_valid(n))
+	for i in active_notes.size(): 
 		var note = active_notes[i]
-		if i == 0:
-			note.modulate = Color(1.0, 1.0, 1.0, 1.0) 
-		else:
-			note.modulate = Color(0.5, 0.5, 0.5, 0.7)
+		note.modulate = Color.WHITE if i == 0 else Color(0.5, 0.5, 0.5, 0.7)
+		# [추가됨] 노트 상태가 변할 때마다 선을 다시 그리도록 요청
+		note.queue_redraw()
