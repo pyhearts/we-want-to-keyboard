@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1775909207
+::res://::1775982820
 ::res://assets/::1774963027
 ::res://assets/fonts/::1774763670
 Pretendard-Black.otf::FontFile::6738690865253165418::1774763670::1774763670::1::::<><><>0<>0<>5fe971453759df0aacc977291aa740e1<>res://.godot/imported/Pretendard-Black.otf-e24b05473bd92daed72abca520244524.fontdata::
@@ -11,19 +11,26 @@ Pretendard-Medium.otf::FontFile::3649033273983700100::1774763670::1774763670::1:
 Pretendard-Regular.otf::FontFile::8796495392445952957::1774763670::1774763670::1::::<><><>0<>0<>68af030330476b6683ce1ef9be92a762<>res://.godot/imported/Pretendard-Regular.otf-375f78108183715aa325a9c9dc71177f.fontdata::
 Pretendard-SemiBold.otf::FontFile::8017452126757596110::1774763670::1774763670::1::::<><><>0<>0<>9d023e1bfc4df0e228fc945096a8ccf4<>res://.godot/imported/Pretendard-SemiBold.otf-b18e006bb23af1cf92c966e372cc15da.fontdata::
 Pretendard-Thin.otf::FontFile::3952888109508034875::1774763670::1774763670::1::::<><><>0<>0<>607541fb32fcfe71a3d1e57d2e085188<>res://.godot/imported/Pretendard-Thin.otf-3a506efce1e112c2415f59ade9f49059.fontdata::
-::res://assets/image/::1774963104
-과녁.png::CompressedTexture2D::4508523144180476764::1774963027::1774963104::1::::<><><>0<>0<>16f52b3e0e704fc7b91d7bb66e084a72<>res://.godot/imported/과녁.png-deb97bdf499dd7e02999be144abc951d.ctex::
-판정-원.png::CompressedTexture2D::1757454568938808694::1774963027::1774963104::1::::<><><>0<>0<>2e2964f5229d4395cb736eb7c11be5d4<>res://.godot/imported/판정-원.png-448705793022e16a7891314a49f3eff5.ctex::
+::res://assets/image/::1775919092
+::res://assets/image/ingame/::1775919085
+과녁.png::CompressedTexture2D::4508523144180476764::1774963027::1775919085::1::::<><><>0<>0<>0dccb73e469990ff9ebfce960a775203<>res://.godot/imported/과녁.png-325a5e53fffcbb9b9543ffbd97b3d764.ctex::
+판정-원.png::CompressedTexture2D::1757454568938808694::1774963027::1775919085::1::::<><><>0<>0<>da58524259fcd9417ccd7545af661437<>res://.godot/imported/판정-원.png-9a0f26d582a79fc9fd772d9c2f6bad6b.ctex::
 ::res://assets/image/mouse point/::1774963104
 mouse point 64.png::CompressedTexture2D::4264791101731234043::1774963027::1774963104::1::::<><><>0<>0<>8557a4b29f47fbdedcb1c7be553c63a9<>res://.godot/imported/mouse point 64.png-ea3b26c58cfa9b0b9bb39ce120313428.ctex::
 mouse point.png::CompressedTexture2D::4168683287540911674::1774963027::1774963104::1::::<><><>0<>0<>713a659e6fa4d302cb4980c86faebbcb<>res://.godot/imported/mouse point.png-dc191aeb67a07347faca584593503492.ctex::
-::res://scenes/::1775902517
-game.tscn::PackedScene::8105288312645883185::1775492872::0::1::::<><><>0<>0<><>::uid://be2ijsn4bnvdj::::res://scenes/gun_point.tscn<>uid://ccg5fm80pgwiq::::res://scripts/game.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/label_score.gd<>uid://cq81px2t2a0k6::::res://scripts/combo.gd
-gun_point.tscn::PackedScene::2723417032514379291::1775902517::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/과녁.png<>uid://ngo16177o8ud::::res://scripts/gun_point.gd<>uid://0blaxdoepjmc::::res://assets/image/판정-원.png<>uid://be4ep4vw3ir6h::::res://scripts/circle_judgment_rect.gd
-::res://scripts/::1775902517
+::res://assets/image/music select/::1775927090
+1MusicSelectButton.png::CompressedTexture2D::2257374053141516969::1775927022::1775927090::1::::<><><>0<>0<>d55aa0d0bb677bf489ee8587b5cbc9e8<>res://.godot/imported/1MusicSelectButton.png-29b31caf5e3c798b94642ef95cc63d7c.ctex::
+::res://scenes/::1775918843
+::res://scenes/in_game/::1775963072
+game.tscn::PackedScene::8105288312645883185::1775963072::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/game.gd<>uid://be2ijsn4bnvdj::::res://scenes/in_game/gun_point.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/label_score.gd<>uid://cq81px2t2a0k6::::res://scripts/combo.gd
+gun_point.tscn::PackedScene::2723417032514379291::1775919084::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/ingame/과녁.png<>uid://ngo16177o8ud::::res://scripts/gun_point.gd<>uid://0blaxdoepjmc::::res://assets/image/ingame/판정-원.png<>uid://be4ep4vw3ir6h::::res://scripts/circle_judgment_rect.gd
+::res://scenes/menu/::1775927485
+music_select.tscn::PackedScene::1700409330663741772::1775927485::0::1::::<><><>0<>0<><>::uid://u1e2g2bccy6g::::res://scenes/menu/music_select_button.tscn
+music_select_button.tscn::PackedScene::1457742135670735508::1775927295::0::1::::<><><>0<>0<><>::uid://7fqvdx3s3o22::::res://assets/image/music select/1MusicSelectButton.png<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
+::res://scripts/::1775909912
 circle_judgment_rect.gd::GDScript::2727314224647982185::1775898591::0::1::::<>TextureRect<><>0<>0<><>::
 combo.gd::GDScript::5965594010845350311::1775386721::0::1::::<>Label<><>0<>0<><>::
-game.gd::GDScript::4927436442354083576::1775902517::0::1::::<>Control<><>0<>0<><>::
+game.gd::GDScript::4927436442354083576::1775909912::0::1::::<>Control<><>0<>0<><>::
 global.gd::GDScript::5288415493149227183::1775386690::0::1::::<>Node<><>0<>0<><>::
-gun_point.gd::GDScript::925739372245092127::1775902336::0::1::::<>Control<><>0<>0<><>::
+gun_point.gd::GDScript::925739372245092127::1775909810::0::1::::<>Control<><>0<>0<><>::
 label_score.gd::GDScript::840920046692643988::1775386405::0::1::::<>Label<><>0<>0<><>::

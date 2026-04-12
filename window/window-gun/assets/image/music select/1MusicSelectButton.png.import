@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b5h7ynn46ri4k"
-path="res://.godot/imported/과녁.png-deb97bdf499dd7e02999be144abc951d.ctex"
+uid="uid://7fqvdx3s3o22"
+path="res://.godot/imported/1MusicSelectButton.png-29b31caf5e3c798b94642ef95cc63d7c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/image/과녁.png"
-dest_files=["res://.godot/imported/과녁.png-deb97bdf499dd7e02999be144abc951d.ctex"]
+source_file="res://assets/image/music select/1MusicSelectButton.png"
+dest_files=["res://.godot/imported/1MusicSelectButton.png-29b31caf5e3c798b94642ef95cc63d7c.ctex"]
 
 [params]
 

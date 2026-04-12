@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0blaxdoepjmc"
-path="res://.godot/imported/판정-원.png-448705793022e16a7891314a49f3eff5.ctex"
+path="res://.godot/imported/판정-원.png-9a0f26d582a79fc9fd772d9c2f6bad6b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/image/판정-원.png"
-dest_files=["res://.godot/imported/판정-원.png-448705793022e16a7891314a49f3eff5.ctex"]
+source_file="res://assets/image/ingame/판정-원.png"
+dest_files=["res://.godot/imported/판정-원.png-9a0f26d582a79fc9fd772d9c2f6bad6b.ctex"]
 
 [params]
 

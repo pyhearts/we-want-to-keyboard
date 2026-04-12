@@ -24,6 +24,7 @@ window/size/viewport_width=1600
 window/size/viewport_height=900
 window/size/mode=3
 mouse_cursor/custom_image="uid://b105qshtlkvw2"
+mouse_cursor/custom_image_hotspot=Vector2(32, 32)
 
 [input]
 

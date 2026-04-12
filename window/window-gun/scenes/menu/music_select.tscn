@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://yhxq1gosjepw"]
+
+[ext_resource type="PackedScene" uid="uid://u1e2g2bccy6g" path="res://scenes/menu/music_select_button.tscn" id="1_b24pk"]
+
+[node name="MusicSelect" type="Control" unique_id=915521571]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MusicSelectButton" parent="." unique_id=1930392246 instance=ExtResource("1_b24pk")]
+layout_mode = 1
+anchors_preset = -1
+offset_bottom = -767.0

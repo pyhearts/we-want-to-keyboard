@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://dnqi6c7d25jth"]
 
-[ext_resource type="PackedScene" uid="uid://be2ijsn4bnvdj" path="res://scenes/gun_point.tscn" id="1_uwrxv"]
-[ext_resource type="Script" uid="uid://ccg5fm80pgwiq" path="res://scripts/game.gd" id="1_yqjtg"]
-[ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="3_lnu2h"]
-[ext_resource type="Script" uid="uid://l8l3h3p5ygsy" path="res://scripts/label_score.gd" id="4_lbhrr"]
-[ext_resource type="Script" uid="uid://cq81px2t2a0k6" path="res://scripts/combo.gd" id="5_iywne"]
+[ext_resource type="Script" uid="uid://ccg5fm80pgwiq" path="res://scripts/game.gd" id="1_6m8sb"]
+[ext_resource type="PackedScene" uid="uid://be2ijsn4bnvdj" path="res://scenes/in_game/gun_point.tscn" id="2_rs7p2"]
+[ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="3_fpr44"]
+[ext_resource type="Script" uid="uid://l8l3h3p5ygsy" path="res://scripts/label_score.gd" id="4_iv5bb"]
+[ext_resource type="Script" uid="uid://cq81px2t2a0k6" path="res://scripts/combo.gd" id="5_3rdkh"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ej7j1"]
 bg_color = Color(0.95987433, 0.92118317, 0.8007787, 1)
@@ -16,7 +16,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_yqjtg")
+script = ExtResource("1_6m8sb")
 
 [node name="BackGround" type="Panel" parent="." unique_id=1116742002]
 layout_mode = 1
@@ -27,8 +27,9 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_ej7j1")
 
-[node name="GunPoint" parent="." unique_id=962535481 instance=ExtResource("1_uwrxv")]
+[node name="GunPoint" parent="." unique_id=962535481 instance=ExtResource("2_rs7p2")]
 layout_mode = 1
+perfect_margin = 0.4
 prevent_overlap_count = 5
 min_x = -500.0
 max_x = 1000.0
@@ -46,11 +47,11 @@ grow_horizontal = 2
 [node name="Score" type="Label" parent="CanvasLayer/stats" unique_id=526092494]
 layout_mode = 2
 theme_override_constants/outline_size = 10
-theme_override_fonts/font = ExtResource("3_lnu2h")
+theme_override_fonts/font = ExtResource("3_fpr44")
 theme_override_font_sizes/font_size = 80
 text = "0"
 vertical_alignment = 1
-script = ExtResource("4_lbhrr")
+script = ExtResource("4_iv5bb")
 
 [node name="Combo" type="Label" parent="CanvasLayer" unique_id=331619747]
 anchors_preset = 10
@@ -58,8 +59,8 @@ anchor_right = 1.0
 offset_bottom = 110.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.3854925, 0.38549247, 0.38549247, 1)
-theme_override_fonts/font = ExtResource("3_lnu2h")
+theme_override_fonts/font = ExtResource("3_fpr44")
 theme_override_font_sizes/font_size = 100
 text = "0"
 horizontal_alignment = 1
-script = ExtResource("5_iywne")
+script = ExtResource("5_3rdkh")

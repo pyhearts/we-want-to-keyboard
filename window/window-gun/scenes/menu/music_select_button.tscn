@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://u1e2g2bccy6g"]
+
+[ext_resource type="Texture2D" uid="uid://7fqvdx3s3o22" path="res://assets/image/music select/1MusicSelectButton.png" id="1_aw426"]
+[ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="2_10xxq"]
+
+[node name="MusicSelectButton" type="Control" unique_id=1930392246]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TextureButton" type="TextureButton" parent="." unique_id=1912835909]
+layout_mode = 0
+offset_right = 724.0
+offset_bottom = 129.0
+texture_normal = ExtResource("1_aw426")
+ignore_texture_size = true
+stretch_mode = 4
+
+[node name="Label" type="Label" parent="TextureButton" unique_id=1341044863]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 19.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_10xxq")
+theme_override_font_sizes/font_size = 100
+text = "asdf"
+vertical_alignment = 1
