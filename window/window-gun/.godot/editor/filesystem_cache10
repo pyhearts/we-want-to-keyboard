@@ -1,6 +1,6 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1775982820
-::res://assets/::1774963027
+::res://::1775999098
+::res://assets/::1775996875
 ::res://assets/fonts/::1774763670
 Pretendard-Black.otf::FontFile::6738690865253165418::1774763670::1774763670::1::::<><><>0<>0<>5fe971453759df0aacc977291aa740e1<>res://.godot/imported/Pretendard-Black.otf-e24b05473bd92daed72abca520244524.fontdata::
 Pretendard-Bold.otf::FontFile::3241708902818658160::1774763670::1774763670::1::::<><><>0<>0<>493f72e68fbd3c9ff868c9375f12bcfe<>res://.godot/imported/Pretendard-Bold.otf-4a691e6e36733770b88ad2bff83a9eb8.fontdata::
@@ -20,17 +20,22 @@ mouse point 64.png::CompressedTexture2D::4264791101731234043::1774963027::177496
 mouse point.png::CompressedTexture2D::4168683287540911674::1774963027::1774963104::1::::<><><>0<>0<>713a659e6fa4d302cb4980c86faebbcb<>res://.godot/imported/mouse point.png-dc191aeb67a07347faca584593503492.ctex::
 ::res://assets/image/music select/::1775927090
 1MusicSelectButton.png::CompressedTexture2D::2257374053141516969::1775927022::1775927090::1::::<><><>0<>0<>d55aa0d0bb677bf489ee8587b5cbc9e8<>res://.godot/imported/1MusicSelectButton.png-29b31caf5e3c798b94642ef95cc63d7c.ctex::
+::res://assets/musics/::1775997263
+musics.json::JSON::-1::1775997263::0::1::::<><><>0<>0<><>::
+::res://assets/musics/R/::1775997302
+chart.json::JSON::-1::1775997302::0::1::::<><><>0<>0<><>::
 ::res://scenes/::1775918843
-::res://scenes/in_game/::1775963072
-game.tscn::PackedScene::8105288312645883185::1775963072::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/game.gd<>uid://be2ijsn4bnvdj::::res://scenes/in_game/gun_point.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/label_score.gd<>uid://cq81px2t2a0k6::::res://scripts/combo.gd
+::res://scenes/in_game/::1775982915
+game.tscn::PackedScene::8105288312645883185::1775982915::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/game.gd<>uid://be2ijsn4bnvdj::::res://scenes/in_game/gun_point.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/label_score.gd<>uid://cq81px2t2a0k6::::res://scripts/combo.gd
 gun_point.tscn::PackedScene::2723417032514379291::1775919084::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/ingame/과녁.png<>uid://ngo16177o8ud::::res://scripts/gun_point.gd<>uid://0blaxdoepjmc::::res://assets/image/ingame/판정-원.png<>uid://be4ep4vw3ir6h::::res://scripts/circle_judgment_rect.gd
-::res://scenes/menu/::1775927485
-music_select.tscn::PackedScene::1700409330663741772::1775927485::0::1::::<><><>0<>0<><>::uid://u1e2g2bccy6g::::res://scenes/menu/music_select_button.tscn
+::res://scenes/menu/::1775997508
+music_select.tscn::PackedScene::1700409330663741772::1775997508::0::1::::<><><>0<>0<><>::uid://u1e2g2bccy6g::::res://scenes/menu/music_select_button.tscn<>uid://bfmnrm2p0c3g6::::res://scenes/menu/music_select_button.gd
+music_select_button.gd::GDScript::2762957787039299483::1775996355::0::1::::<>Control<><>0<>0<><>::
 music_select_button.tscn::PackedScene::1457742135670735508::1775927295::0::1::::<><><>0<>0<><>::uid://7fqvdx3s3o22::::res://assets/image/music select/1MusicSelectButton.png<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
-::res://scripts/::1775909912
+::res://scripts/::1775997508
 circle_judgment_rect.gd::GDScript::2727314224647982185::1775898591::0::1::::<>TextureRect<><>0<>0<><>::
 combo.gd::GDScript::5965594010845350311::1775386721::0::1::::<>Label<><>0<>0<><>::
 game.gd::GDScript::4927436442354083576::1775909912::0::1::::<>Control<><>0<>0<><>::
-global.gd::GDScript::5288415493149227183::1775386690::0::1::::<>Node<><>0<>0<><>::
+global.gd::GDScript::5288415493149227183::1775997508::0::1::::<>Node<><>0<>0<><>::
 gun_point.gd::GDScript::925739372245092127::1775909810::0::1::::<>Control<><>0<>0<><>::
 label_score.gd::GDScript::840920046692643988::1775386405::0::1::::<>Label<><>0<>0<><>::

@@ -1,9 +1,11 @@
+Control
+VBoxContainer
+Container
 Label
 TextureButton
 TextEdit
 CanvasLayer
 Node
 TextureRect
-VBoxContainer
 Panel
 Node2D

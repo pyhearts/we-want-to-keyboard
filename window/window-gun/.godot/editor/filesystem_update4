@@ -1,1 +1,4 @@
-res://scenes/in_game/game.tscn
+res://scenes/menu/music_select.tscn
+res://scenes/menu/music_select_button.gd
+res://assets/musics/musics.json
+res://scripts/global.gd
