@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://u1e2g2bccy6g"]
 
+[ext_resource type="Script" uid="uid://2houxru0lpft" path="res://scenes/menu/music_select_text.gd" id="1_10xxq"]
 [ext_resource type="Texture2D" uid="uid://7fqvdx3s3o22" path="res://assets/image/music select/1MusicSelectButton.png" id="1_aw426"]
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="2_10xxq"]
 
@@ -10,6 +11,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_10xxq")
 
 [node name="TextureButton" type="TextureButton" parent="." unique_id=1912835909]
 layout_mode = 0

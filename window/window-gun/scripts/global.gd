@@ -3,6 +3,8 @@ extends Node
 var score = 0
 var combo = 0
 var time: float = 0.0
+var music_titles = ["R","HEELO","MEGALOVANIA"]
+
 
 func _ready() -> void:
 	time = 0.0
