@@ -1,3 +1,4 @@
+TextureRect
 Control
 VBoxContainer
 Container
@@ -6,6 +7,5 @@ TextureButton
 TextEdit
 CanvasLayer
 Node
-TextureRect
 Panel
 Node2D

@@ -6,3 +6,5 @@ res://scenes/menu/music_select_button.gd
 res://assets/musics/R/music_R.tres
 res://scenes/menu/music_select_button.tscn
 res://scenes/menu/music_select_text.gd
+res://scenes/menu/main_menu.tscn
+res://scenes/menu/crazy.gd
