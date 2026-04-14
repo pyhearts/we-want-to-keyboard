@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://cq81px2t2a0k6" path="res://scripts/combo.gd" id="5_3rdkh"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ej7j1"]
-bg_color = Color(0.95987433, 0.92118317, 0.8007787, 1)
+bg_color = Color(0.9999998, 0.87686116, 0.8996086, 1)
 
 [node name="Game" type="Control" unique_id=509220831]
 layout_mode = 3

@@ -1,10 +1,12 @@
 [gd_scene format=3 uid="uid://0ysc7tqillx4"]
 
-[ext_resource type="Texture2D" uid="uid://0rn64j1d5oty" path="res://assets/image/main/우리는 총이 원하다!-3.PNG" id="1_247la"]
 [ext_resource type="Texture2D" uid="uid://brigg8f1r7c4y" path="res://assets/image/main/제목을 입력해주세요. (3).png" id="1_kiqgm"]
-[ext_resource type="Texture2D" uid="uid://bpilbatqxha2p" path="res://assets/image/main/우리는 총이 원하다!-1.PNG" id="2_kiqgm"]
-[ext_resource type="Texture2D" uid="uid://tyh0l6hugx4r" path="res://assets/image/main/우리는 총이 원하다!-2.PNG" id="3_hj162"]
-[ext_resource type="Script" uid="uid://s08rnnrk6it4" path="res://scenes/menu/crazy.gd" id="4_hj162"]
+[ext_resource type="Script" uid="uid://lqonaeq14cg8" path="res://scripts/scene_changer.gd" id="2_xn6kt"]
+[ext_resource type="PackedScene" uid="uid://yhxq1gosjepw" path="res://scenes/menu/music_select.tscn" id="3_isoef"]
+[ext_resource type="Script" uid="uid://s08rnnrk6it4" path="res://scripts/crazy.gd" id="4_hj162"]
+[ext_resource type="Texture2D" uid="uid://c6b1jhnhfsj6y" path="res://assets/image/main/i want a gun no title.png" id="4_isoef"]
+[ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="5_hj162"]
+[ext_resource type="Texture2D" uid="uid://18nnuufyapx4" path="res://assets/image/main/i want a gun only title (1).png" id="6_qgo02"]
 
 [node name="MainMenu" type="Control" unique_id=1152809603]
 layout_mode = 3
@@ -14,34 +16,58 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TextureRect4" type="TextureRect" parent="." unique_id=335794758]
+[node name="Background" type="TextureRect" parent="." unique_id=335794758]
 layout_mode = 0
 offset_right = 1920.0
 offset_bottom = 256.0
 texture = ExtResource("1_kiqgm")
+script = ExtResource("2_xn6kt")
+next_scene = ExtResource("3_isoef")
 
-[node name="TextureRect" type="TextureRect" parent="." unique_id=1106884044]
-layout_mode = 0
-offset_right = 1920.0
-offset_bottom = 256.0
-texture = ExtResource("1_247la")
-
-[node name="TextureRect2" type="TextureRect" parent="." unique_id=846000679]
-layout_mode = 0
-offset_left = 8.0
-offset_top = 324.0
-offset_right = 751.0
-offset_bottom = 1083.0
-texture = ExtResource("2_kiqgm")
+[node name="Background2" type="TextureRect" parent="." unique_id=1122399113]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.1, 1.1)
+pivot_offset = Vector2(960, 540)
+texture = ExtResource("4_isoef")
+expand_mode = 1
 script = ExtResource("4_hj162")
-base_angle_deg = 0.0
+lerp_speed = 7.0
 
-[node name="TextureRect3" type="TextureRect" parent="." unique_id=1088527388]
-layout_mode = 0
-offset_left = 1125.0
-offset_top = 348.0
-offset_right = 1922.0
-offset_bottom = 1065.0
-texture = ExtResource("3_hj162")
+[node name="Background3" type="TextureRect" parent="." unique_id=926740562]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 269.0
+offset_top = -390.0
+offset_right = 269.0
+offset_bottom = -390.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.1, 1.1)
+pivot_offset = Vector2(960, 540)
+texture = ExtResource("6_qgo02")
+expand_mode = 1
 script = ExtResource("4_hj162")
-random_angle_range = 180.0
+lerp_speed = 4.0
+
+[node name="Label" type="Label" parent="." unique_id=1880497941]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 989.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.6156863)
+theme_override_fonts/font = ExtResource("5_hj162")
+theme_override_font_sizes/font_size = 60
+text = "press any key to start"
+horizontal_alignment = 1
+vertical_alignment = 2

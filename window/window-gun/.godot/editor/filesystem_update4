@@ -1,10 +1,7 @@
-res://scenes/menu/music_select.tscn
-res://assets/musics/musics.json
-res://scripts/global.gd
-res://scripts/music_data.gd
-res://scenes/menu/music_select_button.gd
-res://assets/musics/R/music_R.tres
+res://scenes/in_game/game.tscn
 res://scenes/menu/music_select_button.tscn
-res://scenes/menu/music_select_text.gd
+res://scenes/menu/background.gd
+res://scenes/menu/music_select.tscn
 res://scenes/menu/main_menu.tscn
-res://scenes/menu/crazy.gd
+res://scripts/background.gd
+res://scripts/crazy.gd

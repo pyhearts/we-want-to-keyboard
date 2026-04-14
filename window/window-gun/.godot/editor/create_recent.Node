@@ -1,8 +1,8 @@
+Label
 TextureRect
 Control
 VBoxContainer
 Container
-Label
 TextureButton
 TextEdit
 CanvasLayer

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://yhxq1gosjepw"]
 
 [ext_resource type="PackedScene" uid="uid://u1e2g2bccy6g" path="res://scenes/menu/music_select_button.tscn" id="1_b24pk"]
-[ext_resource type="Script" uid="uid://bfmnrm2p0c3g6" path="res://scenes/menu/music_select_button.gd" id="1_fsg0r"]
+[ext_resource type="Script" uid="uid://bfmnrm2p0c3g6" path="res://scripts/music_select_button.gd" id="1_fsg0r"]
 [ext_resource type="Texture2D" uid="uid://brigg8f1r7c4y" path="res://assets/image/main/제목을 입력해주세요. (3).png" id="1_kikgp"]
 [ext_resource type="Texture2D" uid="uid://dohp0de7qvf3a" path="res://assets/image/main/우리는 총이 원하다! 흰배경.png" id="3_2dxlo"]
 

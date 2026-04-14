@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1776065637
+::res://::1776150890
 ::res://assets/::1776061199
 ::res://assets/fonts/::1775460149
 Pretendard-Black.otf::FontFile::6738690865253165418::1775460037::1775460149::1::::<><><>0<>0<>5fe971453759df0aacc977291aa740e1<>res://.godot/imported/Pretendard-Black.otf-e24b05473bd92daed72abca520244524.fontdata::
@@ -15,7 +15,10 @@ Pretendard-Thin.otf::FontFile::3952888109508034875::1775460037::1775460149::1:::
 ::res://assets/image/ingame/::1776061219
 과녁.png::CompressedTexture2D::4508523144180476764::1776061199::1776061219::1::::<><><>0<>0<>0dccb73e469990ff9ebfce960a775203<>res://.godot/imported/과녁.png-325a5e53fffcbb9b9543ffbd97b3d764.ctex::
 판정-원.png::CompressedTexture2D::1757454568938808694::1776061199::1776061219::1::::<><><>0<>0<>da58524259fcd9417ccd7545af661437<>res://.godot/imported/판정-원.png-9a0f26d582a79fc9fd772d9c2f6bad6b.ctex::
-::res://assets/image/main/::1776065647
+::res://assets/image/main/::1776152267
+i want a gun no title.png::CompressedTexture2D::6952354999947694938::1776152192::1776152193::1::::<><><>0<>0<>cf1d502f2c5cffc1da4cb767ed78b19d<>res://.godot/imported/i want a gun no title.png-b42a697b19a983439efa397390dc0ece.ctex::
+i want a gun only title (1).png::CompressedTexture2D::1893848018321900807::1776152267::1776152268::1::::<><><>0<>0<>d97455d21d1414b62fc2a2ae1b5d8d00<>res://.godot/imported/i want a gun only title (1).png-f764e40184eb93b00c913a97fbe04317.ctex::
+I_Want_a_Gun.jpg::CompressedTexture2D::2872823565909485894::1776150672::1776150676::1::::<><><>0<>0<>8394be62b43a089462832a14fa95055c<>res://.godot/imported/I_Want_a_Gun.jpg-1bb2e8671013878d10005db9aecd1302.ctex::
 우리는 총이 원하다! 흰배경.png::CompressedTexture2D::8157312071254709492::1776064966::1776065638::1::::<><><>0<>0<>16a66ac9a356e7ab8298a387d3095b4e<>res://.godot/imported/우리는 총이 원하다! 흰배경.png-e97f6da7f25934f8287642f97babad64.ctex::
 우리는 총이 원하다!-1.PNG::CompressedTexture2D::3456438063119663501::1776065647::1776065647::1::::<><><>0<>0<>909ee4876257bd83123b7845d94c8282<>res://.godot/imported/우리는 총이 원하다!-1.PNG-14255ed7dfa8546b9a068028797857bb.ctex::
 우리는 총이 원하다!-2.PNG::CompressedTexture2D::1383603385007864151::1776065647::1776065647::1::::<><><>0<>0<>4cebc7911f832f04b9d0b466e8a65d4f<>res://.godot/imported/우리는 총이 원하다!-2.PNG-5741035a4136c850d398b20489e421cb.ctex::
@@ -32,20 +35,22 @@ mouse point.png::CompressedTexture2D::4168683287540911674::1775460037::177546014
 chart.json::JSON::-1::1776061199::0::1::::<><><>0<>0<><>::
 music_R.tres::Resource/MusicData::1945995525735648384::1776062422::0::1::::<><><>0<>0<><>::uid://ciljglxaby7qn::::res://scripts/music_data.gd
 ::res://scenes/::1776061199
-::res://scenes/in_game/::1776061199
-game.tscn::PackedScene::8105288312645883185::1776061199::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/game.gd<>uid://be2ijsn4bnvdj::::res://scenes/in_game/gun_point.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/label_score.gd<>uid://cq81px2t2a0k6::::res://scripts/combo.gd
+::res://scenes/in_game/::1776149869
+game.tscn::PackedScene::8105288312645883185::1776149869::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/game.gd<>uid://be2ijsn4bnvdj::::res://scenes/in_game/gun_point.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/label_score.gd<>uid://cq81px2t2a0k6::::res://scripts/combo.gd
 gun_point.tscn::PackedScene::2723417032514379291::1776061199::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/ingame/과녁.png<>uid://ngo16177o8ud::::res://scripts/gun_point.gd<>uid://0blaxdoepjmc::::res://assets/image/ingame/판정-원.png<>uid://be4ep4vw3ir6h::::res://scripts/circle_judgment_rect.gd
-::res://scenes/menu/::1776065637
-main_menu.tscn::PackedScene::1805364345342442223::1776065637::0::1::::<><><>0<>0<><>::
-music_select.tscn::PackedScene::1700409330663741772::1776065637::0::1::::<><><>0<>0<><>::uid://u1e2g2bccy6g::::res://scenes/menu/music_select_button.tscn<>uid://bfmnrm2p0c3g6::::res://scenes/menu/music_select_button.gd<>uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://dohp0de7qvf3a::::res://assets/image/main/우리는 총이 원하다! 흰배경.png
-music_select_button.gd::GDScript::2762957787039299483::1776064264::0::1::::<>Control<><>0<>0<><>::
-music_select_button.tscn::PackedScene::1457742135670735508::1776063574::0::1::::<><><>0<>0<><>::uid://2houxru0lpft::::res://scenes/menu/music_select_text.gd<>uid://7fqvdx3s3o22::::res://assets/image/music select/1MusicSelectButton.png<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
-music_select_text.gd::GDScript::1910436411523416353::1776064271::0::1::::<>Control<><>0<>0<><>::
-::res://scripts/::1776063998
+::res://scenes/menu/::1776151890
+main_menu.tscn::PackedScene::1805364345342442223::1776151890::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://lqonaeq14cg8::::res://scripts/scene_changer.gd<>uid://yhxq1gosjepw::::res://scenes/menu/music_select.tscn<>uid://s08rnnrk6it4::::res://scripts/crazy.gd<>uid://bg6u8p8c318m1::::res://assets/image/main/I_Want_a_Gun.jpg<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
+music_select.tscn::PackedScene::1700409330663741772::1776148943::0::1::::<><><>0<>0<><>::uid://u1e2g2bccy6g::::res://scenes/menu/music_select_button.tscn<>uid://bfmnrm2p0c3g6::::res://scenes/menu/music_select_button.gd<>uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://dohp0de7qvf3a::::res://assets/image/main/우리는 총이 원하다! 흰배경.png
+music_select_button.tscn::PackedScene::1457742135670735508::1776148941::0::1::::<><><>0<>0<><>::uid://2houxru0lpft::::res://scripts/music_select_text.gd<>uid://7fqvdx3s3o22::::res://assets/image/music select/1MusicSelectButton.png<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
+::res://scripts/::1776151854
 circle_judgment_rect.gd::GDScript::2727314224647982185::1775460037::0::1::::<>TextureRect<><>0<>0<><>::
 combo.gd::GDScript::5965594010845350311::1775460037::0::1::::<>Label<><>0<>0<><>::
+crazy.gd::GDScript::1317043352266757051::1776151854::0::1::::<>Control<><>0<>0<><>::
 game.gd::GDScript::4927436442354083576::1776061199::0::1::::<>Control<><>0<>0<><>::
 global.gd::GDScript::5288415493149227183::1776063998::0::1::::<>Node<><>0<>0<><>::
 gun_point.gd::GDScript::925739372245092127::1776061199::0::1::::<>Control<><>0<>0<><>::
 label_score.gd::GDScript::840920046692643988::1775460037::0::1::::<>Label<><>0<>0<><>::
 music_data.gd::GDScript::5357618052773116605::1776062111::0::1::::MusicData<>Resource<><>0<>0<><>::
+music_select_button.gd::GDScript::2762957787039299483::1776064264::0::1::::<>Control<><>0<>0<><>::
+music_select_text.gd::GDScript::1910436411523416353::1776064271::0::1::::<>Control<><>0<>0<><>::
+scene_changer.gd::GDScript::805980584244878333::1776149869::0::1::::<>TextureRect<><>0<>0<><>::
