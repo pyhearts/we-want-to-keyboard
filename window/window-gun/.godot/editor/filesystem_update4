@@ -1,7 +1,5 @@
-res://scenes/in_game/game.tscn
-res://scenes/menu/music_select_button.tscn
-res://scenes/menu/background.gd
 res://scenes/menu/music_select.tscn
+res://scenes/menu/music_select_button.gd
 res://scenes/menu/main_menu.tscn
-res://scripts/background.gd
-res://scripts/crazy.gd
+res://scenes/in_game/game.tscn
+res://scripts/Input/music_select_button_input.gd

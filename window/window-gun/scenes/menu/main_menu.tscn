@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://0ysc7tqillx4"]
 
 [ext_resource type="Texture2D" uid="uid://brigg8f1r7c4y" path="res://assets/image/main/제목을 입력해주세요. (3).png" id="1_kiqgm"]
-[ext_resource type="Script" uid="uid://lqonaeq14cg8" path="res://scripts/scene_changer.gd" id="2_xn6kt"]
+[ext_resource type="Script" uid="uid://lqonaeq14cg8" path="res://scripts/Input/scene_changer.gd" id="2_xn6kt"]
 [ext_resource type="PackedScene" uid="uid://yhxq1gosjepw" path="res://scenes/menu/music_select.tscn" id="3_isoef"]
-[ext_resource type="Script" uid="uid://s08rnnrk6it4" path="res://scripts/crazy.gd" id="4_hj162"]
+[ext_resource type="Script" uid="uid://s08rnnrk6it4" path="res://scripts/Animation/crazy.gd" id="4_hj162"]
 [ext_resource type="Texture2D" uid="uid://c6b1jhnhfsj6y" path="res://assets/image/main/i want a gun no title.png" id="4_isoef"]
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="5_hj162"]
 [ext_resource type="Texture2D" uid="uid://18nnuufyapx4" path="res://assets/image/main/i want a gun only title (1).png" id="6_qgo02"]

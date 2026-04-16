@@ -1,9 +1,11 @@
 [gd_scene format=3 uid="uid://yhxq1gosjepw"]
 
-[ext_resource type="PackedScene" uid="uid://u1e2g2bccy6g" path="res://scenes/menu/music_select_button.tscn" id="1_b24pk"]
-[ext_resource type="Script" uid="uid://bfmnrm2p0c3g6" path="res://scripts/music_select_button.gd" id="1_fsg0r"]
 [ext_resource type="Texture2D" uid="uid://brigg8f1r7c4y" path="res://assets/image/main/제목을 입력해주세요. (3).png" id="1_kikgp"]
 [ext_resource type="Texture2D" uid="uid://dohp0de7qvf3a" path="res://assets/image/main/우리는 총이 원하다! 흰배경.png" id="3_2dxlo"]
+[ext_resource type="Texture2D" uid="uid://bim0m10phtnkw" path="res://assets/image/music select/하츄핑 타이틀.png" id="3_kikgp"]
+[ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="4_2ybb2"]
+[ext_resource type="Script" uid="uid://ddgk54cu7pkl" path="res://scripts/Input/music_select_button.gd" id="4_sm0ga"]
+[ext_resource type="Script" uid="uid://g8hr6mko2xvs" path="res://scripts/Input/music_select_button_input.gd" id="6_sm0ga"]
 
 [node name="MusicSelect" type="Control" unique_id=915521571]
 layout_mode = 3
@@ -12,15 +14,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="Background2" type="TextureRect" parent="." unique_id=1472444943]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("1_kikgp")
 
 [node name="Background1" type="TextureRect" parent="." unique_id=1157985658]
 modulate = Color(0.8784314, 0.8784314, 0.8784314, 0.2784314)
@@ -36,24 +29,49 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("3_2dxlo")
 
-[node name="Buttons" type="Control" parent="." unique_id=908180051]
+[node name="Background2" type="TextureRect" parent="." unique_id=1472444943]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_fsg0r")
+texture = ExtResource("1_kikgp")
 
-[node name="MusicSelectButton" parent="Buttons" unique_id=1930392246 instance=ExtResource("1_b24pk")]
-layout_mode = 0
-anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 17.0
-offset_top = 15.0
-offset_right = 17.0
-offset_bottom = 15.0
-grow_horizontal = 1
-grow_vertical = 1
-size_flags_vertical = 15
+[node name="buttons" type="VBoxContainer" parent="." unique_id=1840089767]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 31.0
+offset_bottom = 1727.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 33
+
+[node name="MusicSelectButton" type="TextureButton" parent="buttons" unique_id=271114503]
+layout_mode = 2
+texture_normal = ExtResource("3_kikgp")
+script = ExtResource("4_sm0ga")
+
+[node name="Label" type="Label" parent="buttons/MusicSelectButton" unique_id=1404686910]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_right = -780.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(1, 0.5254902, 0.64705884, 0.6666667)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 0
+theme_override_constants/shadow_outline_size = 15
+theme_override_fonts/font = ExtResource("4_2ybb2")
+theme_override_font_sizes/font_size = 100
+text = "we want a keyboard"
+vertical_alignment = 1
+
+[node name="Input" type="Node" parent="buttons/MusicSelectButton" unique_id=331934685]
+script = ExtResource("6_sm0ga")

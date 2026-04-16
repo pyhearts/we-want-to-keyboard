@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://dnqi6c7d25jth"]
 
-[ext_resource type="Script" uid="uid://ccg5fm80pgwiq" path="res://scripts/game.gd" id="1_6m8sb"]
+[ext_resource type="Script" uid="uid://ccg5fm80pgwiq" path="res://scripts/Input/game.gd" id="1_6m8sb"]
 [ext_resource type="PackedScene" uid="uid://be2ijsn4bnvdj" path="res://scenes/in_game/gun_point.tscn" id="2_rs7p2"]
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="3_fpr44"]
-[ext_resource type="Script" uid="uid://l8l3h3p5ygsy" path="res://scripts/label_score.gd" id="4_iv5bb"]
-[ext_resource type="Script" uid="uid://cq81px2t2a0k6" path="res://scripts/combo.gd" id="5_3rdkh"]
+[ext_resource type="Script" uid="uid://l8l3h3p5ygsy" path="res://scripts/Text/label_score.gd" id="4_iv5bb"]
+[ext_resource type="Script" uid="uid://cq81px2t2a0k6" path="res://scripts/Text/combo.gd" id="5_3rdkh"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ej7j1"]
 bg_color = Color(0.9999998, 0.87686116, 0.8996086, 1)
