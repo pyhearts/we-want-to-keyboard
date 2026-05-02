@@ -1,9 +1,10 @@
+Control
 Node
-Label
+Button
 TextureButton
+Label
 VBoxContainer
 TextureRect
-Control
 Container
 TextEdit
 CanvasLayer

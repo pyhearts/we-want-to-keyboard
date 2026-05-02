@@ -1,5 +1,3 @@
 res://scenes/menu/music_select.tscn
-res://scenes/menu/music_select_button.gd
-res://scenes/menu/main_menu.tscn
-res://scenes/in_game/game.tscn
-res://scripts/Input/music_select_button_input.gd
+res://scenes/menu/VBoxContainerMove.gd
+res://scripts/autoload/global.gd

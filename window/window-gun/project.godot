@@ -11,12 +11,12 @@ config_version=5
 [application]
 
 config/name="window_gun"
-run/main_scene="uid://0ysc7tqillx4"
+run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 
 [autoload]
 
-Global="*uid://chl0ovxmbw07l"
+Global="*res://scripts/autoload/global.gd"
 
 [display]
 

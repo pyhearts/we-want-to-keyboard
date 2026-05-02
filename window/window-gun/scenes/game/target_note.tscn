@@ -1,11 +1,12 @@
 [gd_scene format=3 uid="uid://be2ijsn4bnvdj"]
 
-[ext_resource type="Texture2D" uid="uid://b5h7ynn46ri4k" path="res://assets/image/과녁.png" id="1_cwjeo"]
-[ext_resource type="Script" uid="uid://ngo16177o8ud" path="res://scripts/gun_point.gd" id="2_r2w7e"]
-[ext_resource type="Texture2D" uid="uid://0blaxdoepjmc" path="res://assets/image/판정-원.png" id="3_xh8cv"]
-[ext_resource type="Script" uid="uid://be4ep4vw3ir6h" path="res://scripts/circle_judgment_rect.gd" id="4_5oldh"]
+[ext_resource type="Texture2D" uid="uid://b5h7ynn46ri4k" path="res://assets/image/ingame/과녁.png" id="1_cwjeo"]
+[ext_resource type="Script" uid="uid://ngo16177o8ud" path="res://scripts/gameplay/target_note.gd" id="2_r2w7e"]
+[ext_resource type="Texture2D" uid="uid://0blaxdoepjmc" path="res://assets/image/ingame/판정-원.png" id="3_xh8cv"]
+[ext_resource type="Script" uid="uid://be4ep4vw3ir6h" path="res://scripts/effects/judgment_ring.gd" id="4_5oldh"]
 
-[node name="GunPoint" type="Control" unique_id=962535481]
+
+[node name="TargetNote" type="Control" unique_id=962535481]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,6 +18,11 @@ offset_bottom = -148.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_r2w7e")
+particle_min_amount = 20
+particle_max_amount = 100
+particle_offset = Vector2(-230, -90)
+center_offset = Vector2(-230, -90)
+connect_line_color = Color(0, 1, 1, 0.5019608)
 
 [node name="Point" type="TextureButton" parent="." unique_id=1013239008]
 layout_mode = 0

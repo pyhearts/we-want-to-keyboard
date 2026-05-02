@@ -3,9 +3,9 @@
 [ext_resource type="Texture2D" uid="uid://brigg8f1r7c4y" path="res://assets/image/main/제목을 입력해주세요. (3).png" id="1_kikgp"]
 [ext_resource type="Texture2D" uid="uid://dohp0de7qvf3a" path="res://assets/image/main/우리는 총이 원하다! 흰배경.png" id="3_2dxlo"]
 [ext_resource type="Texture2D" uid="uid://bim0m10phtnkw" path="res://assets/image/music select/하츄핑 타이틀.png" id="3_kikgp"]
+[ext_resource type="Script" uid="uid://bip5eikp1c1mm" path="res://scenes/menu/VBoxContainerMove.gd" id="3_sm0ga"]
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="4_2ybb2"]
-[ext_resource type="Script" uid="uid://ddgk54cu7pkl" path="res://scripts/Input/music_select_button.gd" id="4_sm0ga"]
-[ext_resource type="Script" uid="uid://g8hr6mko2xvs" path="res://scripts/Input/music_select_button_input.gd" id="6_sm0ga"]
+[ext_resource type="Script" uid="uid://ddgk54cu7pkl" path="res://scripts/ui/music_select_button.gd" id="4_sm0ga"]
 
 [node name="MusicSelect" type="Control" unique_id=915521571]
 layout_mode = 3
@@ -38,16 +38,20 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("1_kikgp")
 
-[node name="buttons" type="VBoxContainer" parent="." unique_id=1840089767]
+[node name="buttons" type="VBoxContainer" parent="." unique_id=1840089767 node_paths=PackedStringArray("btn_up", "btn_down")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 31.0
-offset_bottom = 1727.0
+offset_bottom = 31.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 33
+script = ExtResource("3_sm0ga")
+btn_up = NodePath("../Up")
+btn_down = NodePath("../Down")
+scroll_step = 210.0
 
 [node name="MusicSelectButton" type="TextureButton" parent="buttons" unique_id=271114503]
 layout_mode = 2
@@ -73,5 +77,28 @@ theme_override_font_sizes/font_size = 100
 text = "we want a keyboard"
 vertical_alignment = 1
 
-[node name="Input" type="Node" parent="buttons/MusicSelectButton" unique_id=331934685]
-script = ExtResource("6_sm0ga")
+[node name="Up" type="Button" parent="." unique_id=1457289231]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_right = -740.0
+offset_bottom = 300.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("4_2ybb2")
+theme_override_font_sizes/font_size = 200
+text = "↑"
+
+[node name="Down" type="Button" parent="." unique_id=73024339]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -293.0
+offset_right = -740.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_2ybb2")
+theme_override_font_sizes/font_size = 200
+text = "↓"
