@@ -4,7 +4,7 @@ var score := 0
 var combo := 0
 var time: float = 0.0
 var music_titles : Array
-var selected_music = ""
+var selected_music: String = ""
 
 func _ready() -> void:
 	reset_run()

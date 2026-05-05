@@ -28,9 +28,9 @@ var window_pool: Array[Window] = []
 # =========================================================
 func _ready() -> void:
 	Global.reset_run()
+	# Global.selected_music = "test_song" # 폴더명 세팅 필수
 	
-	create_moving_window(Vector2i(200, 200), Vector2i(100, 100), Vector2i(800, 100), 3.0, MoveType.SMOOTH, "Smooth", "res://assets/image/ingame/과녁.png")
-	create_moving_window(Vector2i(200, 200), Vector2i(100, 350), Vector2i(800, 350), 3.0, MoveType.LINEAR, "Linear", "res://assets/image/ingame/과녁.png")
+	start_chart() # 채보 시스템 시작
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("1"):
@@ -154,3 +154,113 @@ func _animate_window_movement_linear(window: Window, target_rel_pos: Vector2i, d
 	
 	# 💡 [최적화] 삭제(queue_free) 대신 숨김(hide) 처리하여 대기열로 돌려보냅니다.
 	tween.tween_callback(window.hide)
+	
+	
+func load_chart():
+	# 1. 불러올 파일의 경로 조합
+	var path = "res://assets/musics/" + Global.selected_music + "/chart.json"
+	
+	# 2. 해당 경로에 파일이 실제로 존재하는지 확인
+	if not FileAccess.file_exists(path):
+		push_error("차트 파일을 찾을 수 없습니다: ", path)
+		return null
+		
+	# 3. 파일 열기 (읽기 모드)
+	var file = FileAccess.open(path, FileAccess.READ)
+	
+	if file == null:
+		push_error("파일을 여는 데 실패했습니다: ", path)
+		return null
+		
+	# 4. 파일 내용을 문자열로 모두 읽어오기
+	var json_text = file.get_as_text()
+	
+	# 5. JSON 문자열을 파싱하여 변수에 담기 (Dictionary 또는 Array)
+	var chart = JSON.parse_string(json_text)
+	
+	# 6. 파싱 성공 여부 확인
+	if chart == null:
+		push_error("JSON 파싱 에러 (파일 형식이 잘못되었습니다): ", path)
+		return null
+		
+	# 7. 최종 데이터 반환
+	return chart
+
+
+# =========================================================
+# 6. 채보 재생 시스템 (추가된 부분)
+# =========================================================
+
+var chart_data: Dictionary = {}  # 불러온 채보 데이터 저장
+var current_time: float = 0.0    # 현재 누적 재생 시간
+var is_playing: bool = false     # 재생 상태 확인
+
+var note_index: int = 0          # 처리할 다음 노트 번호
+var event_index: int = 0         # 처리할 다음 이벤트 번호
+
+# 게임 시작 (예: 음악 시작 시 호출)
+func start_chart():
+	chart_data = load_chart()
+	if chart_data == null or not chart_data.has("notes"):
+		push_error("채보를 시작할 수 없습니다.")
+		return
+		
+	# 시간 순서대로 정렬 (불러올 때 정렬되어 있지 않을 수 있으므로 안전장치)
+	chart_data["notes"].sort_custom(func(a, b): return a["time"] < b["time"])
+	chart_data["events"].sort_custom(func(a, b): return a["time"] < b["time"])
+	
+	note_index = 0
+	event_index = 0
+	current_time = 0.0
+	is_playing = true
+	print("채보 재생 시작!")
+
+func _process(delta: float) -> void:
+	if not is_playing:
+		return
+		
+	current_time += delta  # 시간 흐름 (더 정확하게는 AudioServer의 시간을 쓰는 것이 좋음)
+	
+	# 1. 노트 처리 (notes 배열)
+	while note_index < chart_data["notes"].size():
+		var note = chart_data["notes"][note_index]
+		if current_time >= note["time"]:
+			_process_note(note)
+			note_index += 1
+		else:
+			break # 아직 소환 시간이 아님
+			
+	# 2. 이벤트 처리 (events 배열)
+	while event_index < chart_data["events"].size():
+		var event = chart_data["events"][event_index]
+		if current_time >= event["time"]:
+			_process_event(event)
+			event_index += 1
+		else:
+			break
+			
+# JSON 데이터 기반 실제 노트 소환 로직
+func _process_note(note_info: Dictionary):
+	var pos = Vector2(note_info["x"], note_info["y"])
+	var mode = NORMAL_NOTE_MODE
+	
+	if note_info["type"] == "moving":
+		mode = MOVING_NOTE_MODE
+		
+	_spawn_note(mode, pos)
+	# print("노트 소환: ", note_info["time"], " / 타입: ", note_info["type"])
+
+# JSON 데이터 기반 실제 이벤트(창 띄우기 등) 실행 로직
+func _process_event(event_info: Dictionary):
+	if event_info["type"] == "window":
+		var size = Vector2i(event_info.get("width", 200), event_info.get("height", 200))
+		var pos = Vector2i(event_info["x"], event_info["y"])
+		
+		# 고정된 창을 띄우는 예시 (duration 등은 JSON에 없으면 기본값 사용)
+		create_static_window(
+			size, 
+			pos, 
+			3.0,                     # 지속 시간 (JSON에 추가하면 더 좋음)
+			"Event Window", 
+			"res://assets/image/ingame/과녁.png"
+		)

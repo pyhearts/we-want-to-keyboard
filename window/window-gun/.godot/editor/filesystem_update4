@@ -1,2 +1,6 @@
 res://scenes/game/game.tscn
 res://scripts/gameplay/game_controller.gd
+res://scripts/autoload/global.gd
+res://assets/musics/MEGALOVANIA/chart.json
+res://assets/musics/R/chart.json
+res://assets/musics/Flower Rocket/chart.json
