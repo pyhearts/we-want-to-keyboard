@@ -23,6 +23,7 @@ Global="*res://scripts/autoload/global.gd"
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
+window/subwindows/embed_subwindows=false
 mouse_cursor/custom_image="uid://b105qshtlkvw2"
 mouse_cursor/custom_image_hotspot=Vector2(32, 32)
 

@@ -1,6 +1,2 @@
-res://scenes/menu/music_select.tscn
-res://scripts/autoload/global.gd
-res://assets/musics/R/music_R.tres
-res://assets/musics/Flower Rocket/music_R.tres
-res://assets/musics/Flower Rocket/Res.tres
-res://assets/musics/Flower Rocket/chart.json
+res://scenes/game/game.tscn
+res://scripts/gameplay/game_controller.gd
