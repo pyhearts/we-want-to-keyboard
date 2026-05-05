@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://2ywi54p3lvhg"]
+
+[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_kd1js"]
+[ext_resource type="AudioStream" uid="uid://dpir2wntfuj07" path="res://assets/musics/R/R.mp3" id="1_t3pw6"]
+
+[resource]
+script = ExtResource("1_kd1js")
+id = "R"
+title = "R"
+composer = "plum"
+bpm = 180
+offset = 0.14
+audio_stream = ExtResource("1_t3pw6")
+metadata/_custom_type_script = "uid://ciljglxaby7qn"

@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1777725066
+::res://::1777901226
 ::res://assets/::1775996875
 ::res://assets/fonts/::1774763670
 Pretendard-Black.otf::FontFile::6738690865253165418::1774763670::1774763670::1::::<><><>0<>0<>5fe971453759df0aacc977291aa740e1<>res://.godot/imported/Pretendard-Black.otf-e24b05473bd92daed72abca520244524.fontdata::
@@ -31,23 +31,28 @@ mouse point.png::CompressedTexture2D::4168683287540911674::1774963027::177496310
 ::res://assets/image/music select/::1777551103
 1MusicSelectButton.png::CompressedTexture2D::2257374053141516969::1775927022::1775927090::1::::<><><>0<>0<>d55aa0d0bb677bf489ee8587b5cbc9e8<>res://.godot/imported/1MusicSelectButton.png-29b31caf5e3c798b94642ef95cc63d7c.ctex::
 하츄핑 타이틀.png::CompressedTexture2D::2974244725110959814::1776426089::1777551103::1::::<><><>0<>0<>74587e4326192035fe2d59de7fbf1c99<>res://.godot/imported/하츄핑 타이틀.png-9a3569b110d7ec4bc452f34d2992258f.ctex::
-::res://assets/musics/::1776000156
-::res://assets/musics/R/::1777620653
+::res://assets/musics/::1777901149
+::res://assets/musics/Flower Rocket/::1777901221
+chart.json::JSON::-1::1777901149::0::1::::<><><>0<>0<><>::
+Flower Rocket.mp3::AudioStreamMP3::3841328975623429963::1777901158::1777901158::1::::<><><>0<>0<>7e3920bb93afa528270b7d7713988b75<>res://.godot/imported/Flower Rocket.mp3-d20a0476392408ea185f226fb11180f3.mp3str::
+res.tres::Resource/MusicData::2126173311199258974::1777901221::0::1::::<><><>0<>0<><>::uid://ciljglxaby7qn::::res://scripts/data/music_data.gd
+::res://assets/musics/R/::1777901226
 chart.json::JSON::-1::1777620653::0::1::::<><><>0<>0<><>::
-music_R.tres::Resource/MusicData::1945995525735648384::1777619194::0::1::::<><><>0<>0<><>::uid://ciljglxaby7qn::::res://scripts/data/music_data.gd
+R.mp3::AudioStreamMP3::8229691309461641894::1777900591::1777900591::1::::<><><>0<>0<>068892509e4ba12280160ea27047f329<>res://.godot/imported/R.mp3-7ebfb166d1d8871808e389d3d72d2045.mp3str::
+Res.tres::Resource/MusicData::1945995525735648384::1777901149::0::1::::<><><>0<>0<><>::uid://ciljglxaby7qn::::res://scripts/data/music_data.gd<>uid://dpir2wntfuj07::::res://assets/musics/R/R.mp3
 ::res://export_templates/::1777619979
 ::res://feature_profiles/::1777619979
 ::res://scenes/::1777619211
 ::res://scenes/game/::1777691283
 game.tscn::PackedScene::8105288312645883185::1777691283::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/gameplay/game_controller.gd<>uid://be2ijsn4bnvdj::::res://scenes/game/target_note.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/ui/score_label.gd<>uid://cq81px2t2a0k6::::res://scripts/ui/combo_label.gd
 target_note.tscn::PackedScene::2723417032514379291::1777619194::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/ingame/과녁.png<>uid://ngo16177o8ud::::res://scripts/gameplay/target_note.gd<>uid://0blaxdoepjmc::::res://assets/image/ingame/판정-원.png<>uid://be4ep4vw3ir6h::::res://scripts/effects/judgment_ring.gd
-::res://scenes/menu/::1777725028
+::res://scenes/menu/::1777899213
 main_menu.tscn::PackedScene::1805364345342442223::1777619194::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://lqonaeq14cg8::::res://scripts/ui/start_on_any_input.gd<>uid://yhxq1gosjepw::::res://scenes/menu/music_select.tscn<>uid://s08rnnrk6it4::::res://scripts/effects/background_tilt.gd<>uid://c6b1jhnhfsj6y::::res://assets/image/main/i want a gun no title.png<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://18nnuufyapx4::::res://assets/image/main/i want a gun only title (1).png
-music_select.tscn::PackedScene::1700409330663741772::1777725028::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://dohp0de7qvf3a::::res://assets/image/main/우리는 총이 원하다! 흰배경.png<>uid://bim0m10phtnkw::::res://assets/image/music select/하츄핑 타이틀.png<>uid://bip5eikp1c1mm::::res://scenes/menu/VBoxContainerMove.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://ddgk54cu7pkl::::res://scripts/ui/music_select_button.gd
-VBoxContainerMove.gd::GDScript::2980726188418100764::1777724995::0::1::::<>VBoxContainer<><>0<>0<><>::
+music_select.tscn::PackedScene::1700409330663741772::1777899213::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://dohp0de7qvf3a::::res://assets/image/main/우리는 총이 원하다! 흰배경.png<>uid://bim0m10phtnkw::::res://assets/image/music select/하츄핑 타이틀.png<>uid://bip5eikp1c1mm::::res://scenes/menu/VBoxContainerMove.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://ddgk54cu7pkl::::res://scripts/ui/music_select_button.gd
+VBoxContainerMove.gd::GDScript::2980726188418100764::1777727003::0::1::::<>VBoxContainer<><>0<>0<><>::
 ::res://scripts/::1777619211
-::res://scripts/autoload/::1777619177
-global.gd::GDScript::5288415493149227183::1777619177::0::1::::<>Node<><>0<>0<><>::
+::res://scripts/autoload/::1777899213
+global.gd::GDScript::5288415493149227183::1777899213::0::1::::<>Node<><>0<>0<><>::
 ::res://scripts/data/::1777619177
 music_data.gd::GDScript::5357618052773116605::1777619177::0::1::::MusicData<>Resource<><>0<>0<><>::
 ::res://scripts/effects/::1777619177

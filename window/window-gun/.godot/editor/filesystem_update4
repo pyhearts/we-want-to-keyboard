@@ -1,3 +1,6 @@
 res://scenes/menu/music_select.tscn
-res://scenes/menu/VBoxContainerMove.gd
 res://scripts/autoload/global.gd
+res://assets/musics/R/music_R.tres
+res://assets/musics/Flower Rocket/music_R.tres
+res://assets/musics/Flower Rocket/Res.tres
+res://assets/musics/Flower Rocket/chart.json

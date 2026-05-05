@@ -57,7 +57,7 @@ func update_ui() -> void:
 			buttons[i].modulate = Color(1, 1, 1, 1) # 선택됨 (흰색)
 			Global.selected_music = title
 		else:
-			buttons[i].modulate = Color(0.779, 0.779, 0.779, 1.0) # 선택 안 됨 (어둡게)
+			buttons[i].modulate = Color(0.86, 0.86, 0.86, 1.0) # 선택 안 됨 (어둡게)
 
 	# 가운데 선택된 곡을 전역 변수에 저장 (게임 씬에서 활용)
 	# Global.selected_music = get_title(0)

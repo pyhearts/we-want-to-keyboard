@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://5j6077kj1phu"]
+
+[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_h1yfg"]
+[ext_resource type="AudioStream" uid="uid://buy1ek20egj7x" path="res://assets/musics/Flower Rocket/Flower Rocket.mp3" id="1_io1uk"]
+
+[resource]
+script = ExtResource("1_h1yfg")
+id = "Flower Dance"
+title = "Flower Dance"
+composer = "plum"
+bpm = 230
+offset = 0.26
+audio_stream = ExtResource("1_io1uk")
+metadata/_custom_type_script = "uid://ciljglxaby7qn"
