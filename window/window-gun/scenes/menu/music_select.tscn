@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://brigg8f1r7c4y" path="res://assets/image/main/제목을 입력해주세요. (3).png" id="1_kikgp"]
 [ext_resource type="Texture2D" uid="uid://dohp0de7qvf3a" path="res://assets/image/main/우리는 총이 원하다! 흰배경.png" id="3_2dxlo"]
 [ext_resource type="Texture2D" uid="uid://bim0m10phtnkw" path="res://assets/image/music select/하츄핑 타이틀.png" id="3_kikgp"]
-[ext_resource type="Script" uid="uid://bip5eikp1c1mm" path="res://scenes/menu/VBoxContainerMove.gd" id="3_sm0ga"]
+[ext_resource type="Script" uid="uid://bip5eikp1c1mm" path="res://scripts/ui/VBoxContainerMove.gd" id="3_sm0ga"]
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="4_2ybb2"]
 [ext_resource type="Script" uid="uid://ddgk54cu7pkl" path="res://scripts/ui/music_select_button.gd" id="4_sm0ga"]
 

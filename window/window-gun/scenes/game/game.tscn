@@ -5,6 +5,7 @@
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="3_fpr44"]
 [ext_resource type="Script" uid="uid://l8l3h3p5ygsy" path="res://scripts/ui/score_label.gd" id="4_iv5bb"]
 [ext_resource type="Script" uid="uid://cq81px2t2a0k6" path="res://scripts/ui/combo_label.gd" id="5_3rdkh"]
+[ext_resource type="Script" uid="uid://c1125ttohes1l" path="res://scripts/effects/audio_stream_player.gd" id="6_5i0tg"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ej7j1"]
 bg_color = Color(0.9999998, 0.87686116, 0.8996086, 1)
@@ -69,3 +70,6 @@ theme_override_font_sizes/font_size = 100
 text = "0"
 horizontal_alignment = 1
 script = ExtResource("5_3rdkh")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=625458886]
+script = ExtResource("6_5i0tg")
