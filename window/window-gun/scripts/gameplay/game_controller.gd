@@ -142,7 +142,7 @@ func _animate_window_movement_smooth(window: Window, target_rel_pos: Vector2i, d
 		.set_ease(Tween.EASE_IN_OUT)
 	
 	# 💡 [최적화] 삭제(queue_free) 대신 숨김(hide) 처리하여 대기열로 돌려보냅니다.
-	tween.tween_callback(window.hide)
+	tween.tween_callback(window.queue_free)
 
 
 func _animate_window_movement_linear(window: Window, target_rel_pos: Vector2i, duration: float) -> void:

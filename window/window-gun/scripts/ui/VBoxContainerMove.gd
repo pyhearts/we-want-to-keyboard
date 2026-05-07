@@ -5,6 +5,8 @@ extends VBoxContainer
 
 @export var scroll_step: float = 100.0 # 한 칸 스크롤 시 이동 거리
 @export var scroll_duration: float = 0.2 # 스크롤 애니메이션 시간
+@onready var audio_stream_player: AudioStreamPlayer = $"../AudioStreamPlayer"
+
 
 var current_index: int = 0
 var base_y: float = 0.0
@@ -63,6 +65,8 @@ func update_ui() -> void:
 	# Global.selected_music = get_title(0)
 
 func _on_up_pressed() -> void:
+
+	
 	# 애니메이션 도중 중복 입력 방지
 	if scroll_tween and scroll_tween.is_valid() and scroll_tween.is_running(): return
 	if Global.music_titles.size() == 0: return
@@ -78,6 +82,8 @@ func _on_up_pressed() -> void:
 	# 3. 트릭: UI를 순간적으로 한 칸 위로 보낸 뒤, 원래 위치로 부드럽게 내려옵니다.
 	position.y = base_y - scroll_step
 	animate_scroll()
+	audio_stream_player.stream = load("res://assets/musics/" + Global.selected_music + "/" + Global.selected_music + ".mp3")
+	audio_stream_player.play()
 
 func _on_down_pressed() -> void:
 	if scroll_tween and scroll_tween.is_valid() and scroll_tween.is_running(): return
@@ -92,7 +98,9 @@ func _on_down_pressed() -> void:
 	# 3. 트릭: UI를 순간적으로 한 칸 아래로 보낸 뒤, 원래 위치로 부드럽게 올라갑니다.
 	position.y = base_y + scroll_step
 	animate_scroll()
-
+	audio_stream_player.stream = load("res://assets/musics/" + Global.selected_music + "/" + Global.selected_music + ".mp3")
+	audio_stream_player.play()
+	
 func animate_scroll() -> void:
 	scroll_tween = create_tween()
 	scroll_tween.set_trans(Tween.TRANS_CUBIC)

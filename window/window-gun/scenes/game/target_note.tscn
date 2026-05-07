@@ -5,7 +5,6 @@
 [ext_resource type="Texture2D" uid="uid://0blaxdoepjmc" path="res://assets/image/ingame/판정-원.png" id="3_xh8cv"]
 [ext_resource type="Script" uid="uid://be4ep4vw3ir6h" path="res://scripts/effects/judgment_ring.gd" id="4_5oldh"]
 
-
 [node name="TargetNote" type="Control" unique_id=962535481]
 layout_mode = 3
 anchors_preset = 15

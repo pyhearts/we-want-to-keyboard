@@ -1,29 +1,48 @@
 extends AudioStreamPlayer
 
-# 노래 파일이 들어있는 기본 경로 (프로젝트 구조에 맞게 수정하세요)
+# 노래 파일이 들어있는 기본 경로
 const MUSIC_BASE_PATH = "res://assets/musics/"
 
-func _ready() -> void:
-	# 예시: Global 변수에 저장된 선택된 곡을 바로 재생하고 싶을 때
-	if Global.selected_music != "":
-		play_selected_music(Global.selected_music)
+# 불러온 오프셋 값을 저장할 변수
+var music_offset: float = 0.0
 
-## 특정 곡 이름을 받아 파일을 로드하고 재생하는 함수
-func play_selected_music(music_name: String) -> void:
-	# 1. 파일 경로 조합 (곡 이름 폴더 안에 music.mp3가 있다고 가정)
-	# 확장자는 .mp3, .ogg, .wav 등 실제 파일에 맞춰주세요.
-	var path = MUSIC_BASE_PATH + music_name + "/" + Global.selected_music + ".mp3"
+func _ready() -> void:
+	# 1. 곡이 선택되어 있는지 확인
+	if Global.selected_music == "":
+		return
+
+	# 2. Res.tres 파일에서 오프셋 정보 가져오기
+	var res_path = MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
+	var music_res = load(res_path)
 	
-	# 2. 리소스 로드
-	var song = load(path)
+	if music_res and "offset" in music_res:
+		music_offset = music_res.offset + 0.7
+		print("설정된 오프셋: ", music_offset, "초")
+	else:
+		music_offset = 0.0
+		print("리소스를 찾을 수 없거나 offset 정보가 없어 0초로 설정합니다.")
+
+	# 3. [핵심] 오프셋만큼 기다리기
+	if music_offset > 0:
+		print(music_offset, "초 대기 시작...")
+		await get_tree().create_timer(music_offset).timeout
+	
+	# 4. 대기 완료 후 음악 재생 호출
+	play_selected_music(Global.selected_music)
+
+
+## 특정 곡 이름을 받아 파일을 로드하고 바로 재생하는 함수
+func play_selected_music(music_name: String) -> void:
+	# 오디오 파일 경로 조합
+	var audio_path = MUSIC_BASE_PATH + music_name + "/" + music_name + ".mp3"
+	var song = load(audio_path)
 	
 	if song:
-		# 3. 오디오 스트림 할당 및 재생
 		self.stream = song
 		self.play()
-		print("재생 시작: ", path)
+		print("음악 재생 시작: ", audio_path)
 	else:
-		push_error("노래 파일을 찾을 수 없습니다: " + path)
+		push_error("노래 파일을 찾을 수 없습니다: " + audio_path)
 
 ## 재생을 멈추는 함수
 func stop_music() -> void:

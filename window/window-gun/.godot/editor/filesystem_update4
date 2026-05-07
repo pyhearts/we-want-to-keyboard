@@ -1,3 +1,4 @@
-res://scenes/menu/music_select.tscn
 res://scenes/game/game.tscn
 res://scripts/effects/audio_stream_player.gd
+res://assets/musics/MEGALOVANIA/chart.json
+res://scripts/gameplay/game_controller.gd

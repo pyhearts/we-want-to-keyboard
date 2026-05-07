@@ -1,10 +1,10 @@
 {
 	"notes": [
-		{"time":0.5, "x": 500, "y": 100, "type":"normal"},
-		{"time":0.5, "x": 500, "y": 100, "type":"moving"}
+		{"time":0, "x": 500, "y": 100, "type":"normal"},
+		{"time":0, "x": 500, "y": 100, "type":"moving"}
 	],
 	"events": [
-		{"time":0.5, "x":100, "y": 300, "width":200, "height":200, "type":"window"},
-		{"time":0.5, "x":100, "y": 300, "width":200, "height":200, "type":"window"}
+		{"time":0.5, "x":100, "y": 300, "width":200, "height":200, "type":"window_moving_linear", "texture_path":""},
+		{"time":0.5, "x":100, "y": 300, "width":200, "height":200, "type":"window_moving_smooth", "texture_path":""}
 	]
 }
