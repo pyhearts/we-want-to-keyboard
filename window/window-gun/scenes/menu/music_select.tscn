@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://bip5eikp1c1mm" path="res://scripts/ui/VBoxContainerMove.gd" id="3_sm0ga"]
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="4_2ybb2"]
 [ext_resource type="Script" uid="uid://ddgk54cu7pkl" path="res://scripts/ui/music_select_button.gd" id="4_sm0ga"]
+[ext_resource type="Script" path="res://scripts/ui/escape_to_scene.gd" id="9_escape"]
 [ext_resource type="Script" uid="uid://c1125ttohes1l" path="res://scripts/effects/audio_stream_player.gd" id="7_rvwer"]
 
 [node name="MusicSelect" type="Control" unique_id=915521571]
@@ -15,6 +16,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("9_escape")
+next_scene_path = "res://scenes/menu/main_menu.tscn"
 
 [node name="Background1" type="TextureRect" parent="." unique_id=1157985658]
 modulate = Color(0.8784314, 0.8784314, 0.8784314, 0.2784314)

@@ -8,6 +8,7 @@ const EVENT_MOVING_LINEAR_WINDOW := "window_moving_linear"
 const EVENT_MOVING_SMOOTH_WINDOW := "window_moving_smooth"
 
 const MUSIC_BASE_PATH := "res://assets/musics/"
+const MUSIC_SELECT_SCENE := "res://scenes/menu/music_select.tscn"
 const DEFAULT_WINDOW_TEXTURE := "res://assets/image/ingame/과녁.png"
 
 enum MoveType {
@@ -33,7 +34,10 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("1"):
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		get_viewport().set_input_as_handled()
+		get_tree().change_scene_to_file(MUSIC_SELECT_SCENE)
+	elif event.is_action_pressed("1"):
 		_spawn_note(NORMAL_NOTE_MODE)
 	elif event.is_action_pressed("2"):
 		_spawn_note(MOVING_NOTE_MODE)
@@ -187,6 +191,9 @@ func _spawn_note(mode: String, target_pos: Variant = null) -> void:
 
 
 func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_pos: Vector2i, move_duration: float, move_type: MoveType, title: String, img_path: String) -> void:
+	if _is_headless_display():
+		return
+
 	var window := _get_or_create_window(size, title, img_path)
 	if window == null:
 		return
@@ -202,6 +209,9 @@ func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_po
 
 
 func create_static_window(size: Vector2i, rel_pos: Vector2i, duration: float, title: String, img_path: String) -> void:
+	if _is_headless_display():
+		return
+
 	var window := _get_or_create_window(size, title, img_path)
 	if window == null:
 		return
@@ -255,6 +265,10 @@ func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> W
 	add_child(new_window)
 	window_pool.append(new_window)
 	return new_window
+
+
+func _is_headless_display() -> bool:
+	return OS.has_feature("headless") or "--headless" in OS.get_cmdline_args() or "--headless-test" in OS.get_cmdline_user_args() or OS.get_environment("GODOT_HEADLESS_TEST") == "1"
 
 
 func _animate_window_movement_smooth(window: Window, target_rel_pos: Vector2i, duration: float) -> void:

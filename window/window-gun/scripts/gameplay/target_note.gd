@@ -102,12 +102,13 @@ func _process(delta: float) -> void:
 
 	velocity.y += gravity * delta
 	global_position += velocity * delta
-	queue_redraw()
-	_redraw_previous_note()
+	if not _is_headless_run():
+		queue_redraw()
+		_redraw_previous_note()
 
 
 func _draw() -> void:
-	if not is_clone:
+	if not is_clone or _is_headless_run():
 		return
 
 	var my_index := active_notes.find(self)
@@ -204,6 +205,9 @@ func _calculate_hit_score() -> int:
 
 
 func spawn_hit_particles(hit_type: String, score_value: int) -> void:
+	if _is_headless_run():
+		return
+
 	var particles := CPUParticles2D.new()
 	particles.emitting = false
 	particles.one_shot = true
@@ -242,7 +246,8 @@ func update_target_visuals() -> void:
 	for i in range(active_notes.size()):
 		var note := active_notes[i]
 		note.modulate = Color.WHITE if i == 0 else Color(0.5, 0.5, 0.5, 0.7)
-		note.queue_redraw()
+		if not _is_headless_run():
+			note.queue_redraw()
 
 
 func _redraw_previous_note() -> void:
@@ -268,3 +273,7 @@ func _prune_active_notes() -> void:
 		if is_instance_valid(note):
 			valid_notes.append(note)
 	active_notes = valid_notes
+
+
+func _is_headless_run() -> bool:
+	return OS.has_feature("headless") or "--headless" in OS.get_cmdline_args() or "--headless-test" in OS.get_cmdline_user_args() or OS.get_environment("GODOT_HEADLESS_TEST") == "1"
