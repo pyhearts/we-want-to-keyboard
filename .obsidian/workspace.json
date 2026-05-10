@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "codex.md",
+                "file": "rules.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "codex"
+              "title": "rules"
             }
           }
         ]
@@ -185,7 +185,7 @@
   },
   "active": "3d65871a0f32aee3",
   "lastOpenFiles": [
-    "rules.md",
-    "codex.md"
+    "codex.md",
+    "rules.md"
   ]
 }

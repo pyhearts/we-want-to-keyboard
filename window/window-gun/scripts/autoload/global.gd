@@ -5,6 +5,7 @@ var combo := 0
 var time: float = 0.0
 var music_titles : Array
 var selected_music: String = ""
+var music_offset = 0
 
 func _ready() -> void:
 	reset_run()

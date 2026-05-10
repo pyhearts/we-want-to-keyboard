@@ -28,6 +28,14 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_ej7j1")
 
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="." unique_id=1556289254]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
 [node name="TargetNoteSpawner" parent="." unique_id=962535481 instance=ExtResource("2_rs7p2")]
 layout_mode = 1
 offset_left = 0.0
@@ -38,7 +46,7 @@ prevent_overlap_radius = 0.0
 max_x = 2000.0
 particle_min_amount = 15
 particle_max_amount = 40
-particle_offset = Vector2(0, 0)
+particle_offset = Vector2(-220, -90)
 center_offset = Vector2(0, 0)
 connect_line_color = Color(1, 1, 1, 0)
 

@@ -14,6 +14,7 @@ func _ready() -> void:
 
 	var res_path := MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
 	var music_res = load(res_path)
+	Global.music_offset = music_res.offset
 	if music_res and "offset" in music_res:
 		music_offset =  GLOBAL_TIMING_OFFSET - music_res.offset
 		print("Music offset: ", music_offset)

@@ -3,6 +3,50 @@
 		
 	],
 	"events": [
-		
+		{
+		  "time": 0.7,
+		  "type": "image",
+		  "x": 200,
+		  "y": 200,
+		  "width": 300,
+		  "height": 300,
+		  "duration": 2.0,
+		  "texture_path": "res://assets/image/ingame/과녁.png"
+		},
+		{
+		  "time": 2.5,
+		  "type": "image_moving_smooth",
+		  "x": 0,
+		  "y": 100,
+		  "target_x": 1000,
+		  "target_y": 100,
+		  "width": 200,
+		  "height": 200,
+		  "duration": 3.0,
+		  "texture_path": "res://assets/image/ingame/과녁.png"
+		},
+		{
+		  "time": 4.0,
+		  "type": "image_moving_linear",
+		  "x": 500,
+		  "y": 800,
+		  "target_x": 500,
+		  "target_y": 0,
+		  "width": 150,
+		  "height": 150,
+		  "duration": 1.5,
+		  "texture_path": "res://assets/image/ingame/과녁.png"
+		},
+		{
+		  "time": 6.0,
+		  "type": "window",
+		  "x": 100,
+		  "y": 100,
+		  "width": 400,
+		  "height": 300,
+		  "duration": 5.0,
+		  "title": "바탕화면 창도 같이 사용 가능",
+		  "texture_path": "res://assets/image/ingame/과녁.png"
+		}
 	]
 }

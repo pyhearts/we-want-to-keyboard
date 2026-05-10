@@ -3,9 +3,15 @@ extends Control
 const NORMAL_NOTE_MODE := "normal"
 const MOVING_NOTE_MODE := "moving"
 
+# 윈도우 이벤트 상수 (기존)
 const EVENT_STATIC_WINDOW := "window"
 const EVENT_MOVING_LINEAR_WINDOW := "window_moving_linear"
 const EVENT_MOVING_SMOOTH_WINDOW := "window_moving_smooth"
+
+# 이미지 노드 이벤트 상수 (신규 추가)
+const EVENT_STATIC_IMAGE := "image"
+const EVENT_MOVING_LINEAR_IMAGE := "image_moving_linear"
+const EVENT_MOVING_SMOOTH_IMAGE := "image_moving_smooth"
 
 const MUSIC_BASE_PATH := "res://assets/musics/"
 const MUSIC_SELECT_SCENE := "res://scenes/menu/music_select.tscn"
@@ -19,7 +25,10 @@ enum MoveType {
 @onready var target_spawner: Control = $TargetNoteSpawner
 
 var texture_cache: Dictionary = {}
+
+# 오브젝트 풀 (윈도우용, 이미지용 분리)
 var window_pool: Array[Window] = []
+var image_pool: Array[TextureRect] = [] # 신규 추가
 
 var chart_data: Dictionary = {}
 var current_time: float = 0.0
@@ -49,6 +58,13 @@ func _input(event: InputEvent) -> void:
 		create_moving_window(Vector2i(200, 200), Vector2i(100, 350), Vector2i(800, 350), 3.0, MoveType.LINEAR, "Linear", DEFAULT_WINDOW_TEXTURE)
 	elif event.is_action_pressed("6"):
 		create_static_window(Vector2i(200, 200), Vector2i(220, 220), 3.0, "Static", DEFAULT_WINDOW_TEXTURE)
+	# --- 신규 추가된 게임 내 이미지 테스트용 입력 ---
+	elif event.is_action_pressed("7"):
+		create_moving_image(Vector2i(200, 200), Vector2i(100, 500), Vector2i(800, 500), 3.0, MoveType.SMOOTH, DEFAULT_WINDOW_TEXTURE)
+	elif event.is_action_pressed("8"):
+		create_moving_image(Vector2i(200, 200), Vector2i(100, 700), Vector2i(800, 700), 3.0, MoveType.LINEAR, DEFAULT_WINDOW_TEXTURE)
+	elif event.is_action_pressed("9"):
+		create_static_image(Vector2i(200, 200), Vector2i(400, 400), 3.0, DEFAULT_WINDOW_TEXTURE)
 
 
 func _process(delta: float) -> void:
@@ -65,15 +81,8 @@ func start_chart() -> void:
 	if chart_data == null:
 		push_error("Cannot start chart.")
 		return
-
-	chart_data["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
-	chart_data["events"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
-
-	note_index = 0
-	event_index = 0
-	current_time = 0.0
-	is_playing = true
-	print("Chart started: ", Global.selected_music)
+	is_playing = true # 이 줄을 추가해야 채보 처리가 시작됩니다!
+	print("차트 로드 성공: ", chart_data.get("notes", []).size(), "개의 노트")
 
 
 func load_chart() -> Variant:
@@ -104,6 +113,15 @@ func load_chart() -> Variant:
 		chart["notes"] = []
 	if not chart.has("events") or not chart["events"] is Array:
 		chart["events"] = []
+	if not chart.has("notes") or not chart["notes"] is Array:
+		chart["notes"] = []
+	if not chart.has("events") or not chart["events"] is Array:
+		chart["events"] = []
+
+	# --- 추가된 부분: time 기준으로 자동 정렬 ---
+	chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
+	chart["events"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
+	# ----------------------------------------
 
 	return chart
 
@@ -168,12 +186,21 @@ func _process_event(event_info: Dictionary) -> void:
 		texture_path = DEFAULT_WINDOW_TEXTURE
 
 	match event_type:
+		# --- 기존 윈도우 이벤트 ---
 		EVENT_STATIC_WINDOW:
 			create_static_window(size, pos, duration, title, texture_path)
 		EVENT_MOVING_LINEAR_WINDOW:
 			create_moving_window(size, pos, target_pos, duration, MoveType.LINEAR, title, texture_path)
 		EVENT_MOVING_SMOOTH_WINDOW:
 			create_moving_window(size, pos, target_pos, duration, MoveType.SMOOTH, title, texture_path)
+			
+		# --- 신규 추가된 게임 내 이미지 이벤트 ---
+		EVENT_STATIC_IMAGE:
+			create_static_image(size, pos, duration, texture_path)
+		EVENT_MOVING_LINEAR_IMAGE:
+			create_moving_image(size, pos, target_pos, duration, MoveType.LINEAR, texture_path)
+		EVENT_MOVING_SMOOTH_IMAGE:
+			create_moving_image(size, pos, target_pos, duration, MoveType.SMOOTH, texture_path)
 		_:
 			push_warning("Unknown chart event type: " + event_type)
 
@@ -189,6 +216,10 @@ func _spawn_note(mode: String, target_pos: Variant = null) -> void:
 	if target_spawner and target_spawner.has_method("spawn_node"):
 		target_spawner.spawn_node(mode, target_pos)
 
+
+# ==========================================
+# 기존 Window 기반 생성 함수들 (유지됨)
+# ==========================================
 
 func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_pos: Vector2i, move_duration: float, move_type: MoveType, title: String, img_path: String) -> void:
 	if _is_headless_display():
@@ -266,11 +297,6 @@ func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> W
 	window_pool.append(new_window)
 	return new_window
 
-
-func _is_headless_display() -> bool:
-	return OS.has_feature("headless") or "--headless" in OS.get_cmdline_args() or "--headless-test" in OS.get_cmdline_user_args() or OS.get_environment("GODOT_HEADLESS_TEST") == "1"
-
-
 func _animate_window_movement_smooth(window: Window, target_rel_pos: Vector2i, duration: float) -> void:
 	var absolute_target_pos := get_window().position + target_rel_pos
 	var tween := window.create_tween()
@@ -279,10 +305,97 @@ func _animate_window_movement_smooth(window: Window, target_rel_pos: Vector2i, d
 		.set_ease(Tween.EASE_IN_OUT)
 	tween.tween_callback(window.hide)
 
-
 func _animate_window_movement_linear(window: Window, target_rel_pos: Vector2i, duration: float) -> void:
 	var absolute_target_pos := get_window().position + target_rel_pos
 	var tween := window.create_tween()
 	tween.tween_property(window, "position", absolute_target_pos, duration) \
 		.set_trans(Tween.TRANS_LINEAR)
 	tween.tween_callback(window.hide)
+
+
+# ==========================================
+# 신규 TextureRect (게임 내 노드) 스폰 함수들
+# ==========================================
+
+func create_moving_image(size: Vector2i, start_pos: Vector2i, target_pos: Vector2i, move_duration: float, move_type: MoveType, img_path: String) -> void:
+	var img_node := _get_or_create_image(size, img_path)
+	if img_node == null:
+		return
+
+	img_node.position = start_pos
+	img_node.show()
+
+	if move_type == MoveType.SMOOTH:
+		_animate_image_movement_smooth(img_node, target_pos, move_duration)
+	else:
+		_animate_image_movement_linear(img_node, target_pos, move_duration)
+
+
+func create_static_image(size: Vector2i, pos: Vector2i, duration: float, img_path: String) -> void:
+	var img_node := _get_or_create_image(size, img_path)
+	if img_node == null:
+		return
+
+	img_node.position = pos
+	img_node.show()
+
+	if duration > 0.0:
+		var tween := img_node.create_tween()
+		tween.tween_interval(duration)
+		tween.tween_callback(img_node.hide)
+
+
+func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:
+	if not texture_cache.has(img_path):
+		texture_cache[img_path] = load(img_path)
+	if texture_cache[img_path] == null:
+		push_error("Image texture not found: " + img_path)
+		return null
+
+	# 풀(Pool)에서 안 쓰고 있는 TextureRect 찾기
+	for i in range(image_pool.size() - 1, -1, -1):
+		var img_node := image_pool[i]
+		if not is_instance_valid(img_node):
+			image_pool.remove_at(i)
+			continue
+		if not img_node.visible:
+			# [수정핵심 1] 텍스처를 넣고 이전 크기 기억을 강제로 지운 뒤 새 크기 덮어쓰기
+			img_node.texture = texture_cache[img_path]
+			img_node.reset_size() 
+			img_node.size = size
+			return img_node
+
+	# 풀에 없으면 새로 생성하여 게임 화면(씬 트리)에 추가
+	var new_image := TextureRect.new()
+	
+	# [수정핵심 2] expand_mode를 가장 먼저 설정해야 원본 크기로 튀는 것을 방지함
+	new_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	new_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	new_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	new_image.texture = texture_cache[img_path]
+	new_image.size = size # 오류를 일으키던 custom_minimum_size 속성 삭제
+
+	add_child(new_image)
+	image_pool.append(new_image)
+	return new_image
+
+
+func _animate_image_movement_smooth(img_node: TextureRect, target_pos: Vector2i, duration: float) -> void:
+	var tween := img_node.create_tween()
+	tween.tween_property(img_node, "position", Vector2(target_pos), duration) \
+		.set_trans(Tween.TRANS_SINE) \
+		.set_ease(Tween.EASE_IN_OUT)
+	tween.tween_callback(img_node.hide)
+
+
+func _animate_image_movement_linear(img_node: TextureRect, target_pos: Vector2i, duration: float) -> void:
+	var tween := img_node.create_tween()
+	tween.tween_property(img_node, "position", Vector2(target_pos), duration) \
+		.set_trans(Tween.TRANS_LINEAR)
+	tween.tween_callback(img_node.hide)
+
+
+# 유틸리티 함수
+func _is_headless_display() -> bool:
+	return OS.has_feature("headless") or "--headless" in OS.get_cmdline_args() or "--headless-test" in OS.get_cmdline_user_args() or OS.get_environment("GODOT_HEADLESS_TEST") == "1"
