@@ -1,7 +1,7 @@
 extends AudioStreamPlayer
 
 const MUSIC_BASE_PATH := "res://assets/musics/"
-const GLOBAL_TIMING_OFFSET := 0.7
+const GLOBAL_TIMING_OFFSET := 0.6
 
 var music_offset: float = 0.0
 

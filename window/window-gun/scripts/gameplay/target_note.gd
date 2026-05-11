@@ -277,3 +277,15 @@ func _prune_active_notes() -> void:
 
 func _is_headless_run() -> bool:
 	return OS.has_feature("headless") or "--headless" in OS.get_cmdline_args() or "--headless-test" in OS.get_cmdline_user_args() or OS.get_environment("GODOT_HEADLESS_TEST") == "1"
+
+func _input(event: InputEvent) -> void:
+	if not is_clone:
+		return
+
+	# 현재 입력해야 하는 첫 번째 노트만 입력 가능
+	if active_notes.is_empty() or active_notes[0] != self:
+		return
+
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_SPACE:
+			_on_point_pressed()

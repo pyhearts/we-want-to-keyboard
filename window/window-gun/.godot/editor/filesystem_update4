@@ -1,0 +1,4 @@
+res://scenes/menu/music_select.tscn
+res://scripts/effects/audio_stream_player.gd
+res://scenes/game/game.tscn
+res://scripts/gameplay/target_note.gd
