@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://ddgk54cu7pkl" path="res://scripts/ui/music_select_button.gd" id="4_sm0ga"]
 [ext_resource type="Script" uid="uid://c1125ttohes1l" path="res://scripts/effects/audio_stream_player.gd" id="7_rvwer"]
 [ext_resource type="Script" uid="uid://ctox3v2i5efjl" path="res://scripts/ui/escape_to_scene.gd" id="9_escape"]
+[ext_resource type="Script" uid="uid://br0w01bpkuqk3" path="res://scenes/menu/img_change.gd" id="10_mvubq"]
 
 [node name="MusicSelect" type="Control" unique_id=915521571]
 layout_mode = 3
@@ -85,7 +86,7 @@ vertical_alignment = 1
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_right = -740.0
+offset_right = -753.28
 offset_bottom = 300.0
 grow_horizontal = 2
 theme_override_fonts/font = ExtResource("4_2ybb2")
@@ -99,7 +100,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = -293.0
-offset_right = -740.0
+offset_right = -753.28
 offset_bottom = 7.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -109,3 +110,12 @@ text = "↓"
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1262132880]
 script = ExtResource("7_rvwer")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=400547029]
+layout_mode = 0
+offset_left = 1232.0
+offset_top = 31.0
+offset_right = 1866.0
+offset_bottom = 665.0
+expand_mode = 1
+script = ExtResource("10_mvubq")

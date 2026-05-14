@@ -1,12 +1,12 @@
+TextureRect
+Control
 VideoStreamPlayer
 AudioStreamPlayer
-Control
 Node
 Button
 TextureButton
 Label
 VBoxContainer
-TextureRect
 Container
 TextEdit
 CanvasLayer

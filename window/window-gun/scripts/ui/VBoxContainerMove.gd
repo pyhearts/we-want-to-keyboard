@@ -84,6 +84,8 @@ func _on_up_pressed() -> void:
 	animate_scroll()
 	audio_stream_player.stream = load("res://assets/musics/" + Global.selected_music + "/" + Global.selected_music + ".mp3")
 	audio_stream_player.play()
+	if FileAccess.file_exists("res://assets/musics/" + Global.selected_music + "/img.png"):
+		$"../TextureRect".texture = load("res://assets/musics/" + Global.selected_music + "/img.png")
 
 func _on_down_pressed() -> void:
 	if scroll_tween and scroll_tween.is_valid() and scroll_tween.is_running(): return
@@ -100,6 +102,8 @@ func _on_down_pressed() -> void:
 	animate_scroll()
 	audio_stream_player.stream = load("res://assets/musics/" + Global.selected_music + "/" + Global.selected_music + ".mp3")
 	audio_stream_player.play()
+	if FileAccess.file_exists("res://assets/musics/" + Global.selected_music + "/img.png"):
+		$"../TextureRect".texture = load("res://assets/musics/" + Global.selected_music + "/img.png")
 	
 func animate_scroll() -> void:
 	scroll_tween = create_tween()
