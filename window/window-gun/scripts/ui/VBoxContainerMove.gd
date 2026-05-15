@@ -51,22 +51,23 @@ func update_ui() -> void:
 	for i in range(5):
 		# i가 0, 1, 2, 3, 4 일 때 -> offset은 -2, -1, 0, 1, 2 가 됩니다.
 		var offset = i - 2 
-		var title = get_title(offset)
-		buttons[i].label.text = get_title(offset)
+		var folder_name = get_title(offset)
+		
+		var btn = buttons[i]
+		# @onready 변수가 아직 초기화되지 않았을 경우를 대비한 방어 코드
+		var label_node = btn.get_node_or_null("Label")
+		if label_node:
+			label_node.text = folder_name
 		
 		# 2. 가운데(3번째, 인덱스 2) 버튼 강조
 		if i == 2: 
-			buttons[i].modulate = Color(1, 1, 1, 1) # 선택됨 (흰색)
-			Global.selected_music = title
+			btn.modulate = Color(1, 1, 1, 1) # 선택됨 (흰색)
+			Global.selected_music = folder_name
 		else:
-			buttons[i].modulate = Color(0.86, 0.86, 0.86, 1.0) # 선택 안 됨 (어둡게)
+			btn.modulate = Color(0.86, 0.86, 0.86, 1.0) # 선택 안 됨 (어둡게)
 
-	# 가운데 선택된 곡을 전역 변수에 저장 (게임 씬에서 활용)
-	# Global.selected_music = get_title(0)
 
 func _on_up_pressed() -> void:
-
-	
 	# 애니메이션 도중 중복 입력 방지
 	if scroll_tween and scroll_tween.is_valid() and scroll_tween.is_running(): return
 	if Global.music_titles.size() == 0: return
@@ -82,10 +83,10 @@ func _on_up_pressed() -> void:
 	# 3. 트릭: UI를 순간적으로 한 칸 위로 보낸 뒤, 원래 위치로 부드럽게 내려옵니다.
 	position.y = base_y - scroll_step
 	animate_scroll()
-	audio_stream_player.stream = load("res://assets/musics/" + Global.selected_music + "/" + Global.selected_music + ".mp3")
-	audio_stream_player.play()
-	if FileAccess.file_exists("res://assets/musics/" + Global.selected_music + "/img.png"):
-		$"../TextureRect".texture = load("res://assets/musics/" + Global.selected_music + "/img.png")
+	
+	_play_preview()
+	_update_jacket()
+
 
 func _on_down_pressed() -> void:
 	if scroll_tween and scroll_tween.is_valid() and scroll_tween.is_running(): return
@@ -100,11 +101,26 @@ func _on_down_pressed() -> void:
 	# 3. 트릭: UI를 순간적으로 한 칸 아래로 보낸 뒤, 원래 위치로 부드럽게 올라갑니다.
 	position.y = base_y + scroll_step
 	animate_scroll()
-	audio_stream_player.stream = load("res://assets/musics/" + Global.selected_music + "/" + Global.selected_music + ".mp3")
-	audio_stream_player.play()
-	if FileAccess.file_exists("res://assets/musics/" + Global.selected_music + "/img.png"):
-		$"../TextureRect".texture = load("res://assets/musics/" + Global.selected_music + "/img.png")
 	
+	_play_preview()
+	_update_jacket()
+
+
+func _play_preview() -> void:
+	if audio_stream_player:
+		var audio_path = "res://assets/musics/" + Global.selected_music + "/" + Global.selected_music + ".mp3"
+		if FileAccess.file_exists(audio_path):
+			audio_stream_player.stream = load(audio_path)
+			audio_stream_player.play()
+
+
+func _update_jacket() -> void:
+	var jacket_path = "res://assets/musics/" + Global.selected_music + "/img.png"
+	var jacket_rect = $"../TextureRect"
+	if jacket_rect and FileAccess.file_exists(jacket_path):
+		jacket_rect.texture = load(jacket_path)
+
+
 func animate_scroll() -> void:
 	scroll_tween = create_tween()
 	scroll_tween.set_trans(Tween.TRANS_CUBIC)

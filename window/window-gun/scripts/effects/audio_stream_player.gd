@@ -7,6 +7,9 @@ var music_offset: float = 0.0
 
 
 func _ready() -> void:
+	# 전역 참조 등록
+	Global.audio_player = self
+	
 	if _is_headless_run():
 		return
 	if Global.selected_music == "":
@@ -14,13 +17,16 @@ func _ready() -> void:
 
 	var res_path := MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
 	var music_res = load(res_path)
-	Global.music_offset = music_res.offset
+	
+	# 안전한 리소스 체크 및 오프셋 계산
 	if music_res and "offset" in music_res:
-		music_offset =  GLOBAL_TIMING_OFFSET - music_res.offset
-		print("Music offset: ", music_offset)
+		Global.music_offset = music_res.offset
+		music_offset = GLOBAL_TIMING_OFFSET - music_res.offset
+		print("Music offset calculated: ", music_offset, " (Global: ", Global.music_offset, ")")
 	else:
-		music_offset = 0.0
-		print("Music resource or offset not found. Using 0 seconds.")
+		Global.music_offset = 0.0
+		music_offset = GLOBAL_TIMING_OFFSET
+		print("Music resource or offset not found. Using default timing.")
 
 	if music_offset > 0.0:
 		await get_tree().create_timer(music_offset).timeout

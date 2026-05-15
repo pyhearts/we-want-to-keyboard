@@ -90,6 +90,7 @@
 			"width": 300,
 			"height": 300,
 			"duration": 2.0,
+			"opacity": 0.5,
 			"texture_path": "res://assets/image/ingame/과녁.png"
 		},
 		{
@@ -102,6 +103,7 @@
 			"width": 200,
 			"height": 200,
 			"duration": 3.0,
+			"opacity": 0.7,
 			"texture_path": "res://assets/image/ingame/과녁.png"
 		},
 		{
@@ -114,6 +116,7 @@
 			"width": 150,
 			"height": 150,
 			"duration": 1.5,
+			"opacity": 0.3,
 			"texture_path": "res://assets/image/ingame/과녁.png"
 		},
 		{
@@ -124,7 +127,8 @@
 			"width": 400,
 			"height": 300,
 			"duration": 5.0,
-			"title": "바탕화면 창도 같이 사용 가능",
+			"opacity": 0.8,
+			"title": "투명도가 적용된 창",
 			"texture_path": "res://assets/image/ingame/과녁.png"
 		}
 	]

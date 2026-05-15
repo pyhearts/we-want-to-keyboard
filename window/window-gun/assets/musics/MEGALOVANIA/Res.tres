@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_6gpbk")
 id = "MEGALOVANIA"
-title = "MEGALOVANIA Title"
+title = "MEGALOVANIA"
 composer = "Toby Fox"
 audio_stream = ExtResource("1_20eje")
 metadata/_custom_type_script = "uid://ciljglxaby7qn"

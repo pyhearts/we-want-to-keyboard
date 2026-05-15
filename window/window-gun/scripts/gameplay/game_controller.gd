@@ -16,6 +16,7 @@ const EVENT_MOVING_SMOOTH_IMAGE := "image_moving_smooth"
 const MUSIC_BASE_PATH := "res://assets/musics/"
 const MUSIC_SELECT_SCENE := "res://scenes/menu/music_select.tscn"
 const DEFAULT_WINDOW_TEXTURE := "res://assets/image/ingame/과녁.png"
+const TargetNoteScript = preload("res://scripts/gameplay/target_note.gd")
 
 enum MoveType {
 	SMOOTH,
@@ -46,42 +47,61 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
 		get_tree().change_scene_to_file(MUSIC_SELECT_SCENE)
-	elif event.is_action_pressed("1"):
-		_spawn_note(NORMAL_NOTE_MODE)
-	elif event.is_action_pressed("2"):
-		_spawn_note(MOVING_NOTE_MODE)
-	elif event.is_action_pressed("3"):
-		_spawn_note(NORMAL_NOTE_MODE, Vector2(2000.0, 1000.0))
-	elif event.is_action_pressed("4"):
-		create_moving_window(Vector2i(200, 200), Vector2i(100, 100), Vector2i(800, 100), 3.0, MoveType.SMOOTH, "Smooth", DEFAULT_WINDOW_TEXTURE)
-	elif event.is_action_pressed("5"):
-		create_moving_window(Vector2i(200, 200), Vector2i(100, 350), Vector2i(800, 350), 3.0, MoveType.LINEAR, "Linear", DEFAULT_WINDOW_TEXTURE)
-	elif event.is_action_pressed("6"):
-		create_static_window(Vector2i(200, 200), Vector2i(220, 220), 3.0, "Static", DEFAULT_WINDOW_TEXTURE)
-	# --- 신규 추가된 게임 내 이미지 테스트용 입력 ---
-	elif event.is_action_pressed("7"):
-		create_moving_image(Vector2i(200, 200), Vector2i(100, 500), Vector2i(800, 500), 3.0, MoveType.SMOOTH, DEFAULT_WINDOW_TEXTURE)
-	elif event.is_action_pressed("8"):
-		create_moving_image(Vector2i(200, 200), Vector2i(100, 700), Vector2i(800, 700), 3.0, MoveType.LINEAR, DEFAULT_WINDOW_TEXTURE)
-	elif event.is_action_pressed("9"):
-		create_static_image(Vector2i(200, 200), Vector2i(400, 400), 3.0, DEFAULT_WINDOW_TEXTURE)
+	
+	# 디버그용 기능 (디버그 빌드에서만 동작)
+	if OS.is_debug_build():
+		if event.is_action_pressed("1"):
+			_spawn_note(NORMAL_NOTE_MODE)
+		elif event.is_action_pressed("2"):
+			_spawn_note(MOVING_NOTE_MODE)
+		elif event.is_action_pressed("3"):
+			_spawn_note(NORMAL_NOTE_MODE, Vector2(2000.0, 1000.0))
+		elif event.is_action_pressed("4"):
+			create_moving_window(Vector2i(200, 200), Vector2i(100, 100), Vector2i(800, 100), 3.0, MoveType.SMOOTH, "Smooth", DEFAULT_WINDOW_TEXTURE)
+		elif event.is_action_pressed("5"):
+			create_moving_window(Vector2i(200, 200), Vector2i(100, 350), Vector2i(800, 350), 3.0, MoveType.LINEAR, "Linear", DEFAULT_WINDOW_TEXTURE)
+		elif event.is_action_pressed("6"):
+			create_static_window(Vector2i(200, 200), Vector2i(220, 220), 3.0, "Static", DEFAULT_WINDOW_TEXTURE)
+		elif event.is_action_pressed("7"):
+			create_moving_image(Vector2i(200, 200), Vector2i(100, 500), Vector2i(800, 500), 3.0, MoveType.SMOOTH, DEFAULT_WINDOW_TEXTURE)
+		elif event.is_action_pressed("8"):
+			create_moving_image(Vector2i(200, 200), Vector2i(100, 700), Vector2i(800, 700), 3.0, MoveType.LINEAR, DEFAULT_WINDOW_TEXTURE)
+		elif event.is_action_pressed("9"):
+			create_static_image(Vector2i(200, 200), Vector2i(400, 400), 3.0, DEFAULT_WINDOW_TEXTURE)
 
 
 func _process(delta: float) -> void:
 	if not is_playing:
 		return
 
-	current_time += delta
+	# 오디오 플레이어와 싱크 맞추기 (Global.audio_player 참조 활용)
+	if Global.audio_player and Global.audio_player.playing:
+		# 오디오 재생 위치 + 지연 보정 + 글로벌 오프셋
+		var audio_pos = Global.audio_player.get_playback_position() + AudioServer.get_time_since_last_mix() - AudioServer.get_output_latency()
+		# Global.music_offset은 Res.tres의 개별 곡 오프셋 (곡이 시작되기 전까지의 시간)
+		# AudioStreamPlayer가 재생 중이므로, 현재 차트 시간은 audio_pos + 곡 시작 대기 시간(music_offset) 이어야 함
+		# 하지만 audio_stream_player.gd에서 timer로 music_offset만큼 기다렸다가 play()를 하므로,
+		# audio_pos가 0인 시점의 current_time은 이미 music_offset 이어야 함.
+		# 오디오 스크립트의 GLOBAL_TIMING_OFFSET(0.6)도 고려해야 함.
+		
+		# 보다 단순하고 정확한 방식:
+		# 오디오 재생 전까지는 delta로 누적하다가, 재생이 시작되면 오디오 위치를 기준으로 보정
+		var target_time = audio_pos + (0.6 - Global.music_offset) # GLOBAL_TIMING_OFFSET 보정
+		current_time = lerp(current_time, target_time, 0.1) # 급격한 튐 방지
+	else:
+		current_time += delta
+		
 	_process_due_notes()
 	_process_due_events()
 
 
 func start_chart() -> void:
+	TargetNoteScript.reset_state() # 이전 판의 노트 잔재 제거
 	chart_data = load_chart()
 	if chart_data == null:
 		push_error("Cannot start chart.")
 		return
-	is_playing = true # 이 줄을 추가해야 채보 처리가 시작됩니다!
+	is_playing = true
 	print("차트 로드 성공: ", chart_data.get("notes", []).size(), "개의 노트")
 
 
@@ -185,24 +205,35 @@ func _process_event(event_info: Dictionary) -> void:
 	if texture_path == "":
 		texture_path = DEFAULT_WINDOW_TEXTURE
 
+	var opacity := float(event_info.get("opacity", 1.0))
+
+	var node: Node = null
 	match event_type:
 		# --- 기존 윈도우 이벤트 ---
 		EVENT_STATIC_WINDOW:
-			create_static_window(size, pos, duration, title, texture_path)
+			node = create_static_window(size, pos, duration, title, texture_path)
 		EVENT_MOVING_LINEAR_WINDOW:
-			create_moving_window(size, pos, target_pos, duration, MoveType.LINEAR, title, texture_path)
+			node = create_moving_window(size, pos, target_pos, duration, MoveType.LINEAR, title, texture_path)
 		EVENT_MOVING_SMOOTH_WINDOW:
-			create_moving_window(size, pos, target_pos, duration, MoveType.SMOOTH, title, texture_path)
+			node = create_moving_window(size, pos, target_pos, duration, MoveType.SMOOTH, title, texture_path)
 			
 		# --- 신규 추가된 게임 내 이미지 이벤트 ---
 		EVENT_STATIC_IMAGE:
-			create_static_image(size, pos, duration, texture_path)
+			node = create_static_image(size, pos, duration, texture_path)
 		EVENT_MOVING_LINEAR_IMAGE:
-			create_moving_image(size, pos, target_pos, duration, MoveType.LINEAR, texture_path)
+			node = create_moving_image(size, pos, target_pos, duration, MoveType.LINEAR, texture_path)
 		EVENT_MOVING_SMOOTH_IMAGE:
-			create_moving_image(size, pos, target_pos, duration, MoveType.SMOOTH, texture_path)
+			node = create_moving_image(size, pos, target_pos, duration, MoveType.SMOOTH, texture_path)
 		_:
 			push_warning("Unknown chart event type: " + event_type)
+	
+	if node:
+		if node is Window:
+			var tr = node.get_node_or_null("TextureRect")
+			if tr:
+				tr.modulate.a = opacity
+		elif node is CanvasItem:
+			node.modulate.a = opacity
 
 
 func _get_event_target_position(event_info: Dictionary, fallback_pos: Vector2i) -> Vector2i:
@@ -221,9 +252,9 @@ func _spawn_note(mode: String, target_pos: Variant = null) -> void:
 # 기존 Window 기반 생성 함수들 (유지됨)
 # ==========================================
 
-func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_pos: Vector2i, move_duration: float, move_type: MoveType, title: String, img_path: String) -> void:
+func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_pos: Vector2i, move_duration: float, move_type: MoveType, title: String, img_path: String) -> Window:
 	if _is_headless_display():
-		return
+		return null
 
 	var window := _get_or_create_window(size, title, img_path)
 	if window == null:
@@ -237,11 +268,13 @@ func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_po
 		_animate_window_movement_smooth(window, target_rel_pos, move_duration)
 	else:
 		_animate_window_movement_linear(window, target_rel_pos, move_duration)
+	
+	return window
 
 
-func create_static_window(size: Vector2i, rel_pos: Vector2i, duration: float, title: String, img_path: String) -> void:
+func create_static_window(size: Vector2i, rel_pos: Vector2i, duration: float, title: String, img_path: String) -> Window:
 	if _is_headless_display():
-		return
+		return null
 
 	var window := _get_or_create_window(size, title, img_path)
 	if window == null:
@@ -255,6 +288,8 @@ func create_static_window(size: Vector2i, rel_pos: Vector2i, duration: float, ti
 		var tween := window.create_tween()
 		tween.tween_interval(duration)
 		tween.tween_callback(window.hide)
+	
+	return window
 
 
 func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> Window:
@@ -317,10 +352,10 @@ func _animate_window_movement_linear(window: Window, target_rel_pos: Vector2i, d
 # 신규 TextureRect (게임 내 노드) 스폰 함수들
 # ==========================================
 
-func create_moving_image(size: Vector2i, start_pos: Vector2i, target_pos: Vector2i, move_duration: float, move_type: MoveType, img_path: String) -> void:
+func create_moving_image(size: Vector2i, start_pos: Vector2i, target_pos: Vector2i, move_duration: float, move_type: MoveType, img_path: String) -> TextureRect:
 	var img_node := _get_or_create_image(size, img_path)
 	if img_node == null:
-		return
+		return null
 
 	img_node.position = start_pos
 	img_node.show()
@@ -329,12 +364,14 @@ func create_moving_image(size: Vector2i, start_pos: Vector2i, target_pos: Vector
 		_animate_image_movement_smooth(img_node, target_pos, move_duration)
 	else:
 		_animate_image_movement_linear(img_node, target_pos, move_duration)
+	
+	return img_node
 
 
-func create_static_image(size: Vector2i, pos: Vector2i, duration: float, img_path: String) -> void:
+func create_static_image(size: Vector2i, pos: Vector2i, duration: float, img_path: String) -> TextureRect:
 	var img_node := _get_or_create_image(size, img_path)
 	if img_node == null:
-		return
+		return null
 
 	img_node.position = pos
 	img_node.show()
@@ -343,6 +380,8 @@ func create_static_image(size: Vector2i, pos: Vector2i, duration: float, img_pat
 		var tween := img_node.create_tween()
 		tween.tween_interval(duration)
 		tween.tween_callback(img_node.hide)
+	
+	return img_node
 
 
 func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:

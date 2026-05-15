@@ -1,4 +1,5 @@
 extends Control
+class_name TargetNote
 
 const MODE_NORMAL := "normal"
 const MODE_MOVING := "moving"
@@ -58,6 +59,11 @@ func _ready() -> void:
 
 	if point and not point.pressed.is_connected(_on_point_pressed):
 		point.pressed.connect(_on_point_pressed)
+
+
+static func reset_state() -> void:
+	active_notes.clear()
+	recent_positions.clear()
 
 
 func spawn_node(mode: String = MODE_NORMAL, target_pos: Variant = null) -> void:
