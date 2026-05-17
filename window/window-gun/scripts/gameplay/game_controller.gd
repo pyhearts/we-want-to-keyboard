@@ -39,6 +39,16 @@ var event_index: int = 0
 
 
 func _ready() -> void:
+	# 노트를 이펙트보다 위에 표시하기 위한 전용 레이어 생성
+	var note_layer = CanvasLayer.new()
+	note_layer.name = "NoteLayer"
+	note_layer.layer = 10 # 기본 레이어(0)보다 높은 값 설정
+	add_child(note_layer)
+	
+	# 기존 스포너를 새로운 레이어로 이동
+	if target_spawner:
+		target_spawner.reparent(note_layer)
+	
 	Global.reset_run()
 	start_chart()
 

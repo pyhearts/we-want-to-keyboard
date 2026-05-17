@@ -1,3 +1,4 @@
 res://scripts/ui/VBoxContainerMove.gd
 res://assets/musics/Flower Rocket/chart.json
 res://scenes/menu/music_select.tscn
+res://scripts/gameplay/game_controller.gd
