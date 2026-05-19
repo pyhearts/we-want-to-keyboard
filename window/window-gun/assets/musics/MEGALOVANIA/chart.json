@@ -31,7 +31,8 @@
 		{ "time": 10.40, "x": 820, "y": 390, "type": "normal" },
 		{ "time": 10.75, "x": 1060, "y": 390, "type": "normal" },
 		{ "time": 11.10, "x": 1300, "y": 390, "type": "moving" },
-		{ "time": 11.55, "x": 960, "y": 500, "type": "normal" }
+		{ "time": 11.55, "x": 960, "y": 500, "type": "normal" },
+		{"time": 13.0,"type": "hold","duration": 5.0,"beat_division": 16},
 	],
 	"events": [
 		{

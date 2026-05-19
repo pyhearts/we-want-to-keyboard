@@ -36,6 +36,7 @@ var current_time: float = 0.0
 var is_playing: bool = false
 var note_index: int = 0
 var event_index: int = 0
+var bpm: float = 120.0
 
 
 func _ready() -> void:
@@ -111,6 +112,19 @@ func start_chart() -> void:
 	if chart_data == null:
 		push_error("Cannot start chart.")
 		return
+	
+	# BPM 로드
+	var res_path := MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
+	if FileAccess.file_exists(res_path):
+		var music_res = load(res_path)
+		if music_res and "bpm" in music_res:
+			bpm = float(music_res.bpm)
+			print("BPM loaded: ", bpm)
+		else:
+			print("BPM property not found in Res.tres, using default 120.0")
+	else:
+		print("Res.tres not found, using default 120.0")
+		
 	is_playing = true
 	print("차트 로드 성공: ", chart_data.get("notes", []).size(), "개의 노트")
 
@@ -163,7 +177,9 @@ func _ensure_selected_music() -> void:
 	if Global.music_titles.size() == 0:
 		Global.music_titles = Global.get_folder_list(MUSIC_BASE_PATH)
 
-	if Global.music_titles.size() > 0:
+	if "R" in Global.music_titles:
+		Global.selected_music = "R"
+	elif Global.music_titles.size() > 0:
 		Global.selected_music = Global.music_titles[0]
 
 
@@ -188,6 +204,11 @@ func _process_due_events() -> void:
 
 
 func _process_note(note_info: Dictionary) -> void:
+	var note_type = str(note_info.get("type", NORMAL_NOTE_MODE))
+	if note_type == "hold":
+		_spawn_hold_note(note_info)
+		return
+
 	if not note_info.has("x") or not note_info.has("y"):
 		push_warning("Skipping invalid note: " + str(note_info))
 		return
@@ -198,6 +219,24 @@ func _process_note(note_info: Dictionary) -> void:
 		mode = MOVING_NOTE_MODE
 
 	_spawn_note(mode, pos)
+
+
+func _spawn_hold_note(note_info: Dictionary) -> void:
+	var duration := float(note_info.get("duration", 3.0))
+	var beat_division := int(note_info.get("beat_division", 4)) # 기본 4박자(4분음표)
+	var hold_script := load("res://scripts/gameplay/hold_note.gd")
+	if hold_script:
+		var hold_instance = hold_script.new()
+		hold_instance.duration = duration
+		hold_instance.bpm = bpm
+		hold_instance.beat_division = beat_division
+		
+		var note_layer = get_node_or_null("NoteLayer")
+		if note_layer:
+			note_layer.add_child(hold_instance)
+		else:
+			add_child(hold_instance)
+		print("Spawned HoldNote with duration: ", duration, ", BPM: ", bpm, ", Division: ", beat_division)
 
 
 func _process_event(event_info: Dictionary) -> void:
