@@ -215,10 +215,13 @@ func _process_note(note_info: Dictionary) -> void:
 
 	var pos := Vector2(float(note_info["x"]), float(note_info["y"]))
 	var mode := NORMAL_NOTE_MODE
+	var start_pos = null
 	if str(note_info.get("type", NORMAL_NOTE_MODE)) == MOVING_NOTE_MODE:
 		mode = MOVING_NOTE_MODE
+		if note_info.has("start_x") and note_info.has("start_y"):
+			start_pos = Vector2(float(note_info["start_x"]), float(note_info["start_y"]))
 
-	_spawn_note(mode, pos)
+	_spawn_note(mode, pos, start_pos)
 
 
 func _spawn_hold_note(note_info: Dictionary) -> void:
@@ -292,9 +295,9 @@ func _get_event_target_position(event_info: Dictionary, fallback_pos: Vector2i) 
 	)
 
 
-func _spawn_note(mode: String, target_pos: Variant = null) -> void:
+func _spawn_note(mode: String, target_pos: Variant = null, start_pos: Variant = null) -> void:
 	if target_spawner and target_spawner.has_method("spawn_node"):
-		target_spawner.spawn_node(mode, target_pos)
+		target_spawner.spawn_node(mode, target_pos, start_pos)
 
 
 # ==========================================

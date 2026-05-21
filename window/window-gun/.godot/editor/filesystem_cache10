@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1779176790
+::res://::1779346750
 export_presets.cfg::TextFile::-1::1778422440::0::1::::<><><>0<>0<><>::
 ::res://assets/::1776061199
 ::res://assets/fonts/::1775460149
@@ -51,7 +51,8 @@ Res.tres::Resource/MusicData::1945995525735648384::1778135492::0::1::::<><><>0<>
 ::res://scenes/game/::1778482216
 game.tscn::PackedScene::8105288312645883185::1778482216::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/gameplay/game_controller.gd<>uid://be2ijsn4bnvdj::::res://scenes/game/target_note.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/ui/score_label.gd<>uid://cq81px2t2a0k6::::res://scripts/ui/combo_label.gd<>uid://c1125ttohes1l::::res://scripts/effects/audio_stream_player.gd
 target_note.tscn::PackedScene::2723417032514379291::1778422440::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/ingame/과녁.png<>uid://ngo16177o8ud::::res://scripts/gameplay/target_note.gd<>uid://0blaxdoepjmc::::res://assets/image/ingame/판정-원.png<>uid://be4ep4vw3ir6h::::res://scripts/effects/judgment_ring.gd
-::res://scenes/menu/::1779176772
+::res://scenes/menu/::1779346549
+chart_editor.tscn::PackedScene::8828176373217650405::1779346549::0::1::::<><><>0<>0<><>::uid://cw8ydj2sp82s::::res://scripts/ui/chart_editor.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
 img_change.gd::GDScript::3632622255927238416::1778743345::0::1::::<>TextureRect<><>0<>0<><>::
 main_menu.tscn::PackedScene::1805364345342442223::1778140311::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://lqonaeq14cg8::::res://scripts/ui/start_on_any_input.gd<>uid://yhxq1gosjepw::::res://scenes/menu/music_select.tscn<>uid://s08rnnrk6it4::::res://scripts/effects/background_tilt.gd<>uid://c6b1jhnhfsj6y::::res://assets/image/main/i want a gun no title.png<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://18nnuufyapx4::::res://assets/image/main/i want a gun only title (1).png
 music_select.tscn::PackedScene::1700409330663741772::1779176772::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://dohp0de7qvf3a::::res://assets/image/main/우리는 총이 원하다! 흰배경.png<>uid://bim0m10phtnkw::::res://assets/image/music select/하츄핑 타이틀.png<>uid://bip5eikp1c1mm::::res://scripts/ui/VBoxContainerMove.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://ddgk54cu7pkl::::res://scripts/ui/music_select_button.gd<>uid://c1125ttohes1l::::res://scripts/effects/audio_stream_player.gd<>uid://ctox3v2i5efjl::::res://scripts/ui/escape_to_scene.gd<>uid://br0w01bpkuqk3::::res://scenes/menu/img_change.gd
@@ -68,11 +69,12 @@ judgment_ring.gd::GDScript::2727314224647982185::1778135492::0::1::::<>TextureRe
 game_controller.gd::GDScript::4927436442354083576::1779176654::0::1::::<>Control<><>0<>0<><>::
 hold_note.gd::GDScript::3054705766041705536::1779176661::0::1::::HoldNote<>Control<><>0<>0<><>::
 target_note.gd::GDScript::925739372245092127::1779172114::0::1::::TargetNote<>Control<><>0<>0<><>::
-::res://scripts/ui/::1779172114
+::res://scripts/ui/::1779345874
+chart_editor.gd::GDScript::187840690405119972::1779346748::0::1::::<>Control<><>0<>0<><>::
 combo_label.gd::GDScript::5965594010845350311::1779172114::0::1::::<>Label<><>0<>0<><>::
 escape_to_scene.gd::GDScript::6136778323232429073::1778422440::0::1::::<>Control<><>0<>0<><>::
 music_label.gd::GDScript::561107727416804113::1778135492::0::1::::<>Label<><>0<>0<><>::
 music_select_button.gd::GDScript::217143444690629595::1778135492::0::1::::<>TextureButton<><>0<>0<><>::
 score_label.gd::GDScript::840920046692643988::1779172114::0::1::::<>Label<><>0<>0<><>::
-start_on_any_input.gd::GDScript::805980584244878333::1778422440::0::1::::<>TextureRect<><>0<>0<><>::
+start_on_any_input.gd::GDScript::805980584244878333::1779345874::0::1::::<>TextureRect<><>0<>0<><>::
 VBoxContainerMove.gd::GDScript::2980726188418100764::1779172114::0::1::::<>VBoxContainer<><>0<>0<><>::

@@ -1,0 +1,7 @@
+res://scripts/ui/chart_editor.gd
+res://scenes/menu/chart_editor.tscn
+res://scripts/ui/start_on_any_input.gd
+res://assets/musics/Flower Rocket/chart.json
+res://scripts/gameplay/game_controller.gd
+res://scripts/gameplay/target_note.gd
+res://scripts/ui/effect_editor.gd

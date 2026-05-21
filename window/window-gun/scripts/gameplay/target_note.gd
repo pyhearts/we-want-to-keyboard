@@ -66,7 +66,7 @@ static func reset_state() -> void:
 	recent_positions.clear()
 
 
-func spawn_node(mode: String = MODE_NORMAL, target_pos: Variant = null) -> void:
+func spawn_node(mode: String = MODE_NORMAL, target_pos: Variant = null, start_pos: Variant = null) -> void:
 	var final_pos := _get_spawn_position(target_pos)
 	_remember_spawn_position(final_pos)
 
@@ -75,8 +75,12 @@ func spawn_node(mode: String = MODE_NORMAL, target_pos: Variant = null) -> void:
 	get_parent().call_deferred("add_child", clone)
 
 	if mode == MODE_MOVING:
-		var start_pos := Vector2(final_pos.x + randf_range(-100.0, 100.0), max_y + 300.0)
-		clone.call_deferred("activate_moving", final_pos, start_pos)
+		var final_start_pos: Vector2
+		if start_pos is Vector2:
+			final_start_pos = start_pos
+		else:
+			final_start_pos = Vector2(final_pos.x + randf_range(-100.0, 100.0), max_y + 300.0)
+		clone.call_deferred("activate_moving", final_pos, final_start_pos)
 	else:
 		clone.call_deferred("activate_stationary", final_pos)
 

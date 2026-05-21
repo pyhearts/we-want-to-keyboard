@@ -1,0 +1,319 @@
+[gd_scene format=3 uid="uid://dx1o1l7y2q7m4"]
+
+[ext_resource type="Script" uid="uid://cw8ydj2sp82s" path="res://scripts/ui/chart_editor.gd" id="1_editor"]
+[ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="2_font"]
+
+[sub_resource type="GDScript" id="GDScript_canvas"]
+script/source = "extends Control
+func _draw() -> void:
+	if get_owner() and get_owner().has_method(\"_draw_preview_canvas\"):
+		get_owner()._draw_preview_canvas()
+"
+
+[sub_resource type="GDScript" id="GDScript_timeline"]
+script/source = "extends Control
+func _draw() -> void:
+	if get_owner() and get_owner().has_method(\"_draw_timeline\"):
+		get_owner()._draw_timeline()
+"
+
+[node name="ChartEditor" type="Control" unique_id=784928021]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_editor")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1104163305]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.941176, 0.952941, 1)
+
+[node name="Split" type="HSplitContainer" parent="." unique_id=1107195831]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+split_offsets = PackedInt32Array(320)
+split_offset = 320
+
+[node name="Sidebar" type="PanelContainer" parent="Split" unique_id=2106933655]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="Split/Sidebar" unique_id=1550557223]
+layout_mode = 2
+color = Color(1, 0.890196, 0.909804, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="Split/Sidebar" unique_id=1431903992]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Split/Sidebar/MarginContainer" unique_id=893458409]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Controls" type="VBoxContainer" parent="Split/Sidebar/MarginContainer/ScrollContainer" unique_id=723722035]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="Title" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=449778345]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.301961, 0.427451, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 24
+text = "CHART EDITOR"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=848837346]
+layout_mode = 2
+
+[node name="SongSection" type="VBoxContainer" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=1165233500]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/SongSection" unique_id=2047623527]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "Select Song"
+
+[node name="SongSelect" type="OptionButton" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/SongSection" unique_id=339857668]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="BpmSection" type="HBoxContainer" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=913778199]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/BpmSection" unique_id=185412991]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "BPM"
+
+[node name="BpmInput" type="LineEdit" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/BpmSection" unique_id=5363772]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "120"
+alignment = 1
+
+[node name="OffsetSection" type="HBoxContainer" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=662931618]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/OffsetSection" unique_id=1526765107]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "Offset (s)"
+
+[node name="OffsetInput" type="LineEdit" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/OffsetSection" unique_id=882297997]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "0.0"
+alignment = 1
+
+[node name="SnapSection" type="VBoxContainer" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=711826249]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/SnapSection" unique_id=1066090674]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "Grid Snap"
+
+[node name="SnapSelect" type="OptionButton" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/SnapSection" unique_id=1556605373]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="TypeSection" type="VBoxContainer" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=1325157321]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/TypeSection" unique_id=205402516]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "Note Type"
+
+[node name="TypeSelect" type="OptionButton" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/TypeSection" unique_id=2082562418]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="HoldSettings" type="VBoxContainer" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=96341457]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DurationLabel" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/HoldSettings" unique_id=717247421]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "Hold Duration (s)"
+
+[node name="DurationInput" type="LineEdit" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/HoldSettings" unique_id=834290547]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "3.0"
+alignment = 1
+
+[node name="DivisionLabel" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/HoldSettings" unique_id=1063046689]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "Beat Division (e.g. 16)"
+
+[node name="DivisionInput" type="LineEdit" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/HoldSettings" unique_id=854503018]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "16"
+alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=2074190676]
+layout_mode = 2
+
+[node name="PlaybackSection" type="VBoxContainer" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=1478746900]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/PlaybackSection" unique_id=1324982777]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "Playback Control"
+
+[node name="PlayButton" type="Button" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/PlaybackSection" unique_id=1981362804]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+text = "Play"
+
+[node name="SpeedSelect" type="OptionButton" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/PlaybackSection" unique_id=1164896094]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.0823529, 0.129412, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="TimeLabel" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls/PlaybackSection" unique_id=524000738]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.482353, 0.223529, 0.286275, 1)
+theme_override_font_sizes/font_size = 12
+text = "00:00.000 / 00:00.000"
+horizontal_alignment = 1
+
+[node name="HSeparator3" type="HSeparator" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=246152441]
+layout_mode = 2
+
+[node name="HelpLabel" type="Label" parent="Split/Sidebar/MarginContainer/ScrollContainer/Controls" unique_id=566071118]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.482353, 0.223529, 0.286275, 1)
+theme_override_font_sizes/font_size = 11
+text = "Controls:
+- Space: Play/Pause
+- Click Canvas: Add Note
+- Right-Click Note: Delete
+- Arrow Left/Right: Seek 0.1s
+- Ctrl+Arrow: Seek Snap
+- Ctrl+Wheel: Seek Snap
+- Esc: Return to Menu"
+
+[node name="MainArea" type="VSplitContainer" parent="Split" unique_id=2104992304]
+layout_mode = 2
+split_offsets = PackedInt32Array(780)
+split_offset = 780
+
+[node name="CanvasContainer" type="PanelContainer" parent="Split/MainArea" unique_id=1861678355]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ColorRect" type="ColorRect" parent="Split/MainArea/CanvasContainer" unique_id=620816289]
+layout_mode = 2
+color = Color(1, 0.960784, 0.968627, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="Split/MainArea/CanvasContainer" unique_id=1355037709]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="Split/MainArea/CanvasContainer/MarginContainer" unique_id=1045565594]
+layout_mode = 2
+ratio = 1.7778
+
+[node name="PreviewCanvas" type="Control" parent="Split/MainArea/CanvasContainer/MarginContainer/AspectRatioContainer" unique_id=323121537]
+unique_name_in_owner = true
+layout_mode = 2
+script = SubResource("GDScript_canvas")
+
+[node name="TimelineArea" type="PanelContainer" parent="Split/MainArea" unique_id=1903709148]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+
+[node name="Timeline" type="Control" parent="Split/MainArea/TimelineArea" unique_id=2099262180]
+unique_name_in_owner = true
+layout_mode = 2
+script = SubResource("GDScript_timeline")
+
+[node name="Toast" type="PanelContainer" parent="." unique_id=333503986]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -80.0
+offset_right = -30.0
+offset_bottom = -30.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="ColorRect" type="ColorRect" parent="Toast" unique_id=1967863350]
+layout_mode = 2
+color = Color(1, 0.301961, 0.427451, 0.941176)
+
+[node name="MarginContainer" type="MarginContainer" parent="Toast" unique_id=1072681070]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="ToastLabel" type="Label" parent="Toast/MarginContainer" unique_id=703591838]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "Chart Auto-Saved!"
+horizontal_alignment = 1
+vertical_alignment = 1
