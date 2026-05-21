@@ -3,8 +3,8 @@ extends Node
 signal score_changed(new_score: int)
 signal combo_changed(new_combo: int)
 
-var score := 0
-var combo := 0
+var score = 0
+var combo = 0
 var time: float = 0.0
 var music_titles : Array
 var selected_music: String = ""

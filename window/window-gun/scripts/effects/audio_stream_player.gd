@@ -1,7 +1,7 @@
 extends AudioStreamPlayer
 
-const MUSIC_BASE_PATH := "res://assets/musics/"
-const GLOBAL_TIMING_OFFSET := 0.6
+const MUSIC_BASE_PATH = "res://assets/musics/"
+const GLOBAL_TIMING_OFFSET = 0.6
 
 var music_offset: float = 0.0
 
@@ -15,7 +15,7 @@ func _ready() -> void:
 	if Global.selected_music == "":
 		return
 
-	var res_path := MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
+	var res_path = MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
 	var music_res = load(res_path)
 	
 	# 안전한 리소스 체크 및 오프셋 계산
@@ -35,7 +35,7 @@ func _ready() -> void:
 
 
 func play_selected_music(music_name: String) -> void:
-	var audio_path := MUSIC_BASE_PATH + music_name + "/" + music_name + ".mp3"
+	var audio_path = MUSIC_BASE_PATH + music_name + "/" + music_name + ".mp3"
 	var song = load(audio_path)
 	if song:
 		stream = song

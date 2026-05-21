@@ -1,7 +1,7 @@
 extends Control
 
-const MUSIC_BASE_PATH := "res://assets/musics/"
-const CHART_EDITOR_SCENE := "res://scenes/menu/chart_editor.tscn"
+const MUSIC_BASE_PATH = "res://assets/musics/"
+const CHART_EDITOR_SCENE = "res://scenes/menu/chart_editor.tscn"
 
 # UI 바인딩
 @onready var song_select: OptionButton = %SongSelect
@@ -62,28 +62,28 @@ var song_duration: float = 0.0
 # 선택/호버
 var selected_event_index: int = -1
 var hover_event_index: int = -1
-var drag_offset := Vector2.ZERO
+var drag_offset = Vector2.ZERO
 var is_dragging: bool = false
 
 # 테마 색상 (chart_editor와 동일)
-const COLOR_BG_CANVAS := Color(1.0, 0.960784, 0.968627, 1.0)        # #FFF5F7
-const COLOR_BORDER_CANVAS := Color(1.0, 0.560784, 0.639216, 0.8)    # #FF8FA3
-const COLOR_GRID_CANVAS := Color(1.0, 0.815686, 0.854902, 0.4)      # #FFE3E8
-const COLOR_TEXT_WINE := Color(0.290196, 0.0823529, 0.129412, 1.0)   # #4A1521
-const COLOR_TEXT_WINE_MUTED := Color(0.541176, 0.352941, 0.396078, 1.0) # #8A5A65
+const COLOR_BG_CANVAS = Color(1.0, 0.960784, 0.968627, 1.0)        # #FFF5F7
+const COLOR_BORDER_CANVAS = Color(1.0, 0.560784, 0.639216, 0.8)    # #FF8FA3
+const COLOR_GRID_CANVAS = Color(1.0, 0.815686, 0.854902, 0.4)      # #FFE3E8
+const COLOR_TEXT_WINE = Color(0.290196, 0.0823529, 0.129412, 1.0)   # #4A1521
+const COLOR_TEXT_WINE_MUTED = Color(0.541176, 0.352941, 0.396078, 1.0) # #8A5A65
 
 # 이펙트 렌더링 색상
-const COLOR_EVENT_WINDOW := Color(0.3, 0.6, 0.9, 0.6)
-const COLOR_EVENT_IMAGE := Color(0.9, 0.4, 0.6, 0.6)
-const COLOR_EVENT_SELECTED := Color(1.0, 0.84, 0.0, 1.0) # Gold Yellow
+const COLOR_EVENT_WINDOW = Color(0.3, 0.6, 0.9, 0.6)
+const COLOR_EVENT_IMAGE = Color(0.9, 0.4, 0.6, 0.6)
+const COLOR_EVENT_SELECTED = Color(1.0, 0.84, 0.0, 1.0) # Gold Yellow
 
-const COLOR_BG_TIMELINE := Color(1.0, 0.898039, 0.92549, 1.0)       # #FFE5EC
-const COLOR_HEADER_TIMELINE := Color(1.0, 0.0, 0.329412, 0.95)     # #FF0054
-const COLOR_GRID_TIMELINE_MAIN := Color(0.788235, 0.0941176, 0.290196, 0.6) # #C9184A
-const COLOR_GRID_TIMELINE_SUB := Color(1.0, 0.760784, 0.819608, 0.5)  # #FFC2D1
+const COLOR_BG_TIMELINE = Color(1.0, 0.898039, 0.92549, 1.0)       # #FFE5EC
+const COLOR_HEADER_TIMELINE = Color(1.0, 0.0, 0.329412, 0.95)     # #FF0054
+const COLOR_GRID_TIMELINE_MAIN = Color(0.788235, 0.0941176, 0.290196, 0.6) # #C9184A
+const COLOR_GRID_TIMELINE_SUB = Color(1.0, 0.760784, 0.819608, 0.5)  # #FFC2D1
 
 # 이펙트 매핑
-const EFFECT_TYPES := [
+const EFFECT_TYPES = [
 	{"name": "Window (Static)", "code": "window"},
 	{"name": "Window (Linear)", "code": "window_moving_linear"},
 	{"name": "Window (Smooth)", "code": "window_moving_smooth"},
@@ -408,7 +408,7 @@ func _on_song_selected(index: int) -> void:
 	selected_song = music_list[index]
 	Global.selected_music = selected_song
 	
-	var res_path := MUSIC_BASE_PATH + selected_song + "/Res.tres"
+	var res_path = MUSIC_BASE_PATH + selected_song + "/Res.tres"
 	var music_res = null
 	if FileAccess.file_exists(res_path):
 		music_res = load(res_path)
@@ -442,7 +442,7 @@ func _on_song_selected(index: int) -> void:
 	timeline.queue_redraw()
 
 func _load_chart() -> void:
-	var path := MUSIC_BASE_PATH + selected_song + "/chart.json"
+	var path = MUSIC_BASE_PATH + selected_song + "/chart.json"
 	if not FileAccess.file_exists(path):
 		chart_data = {
 			"notes": [],
@@ -451,7 +451,7 @@ func _load_chart() -> void:
 		_save_chart_file()
 		return
 		
-	var file := FileAccess.open(path, FileAccess.READ)
+	var file = FileAccess.open(path, FileAccess.READ)
 	if file:
 		var json_str = file.get_as_text()
 		var parsed = JSON.parse_string(json_str)
@@ -475,8 +475,8 @@ func _sort_events() -> void:
 		)
 
 func _save_chart_file() -> void:
-	var path := MUSIC_BASE_PATH + selected_song + "/chart.json"
-	var file := FileAccess.open(path, FileAccess.WRITE)
+	var path = MUSIC_BASE_PATH + selected_song + "/chart.json"
+	var file = FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		var json_str = JSON.stringify(chart_data, "\t")
 		file.store_string(json_str)
@@ -507,21 +507,21 @@ func _process(delta: float) -> void:
 	_update_time_label()
 
 func _update_time_label() -> void:
-	var cur_min := int(current_time) / 60
-	var cur_sec := int(current_time) % 60
-	var cur_ms := int((current_time - int(current_time)) * 1000)
+	var cur_min = int(current_time) / 60
+	var cur_sec = int(current_time) % 60
+	var cur_ms = int((current_time - int(current_time)) * 1000)
 	
-	var total_min := int(song_duration) / 60
-	var total_sec := int(song_duration) % 60
-	var total_ms := int((song_duration - int(song_duration)) * 1000)
+	var total_min = int(song_duration) / 60
+	var total_sec = int(song_duration) % 60
+	var total_ms = int((song_duration - int(song_duration)) * 1000)
 	
 	time_label.text = "%02d:%02d.%03d / %02d:%02d.%03d" % [cur_min, cur_sec, cur_ms, total_min, total_sec, total_ms]
 
 func get_snapped_time(raw_time: float) -> float:
 	if snap_division <= 1:
 		return raw_time
-	var beat_length := 60.0 / bpm
-	var step := beat_length * (4.0 / snap_division)
+	var beat_length = 60.0 / bpm
+	var step = beat_length * (4.0 / snap_division)
 	var snapped: float = round(raw_time / step) * step
 	return clamp(snapped, 0.0, song_duration)
 
@@ -544,8 +544,8 @@ func _input(event: InputEvent) -> void:
 				_delete_event(selected_event_index)
 				get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_LEFT or event.keycode == KEY_RIGHT:
-			var step := 0.1
-			var is_ctrl := Input.is_key_pressed(KEY_CTRL)
+			var step = 0.1
+			var is_ctrl = Input.is_key_pressed(KEY_CTRL)
 			if is_ctrl:
 				step = 60.0 / bpm
 			if event.keycode == KEY_LEFT:
@@ -597,7 +597,7 @@ func _on_speed_selected(index: int) -> void:
 		audio_player.pitch_scale = playback_speed
 
 func _on_bpm_submitted(new_text: String) -> void:
-	var val := float(new_text)
+	var val = float(new_text)
 	if val > 0:
 		bpm = val
 		_save_resources()
@@ -613,7 +613,7 @@ func _on_offset_submitted(new_text: String) -> void:
 	offset_input.release_focus()
 
 func _save_resources() -> void:
-	var res_path := MUSIC_BASE_PATH + selected_song + "/Res.tres"
+	var res_path = MUSIC_BASE_PATH + selected_song + "/Res.tres"
 	if FileAccess.file_exists(res_path):
 		var music_res = load(res_path)
 		if music_res:
@@ -734,7 +734,7 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 	
 	if event is InputEventMouseButton:
 		var local_pos: Vector2 = event.position
-		var logical_pos := Vector2(local_pos.x / sx, local_pos.y / sy)
+		var logical_pos = Vector2(local_pos.x / sx, local_pos.y / sy)
 		
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			if is_setting_start:
@@ -776,7 +776,7 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 					var cur_pos: Vector2 = _get_event_current_pos(ev, current_time)
 					var ev_w: int = int(ev.get("width", 200))
 					var ev_h: int = int(ev.get("height", 200))
-					var rect := Rect2(cur_pos, Vector2(ev_w, ev_h))
+					var rect = Rect2(cur_pos, Vector2(ev_w, ev_h))
 					if rect.has_point(logical_pos):
 						clicked_idx = i
 						break
@@ -800,7 +800,7 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 				
 	elif event is InputEventMouseMotion and is_dragging:
 		var local_pos: Vector2 = event.position
-		var logical_pos := Vector2(local_pos.x / sx, local_pos.y / sy)
+		var logical_pos = Vector2(local_pos.x / sx, local_pos.y / sy)
 		if selected_event_index != -1:
 			var ev: Dictionary = chart_data["events"][selected_event_index]
 			var etype: String = ev.get("type", "window")
@@ -828,12 +828,12 @@ func _get_event_current_pos(ev: Dictionary, time_val: float) -> Vector2:
 	
 	var sx: float = float(ev.get("x", 860))
 	var sy: float = float(ev.get("y", 440))
-	var start_pos := Vector2(sx, sy)
+	var start_pos = Vector2(sx, sy)
 	
 	if "moving" in etype and ev_dur > 0:
 		var tx: float = float(ev.get("target_x", ev.get("to_x", sx)))
 		var ty: float = float(ev.get("target_y", ev.get("to_y", sy)))
-		var target_pos := Vector2(tx, ty)
+		var target_pos = Vector2(tx, ty)
 		
 		var t: float = (time_val - ev_time) / ev_dur
 		t = clamp(t, 0.0, 1.0)
@@ -861,7 +861,7 @@ func _draw_preview_canvas() -> void:
 		preview_canvas.draw_line(Vector2(0, gy), Vector2(canvas_w, gy), COLOR_GRID_CANVAS, 1.0)
 		
 	var events: Array = chart_data.get("events", [])
-	var font := get_theme_font("font")
+	var font = get_theme_font("font")
 	
 	for i in range(events.size()):
 		var ev = events[i]
@@ -874,17 +874,17 @@ func _draw_preview_canvas() -> void:
 			var ev_h: int = int(ev.get("height", 200))
 			var cur_pos: Vector2 = _get_event_current_pos(ev, current_time)
 			
-			var rect_scaled := Rect2(cur_pos * Vector2(sx, sy), Vector2(ev_w * sx, ev_h * sy))
+			var rect_scaled = Rect2(cur_pos * Vector2(sx, sy), Vector2(ev_w * sx, ev_h * sy))
 			var opac: float = float(ev.get("opacity", 1.0))
 			
-			var fill_color := COLOR_EVENT_WINDOW
+			var fill_color = COLOR_EVENT_WINDOW
 			if "image" in etype:
 				fill_color = COLOR_EVENT_IMAGE
 				
 			fill_color.a = opac * 0.5
 			preview_canvas.draw_rect(rect_scaled, fill_color)
 			
-			var border_color := fill_color
+			var border_color = fill_color
 			border_color.a = opac
 			var is_sel: bool = (i == selected_event_index)
 			var border_w: float = 4.0 if is_sel else 2.0
@@ -894,18 +894,18 @@ func _draw_preview_canvas() -> void:
 			preview_canvas.draw_rect(rect_scaled, border_color, false, border_w)
 			
 			var bar_h: float = 20.0 * sy
-			var bar_rect := Rect2(rect_scaled.position, Vector2(rect_scaled.size.x, bar_h))
-			var bar_color := COLOR_TEXT_WINE
+			var bar_rect = Rect2(rect_scaled.position, Vector2(rect_scaled.size.x, bar_h))
+			var bar_color = COLOR_TEXT_WINE
 			bar_color.a = opac * 0.8
 			preview_canvas.draw_rect(bar_rect, bar_color)
 			
 			var display_title: String = ev.get("title", "Window") if "window" in etype else "Image"
-			var text_pos := bar_rect.position + Vector2(5.0 * sx, 15.0 * sy)
+			var text_pos = bar_rect.position + Vector2(5.0 * sx, 15.0 * sy)
 			preview_canvas.draw_string(font, text_pos, display_title, HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * sy), COLOR_BG_CANVAS)
 			
 			if "moving" in etype and is_sel:
-				var sp := Vector2(float(ev.get("x", 860)), float(ev.get("y", 440))) * Vector2(sx, sy)
-				var tp := Vector2(float(ev.get("target_x", ev.get("to_x", ev.get("x", 860)))), float(ev.get("target_y", ev.get("to_y", ev.get("y", 440))))) * Vector2(sx, sy)
+				var sp = Vector2(float(ev.get("x", 860)), float(ev.get("y", 440))) * Vector2(sx, sy)
+				var tp = Vector2(float(ev.get("target_x", ev.get("to_x", ev.get("x", 860)))), float(ev.get("target_y", ev.get("to_y", ev.get("y", 440))))) * Vector2(sx, sy)
 				
 				preview_canvas.draw_line(sp, tp, COLOR_TEXT_WINE, 2.0)
 				preview_canvas.draw_circle(sp, 6.0 * sx, Color(0, 1, 0, 0.8))
@@ -938,7 +938,7 @@ func _draw_timeline() -> void:
 		
 	var first_beat_index: int = ceili(view_start_time / beat_length)
 	var last_beat_index: int = floori(view_end_time / beat_length)
-	var font := get_theme_font("font")
+	var font = get_theme_font("font")
 	
 	for idx in range(first_beat_index, last_beat_index + 1):
 		var t: float = idx * beat_length
@@ -946,7 +946,7 @@ func _draw_timeline() -> void:
 		var lx: float = center_x + dx
 		
 		timeline.draw_line(Vector2(lx, 15), Vector2(lx, timeline_h), COLOR_GRID_TIMELINE_MAIN, 2.0)
-		var beat_str := str(idx)
+		var beat_str = str(idx)
 		timeline.draw_string(font, Vector2(lx + 4, 15), beat_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, COLOR_TEXT_WINE_MUTED)
 		
 	var sec_step: float = 1.0
@@ -986,7 +986,7 @@ func _draw_timeline() -> void:
 			
 		var bar_y: float = timeline_h / 2.0 - 15.0
 		var bar_h: float = 30.0
-		var rect := Rect2(lx, bar_y, dw, bar_h)
+		var rect = Rect2(lx, bar_y, dw, bar_h)
 		
 		timeline.draw_rect(rect, bar_color)
 		timeline.draw_rect(rect, COLOR_TEXT_WINE, false, 1.5)
@@ -1021,7 +1021,7 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 				var ey: float = timeline.size.y / 2.0 - 15.0
 				var eh: float = 30.0
 				
-				var rect := Rect2(elx, ey, edw, eh)
+				var rect = Rect2(elx, ey, edw, eh)
 				if rect.has_point(event.position):
 					clicked_idx = i
 					break
@@ -1032,7 +1032,7 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 				preview_canvas.queue_redraw()
 				timeline.queue_redraw()
 			else:
-				var is_ctrl := Input.is_key_pressed(KEY_CTRL)
+				var is_ctrl = Input.is_key_pressed(KEY_CTRL)
 				if is_ctrl:
 					target_time = get_snapped_time(target_time)
 				_seek_time(target_time)

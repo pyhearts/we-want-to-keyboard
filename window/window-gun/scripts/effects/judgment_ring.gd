@@ -1,7 +1,7 @@
 extends TextureRect
 
-@export var default_duration := 0.8
-@export var start_diameter := 2500.0
+@export var default_duration = 0.8
+@export var start_diameter = 2500.0
 
 var active_tween: Tween
 

@@ -1,6 +1,6 @@
 extends Control
 
-@export_file("*.tscn") var next_scene_path := ""
+@export_file("*.tscn") var next_scene_path = ""
 
 
 func _input(event: InputEvent) -> void:

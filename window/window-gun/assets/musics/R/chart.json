@@ -1,35 +1,48 @@
 {
+	"events": [],
 	"notes": [
 		{
+			"time": 0.0,
+			"type": "normal",
+			"x": 100.0,
+			"y": 100.0
+		},
+		{
+			"time": 0.0,
+			"type": "normal",
+			"x": 1820.0,
+			"y": 980.0
+		},
+		{
 			"time": 1.5,
-			"x": 600,
-			"y": 400,
-			"type": "normal"
+			"type": "normal",
+			"x": 370.0,
+			"y": 310.0
 		},
 		{
 			"time": 3.0,
-			"x": 1200,
-			"y": 600,
-			"type": "moving"
+			"type": "moving",
+			"x": 970.0,
+			"y": 510.0
 		},
 		{
-			"time": 5.0,
-			"type": "hold",
+			"beat_division": 16.0,
 			"duration": 5.0,
-			"beat_division": 16
+			"time": 5.0,
+			"type": "hold"
 		},
 		{
 			"time": 11.0,
-			"x": 960,
-			"y": 300,
-			"type": "normal"
+			"type": "normal",
+			"x": 730.0,
+			"y": 210.0
 		},
 		{
-			"time": 13.0,
-			"type": "hold",
+			"beat_division": 8.0,
 			"duration": 4.0,
-			"beat_division": 8
+			"time": 13.0,
+			"type": "hold"
 		}
 	],
-	"events": []
+	"offset_corrected": true
 }

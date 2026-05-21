@@ -1,7 +1,7 @@
 extends Control
 
-const MUSIC_BASE_PATH := "res://assets/musics/"
-const MAIN_MENU_SCENE := "res://scenes/menu/main_menu.tscn"
+const MUSIC_BASE_PATH = "res://assets/musics/"
+const MAIN_MENU_SCENE = "res://scenes/menu/main_menu.tscn"
 
 # UI 노드 바인딩
 @onready var song_select: OptionButton = %SongSelect
@@ -52,24 +52,29 @@ var song_duration: float = 0.0
 # 노트 조작 관련
 var hover_note_index: int = -1
 var selected_note_index: int = -1
-var drag_offset := Vector2.ZERO
+var drag_offset = Vector2.ZERO
+var is_dragging_note: bool = false
+var undo_stack: Array = []
+var redo_stack: Array = []
+const MAX_UNDO_DEPTH: int = 50
+var copied_note_data: Dictionary = {}
 
 # 핑크 테마 컬러 상수
-const COLOR_BG_CANVAS := Color(1.0, 0.960784, 0.968627, 1.0)        # #FFF5F7
-const COLOR_BORDER_CANVAS := Color(1.0, 0.560784, 0.639216, 0.8)    # #FF8FA3
-const COLOR_GRID_CANVAS := Color(1.0, 0.815686, 0.854902, 0.4)      # #FFE3E8
-const COLOR_TEXT_WINE := Color(0.290196, 0.0823529, 0.129412, 1.0)   # #4A1521
-const COLOR_TEXT_WINE_MUTED := Color(0.541176, 0.352941, 0.396078, 1.0) # #8A5A65
+const COLOR_BG_CANVAS = Color(1.0, 0.960784, 0.968627, 1.0)        # #FFF5F7
+const COLOR_BORDER_CANVAS = Color(1.0, 0.560784, 0.639216, 0.8)    # #FF8FA3
+const COLOR_GRID_CANVAS = Color(1.0, 0.815686, 0.854902, 0.4)      # #FFE3E8
+const COLOR_TEXT_WINE = Color(0.290196, 0.0823529, 0.129412, 1.0)   # #4A1521
+const COLOR_TEXT_WINE_MUTED = Color(0.541176, 0.352941, 0.396078, 1.0) # #8A5A65
 
-const COLOR_NOTE_NORMAL := Color(1.0, 0.301961, 0.427451, 1.0)      # #FF4D6D
-const COLOR_NOTE_MOVING := Color(1.0, 0.458824, 0.560784, 1.0)      # #FF758F
-const COLOR_NOTE_HOLD := Color(0.788235, 0.0941176, 0.290196, 1.0)    # #C9184A
-const COLOR_NOTE_SELECTED := Color(1.0, 0.0, 0.329412, 1.0)         # #FF0054
+const COLOR_NOTE_NORMAL = Color(1.0, 0.301961, 0.427451, 1.0)      # #FF4D6D
+const COLOR_NOTE_MOVING = Color(1.0, 0.458824, 0.560784, 1.0)      # #FF758F
+const COLOR_NOTE_HOLD = Color(0.788235, 0.0941176, 0.290196, 1.0)    # #C9184A
+const COLOR_NOTE_SELECTED = Color(1.0, 0.0, 0.329412, 1.0)         # #FF0054
 
-const COLOR_BG_TIMELINE := Color(1.0, 0.898039, 0.92549, 1.0)       # #FFE5EC
-const COLOR_HEADER_TIMELINE := Color(1.0, 0.0, 0.329412, 0.95)     # #FF0054 (재생헤드)
-const COLOR_GRID_TIMELINE_MAIN := Color(0.788235, 0.0941176, 0.290196, 0.6) # #C9184A (1비트선)
-const COLOR_GRID_TIMELINE_SUB := Color(1.0, 0.760784, 0.819608, 0.5)  # #FFC2D1 (스냅선)
+const COLOR_BG_TIMELINE = Color(1.0, 0.898039, 0.92549, 1.0)       # #FFE5EC
+const COLOR_HEADER_TIMELINE = Color(1.0, 0.0, 0.329412, 0.95)     # #FF0054 (재생헤드)
+const COLOR_GRID_TIMELINE_MAIN = Color(0.788235, 0.0941176, 0.290196, 0.6) # #C9184A (1비트선)
+const COLOR_GRID_TIMELINE_SUB = Color(1.0, 0.760784, 0.819608, 0.5)  # #FFC2D1 (스냅선)
 
 func _ready() -> void:
 	# AudioStreamPlayer 생성 및 씬 추가
@@ -151,7 +156,7 @@ func _on_song_selected(index: int) -> void:
 	Global.selected_music = selected_song
 	
 	# 음악 파일 및 BPM 리소스 로드
-	var res_path := MUSIC_BASE_PATH + selected_song + "/Res.tres"
+	var res_path = MUSIC_BASE_PATH + selected_song + "/Res.tres"
 	var music_res = null
 	if FileAccess.file_exists(res_path):
 		music_res = load(res_path)
@@ -188,17 +193,17 @@ func _on_song_selected(index: int) -> void:
 	timeline.queue_redraw()
 
 func _load_chart() -> void:
-	var path := MUSIC_BASE_PATH + selected_song + "/chart.json"
+	var path = MUSIC_BASE_PATH + selected_song + "/chart.json"
 	if not FileAccess.file_exists(path):
-		# 없을 시 빈 구조 생성
 		chart_data = {
 			"notes": [],
-			"events": []
+			"events": [],
+			"offset_corrected": true
 		}
 		_save_chart_file()
 		return
 		
-	var file := FileAccess.open(path, FileAccess.READ)
+	var file = FileAccess.open(path, FileAccess.READ)
 	if file:
 		var json_str = file.get_as_text()
 		var parsed = JSON.parse_string(json_str)
@@ -208,12 +213,26 @@ func _load_chart() -> void:
 				chart_data["notes"] = []
 			if not chart_data.has("events"):
 				chart_data["events"] = []
+				
+			# 구버전 차트 좌표 보정 (offset_corrected 플래그가 없는 경우)
+			if not chart_data.get("offset_corrected", false):
+				for note in chart_data["notes"]:
+					if note is Dictionary:
+						if note.has("x"):
+							note["x"] = float(note["x"]) - 230.0
+						if note.has("y"):
+							note["y"] = float(note["y"]) - 90.0
+						if note.has("start_x"):
+							note["start_x"] = float(note["start_x"]) - 230.0
+						if note.has("start_y"):
+							note["start_y"] = float(note["start_y"]) - 90.0
+				chart_data["offset_corrected"] = true
+				_save_chart_file()
 		else:
-			chart_data = {"notes": [], "events": []}
+			chart_data = {"notes": [], "events": [], "offset_corrected": true}
 	else:
-		chart_data = {"notes": [], "events": []}
+		chart_data = {"notes": [], "events": [], "offset_corrected": true}
 		
-	# 정렬
 	_sort_chart()
 
 func _sort_chart() -> void:
@@ -222,8 +241,8 @@ func _sort_chart() -> void:
 
 func _save_chart_file() -> void:
 	_sort_chart()
-	var path := MUSIC_BASE_PATH + selected_song + "/chart.json"
-	var file := FileAccess.open(path, FileAccess.WRITE)
+	var path = MUSIC_BASE_PATH + selected_song + "/chart.json"
+	var file = FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		var json_str = JSON.stringify(chart_data, "\t")
 		file.store_string(json_str)
@@ -231,7 +250,7 @@ func _save_chart_file() -> void:
 		_show_toast("Chart Auto-Saved!")
 
 func _save_resources() -> void:
-	var res_path := MUSIC_BASE_PATH + selected_song + "/Res.tres"
+	var res_path = MUSIC_BASE_PATH + selected_song + "/Res.tres"
 	if FileAccess.file_exists(res_path):
 		var music_res = load(res_path)
 		if music_res:
@@ -270,13 +289,13 @@ func _process(delta: float) -> void:
 	timeline.queue_redraw()
 
 func _update_time_label() -> void:
-	var cur_min := int(current_time) / 60
-	var cur_sec := int(current_time) % 60
-	var cur_ms := int((current_time - int(current_time)) * 1000)
+	var cur_min = int(current_time) / 60
+	var cur_sec = int(current_time) % 60
+	var cur_ms = int((current_time - int(current_time)) * 1000)
 	
-	var total_min := int(song_duration) / 60
-	var total_sec := int(song_duration) % 60
-	var total_ms := int((song_duration - int(song_duration)) * 1000)
+	var total_min = int(song_duration) / 60
+	var total_sec = int(song_duration) % 60
+	var total_ms = int((song_duration - int(song_duration)) * 1000)
 	
 	time_label.text = "%02d:%02d.%03d / %02d:%02d.%03d" % [cur_min, cur_sec, cur_ms, total_min, total_sec, total_ms]
 
@@ -286,8 +305,8 @@ func _update_time_label() -> void:
 func get_snapped_time(raw_time: float) -> float:
 	if snap_division <= 1:
 		return max(0.0, raw_time)
-	var beat_length := 60.0 / bpm
-	var step := beat_length * (4.0 / snap_division)
+	var beat_length = 60.0 / bpm
+	var step = beat_length * (4.0 / snap_division)
 	var snapped: float = round(raw_time / step) * step
 	return max(0.0, snapped)
 
@@ -310,16 +329,90 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_on_play_pressed()
 			return
-			
-	# 방향키 좌/우 이동 (시간 탐색)
-	if event is InputEventKey and event.pressed:
-		var step := 0.1
-		var is_ctrl := false
+
+	# Ctrl 단축키 처리 (Undo / Redo / Copy / Paste)
+	if event is InputEventKey and event.pressed and not event.echo:
+		var is_ctrl = false
 		if event is InputEventWithModifiers:
 			is_ctrl = event.ctrl_pressed
 		
 		if is_ctrl:
-			var beat_length := 60.0 / bpm
+			if event.keycode == KEY_Z:
+				get_viewport().set_input_as_handled()
+				perform_undo()
+				return
+			elif event.keycode == KEY_Y:
+				get_viewport().set_input_as_handled()
+				perform_redo()
+				return
+			elif event.keycode == KEY_C:
+				if selected_note_index != -1:
+					get_viewport().set_input_as_handled()
+					var note = chart_data["notes"][selected_note_index]
+					copied_note_data = note.duplicate(true)
+					_show_toast("Note Copied")
+					return
+			elif event.keycode == KEY_V:
+				if not copied_note_data.is_empty():
+					get_viewport().set_input_as_handled()
+					save_state_for_undo()
+					var new_note = copied_note_data.duplicate(true)
+					new_note["time"] = get_snapped_time(current_time)
+					chart_data["notes"].append(new_note)
+					_save_chart_file()
+					selected_note_index = chart_data["notes"].find(new_note)
+					_show_toast("Note Pasted")
+					preview_canvas.queue_redraw()
+					return
+
+	# 선택된 노트 미세 이동 (WASD / Shift+WASD)
+	if selected_note_index != -1 and event is InputEventKey and event.pressed:
+		var focus_owner = get_viewport().gui_get_focus_owner()
+		if focus_owner == null or not (focus_owner is LineEdit):
+			var step_size = 1.0
+			if event is InputEventWithModifiers and event.shift_pressed:
+				step_size = 10.0
+				
+			var move_vec = Vector2.ZERO
+			match event.keycode:
+				KEY_W: move_vec.y = -step_size
+				KEY_S: move_vec.y = step_size
+				KEY_A: move_vec.x = -step_size
+				KEY_D: move_vec.x = step_size
+				
+			if move_vec != Vector2.ZERO:
+				get_viewport().set_input_as_handled()
+				if not event.echo:
+					save_state_for_undo()
+				var note = chart_data["notes"][selected_note_index]
+				var new_x = float(note.get("x", 960.0)) + move_vec.x
+				var new_y = float(note.get("y", 540.0)) + move_vec.y
+				
+				if note.get("type", "normal") == "moving":
+					var dx = new_x - float(note.get("x", 960.0))
+					var dy = new_y - float(note.get("y", 540.0))
+					if note.has("start_x"):
+						note["start_x"] = float(note["start_x"]) + dx
+					if note.has("start_y"):
+						note["start_y"] = float(note["start_y"]) + dy
+					if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", new_x))
+					if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", new_y + 300.0))
+					
+				note["x"] = new_x
+				note["y"] = new_y
+				_save_chart_file()
+				preview_canvas.queue_redraw()
+				return
+
+	# 방향키 좌우 이동 (시간 탐색)
+	if event is InputEventKey and event.pressed:
+		var step = 0.1
+		var is_ctrl = false
+		if event is InputEventWithModifiers:
+			is_ctrl = event.ctrl_pressed
+		
+		if is_ctrl:
+			var beat_length = 60.0 / bpm
 			step = beat_length * (4.0 / snap_division)
 			
 		if event.keycode == KEY_LEFT:
@@ -339,8 +432,135 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_DELETE:
 		if selected_note_index != -1:
 			get_viewport().set_input_as_handled()
+			save_state_for_undo()
 			_delete_note(selected_note_index)
 
+	# 드래그 중인 동안에는 마우스의 위치가 어디든 최우선으로 드래그 이동과 릴리즈를 처리
+	if is_dragging_note and selected_note_index != -1 and (event is InputEventMouseMotion or event is InputEventMouseButton):
+		var global_pos = event.global_position
+		var local_pos = preview_canvas.get_global_transform().affine_inverse() * global_pos
+		var canvas_w = preview_canvas.size.x
+		var canvas_h = preview_canvas.size.y
+		if canvas_w > 0.0 and canvas_h > 0.0:
+			var logical_pos := Vector2(
+				local_pos.x * (1920.0 / canvas_w),
+				local_pos.y * (1080.0 / canvas_h)
+			)
+			
+			if event is InputEventMouseMotion:
+				var note = chart_data["notes"][selected_note_index]
+				var old_x = float(note.get("x", 960.0))
+				var old_y = float(note.get("y", 540.0))
+				
+				var new_x = logical_pos.x - drag_offset.x
+				var new_y = logical_pos.y - drag_offset.y
+				
+				note["x"] = new_x
+				note["y"] = new_y
+				
+				if note.get("type", "normal") == "moving":
+					var dx = new_x - old_x
+					var dy = new_y - old_y
+					if note.has("start_x"):
+						note["start_x"] = float(note["start_x"]) + dx
+						if note.has("start_y"):
+							note["start_y"] = float(note["start_y"]) + dy
+					if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", new_x))
+					if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", new_y + 300.0))
+					
+				preview_canvas.queue_redraw()
+				get_viewport().set_input_as_handled()
+				return
+				
+			elif event is InputEventMouseButton:
+				if not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+					is_dragging_note = false
+					_save_chart_file()
+					preview_canvas.queue_redraw()
+					get_viewport().set_input_as_handled()
+					return
+
+	# 캔버스 밖 영역(여백) 마우스 입력 처리 (화면 밖 생성 및 삭제 지원)
+	var canvas_container = get_node_or_null("Split/MainArea/CanvasContainer") as Control
+	if canvas_container and (event is InputEventMouseButton or event is InputEventMouseMotion):
+		var global_pos = event.global_position
+		# 마우스가 CanvasContainer 내부이되 PreviewCanvas 외부인 경우
+		if canvas_container.get_global_rect().has_point(global_pos) and not preview_canvas.get_global_rect().has_point(global_pos):
+			var local_pos = preview_canvas.get_global_transform().affine_inverse() * global_pos
+			var canvas_w = preview_canvas.size.x
+			var canvas_h = preview_canvas.size.y
+			if canvas_w > 0.0 and canvas_h > 0.0:
+				var logical_pos = Vector2(
+					local_pos.x * (1920.0 / canvas_w),
+					local_pos.y * (1080.0 / canvas_h)
+				)
+				
+				if event is InputEventMouseMotion:
+					if not is_dragging_note:
+						_update_hover_note(logical_pos)
+						
+				elif event is InputEventMouseButton:
+					if event.pressed:
+						var snapped_time = get_snapped_time(current_time)
+						
+						if event.button_index == MOUSE_BUTTON_LEFT:
+							if is_setting_start_pos and selected_note_index != -1:
+								var note = chart_data["notes"][selected_note_index]
+								note["start_x"] = logical_pos.x
+								note["start_y"] = logical_pos.y
+								if start_x_input: start_x_input.text = "%.1f" % logical_pos.x
+								if start_y_input: start_y_input.text = "%.1f" % logical_pos.y
+								if set_start_btn: set_start_btn.button_pressed = false
+								_save_chart_file()
+								preview_canvas.queue_redraw()
+							else:
+								if hover_note_index != -1:
+									selected_note_index = hover_note_index
+									_show_toast("Note Selected")
+									
+									is_dragging_note = true
+									var note = chart_data["notes"][selected_note_index]
+									drag_offset = logical_pos - Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
+									save_state_for_undo()
+									
+									var note_type = note.get("type", "normal")
+									if note_type == "normal":
+										type_select.selected = 0
+										selected_type = "normal"
+										hold_settings.visible = false
+										if moving_settings: moving_settings.visible = false
+									elif note_type == "moving":
+										type_select.selected = 1
+										selected_type = "moving"
+										hold_settings.visible = false
+										if moving_settings: moving_settings.visible = true
+										if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", note.get("x", 960.0)))
+										if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", float(note.get("y", 540.0)) + 300.0))
+									elif note_type == "hold":
+										type_select.selected = 2
+										selected_type = "hold"
+										hold_settings.visible = true
+										if moving_settings: moving_settings.visible = false
+										hold_duration = float(note.get("duration", 3.0))
+										hold_division = int(note.get("beat_division", 16))
+										duration_input.text = str(hold_duration)
+										division_input.text = str(hold_division)
+									preview_canvas.queue_redraw()
+								else:
+									_add_note(snapped_time, logical_pos)
+									
+						elif event.button_index == MOUSE_BUTTON_RIGHT:
+							if hover_note_index != -1:
+								_delete_note(hover_note_index)
+					else:
+						if event.button_index == MOUSE_BUTTON_LEFT and is_dragging_note:
+							is_dragging_note = false
+							_save_chart_file()
+							preview_canvas.queue_redraw()
+		elif not canvas_container.get_global_rect().has_point(global_pos) and not preview_canvas.get_global_rect().has_point(global_pos):
+			if hover_note_index != -1:
+				hover_note_index = -1
+				preview_canvas.queue_redraw()
 func _seek_time(target: float) -> void:
 	current_time = clamp(target, 0.0, song_duration)
 	if audio_player.playing:
@@ -394,7 +614,7 @@ func _on_speed_selected(index: int) -> void:
 		audio_player.pitch_scale = playback_speed
 
 func _on_bpm_submitted(new_text: String) -> void:
-	var val := float(new_text)
+	var val = float(new_text)
 	if val > 0.0:
 		bpm = val
 		_save_resources()
@@ -407,13 +627,13 @@ func _on_offset_submitted(new_text: String) -> void:
 	offset_input.release_focus()
 
 func _on_hold_duration_submitted(new_text: String) -> void:
-	var val := float(new_text)
+	var val = float(new_text)
 	if val > 0.0:
 		hold_duration = val
 		duration_input.release_focus()
 
 func _on_hold_division_submitted(new_text: String) -> void:
-	var val := int(new_text)
+	var val = int(new_text)
 	if val > 0:
 		hold_division = val
 		division_input.release_focus()
@@ -424,99 +644,136 @@ func _on_hold_division_submitted(new_text: String) -> void:
 func _on_canvas_gui_input(event: InputEvent) -> void:
 	if not chart_data.has("notes"): return
 	
-	var canvas_w := preview_canvas.size.x
-	var canvas_h := preview_canvas.size.y
+	var canvas_w = preview_canvas.size.x
+	var canvas_h = preview_canvas.size.y
 	if canvas_w == 0 or canvas_h == 0: return
 	
 	var local_pos: Vector2 = event.position
-	var logical_pos := Vector2(
+	var logical_pos = Vector2(
 		local_pos.x * (1920.0 / canvas_w),
 		local_pos.y * (1080.0 / canvas_h)
 	)
 	
 	if event is InputEventMouseMotion:
-		_update_hover_note(logical_pos)
+		if is_dragging_note and selected_note_index != -1:
+			var note = chart_data["notes"][selected_note_index]
+			var old_x = float(note.get("x", 960.0))
+			var old_y = float(note.get("y", 540.0))
+			
+			var new_x = logical_pos.x - drag_offset.x
+			var new_y = logical_pos.y - drag_offset.y
+			
+			note["x"] = new_x
+			note["y"] = new_y
+			
+			if note.get("type", "normal") == "moving":
+				var dx = new_x - old_x
+				var dy = new_y - old_y
+				if note.has("start_x"):
+					note["start_x"] = float(note["start_x"]) + dx
+				if note.has("start_y"):
+					note["start_y"] = float(note["start_y"]) + dy
+				if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", new_x))
+				if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", new_y + 300.0))
+				
+			preview_canvas.queue_redraw()
+		else:
+			_update_hover_note(logical_pos)
 		
-	if event is InputEventMouseButton and event.pressed:
-		var snapped_time := get_snapped_time(current_time)
-		
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if is_setting_start_pos and selected_note_index != -1:
-				var note = chart_data["notes"][selected_note_index]
-				note["start_x"] = logical_pos.x
-				note["start_y"] = logical_pos.y
-				if start_x_input: start_x_input.text = "%.1f" % logical_pos.x
-				if start_y_input: start_y_input.text = "%.1f" % logical_pos.y
-				if set_start_btn: set_start_btn.button_pressed = false
+	if event is InputEventMouseButton:
+		if event.pressed:
+			var snapped_time = get_snapped_time(current_time)
+			
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				if is_setting_start_pos and selected_note_index != -1:
+					var note = chart_data["notes"][selected_note_index]
+					note["start_x"] = logical_pos.x
+					note["start_y"] = logical_pos.y
+					if start_x_input: start_x_input.text = "%.1f" % logical_pos.x
+					if start_y_input: start_y_input.text = "%.1f" % logical_pos.y
+					if set_start_btn: set_start_btn.button_pressed = false
+					_save_chart_file()
+					preview_canvas.queue_redraw()
+					return
+					
+				if hover_note_index != -1:
+					selected_note_index = hover_note_index
+					_show_toast("Note Selected")
+					
+					is_dragging_note = true
+					var note = chart_data["notes"][selected_note_index]
+					drag_offset = logical_pos - Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
+					save_state_for_undo()
+					
+					var note_type = note.get("type", "normal")
+					if note_type == "normal":
+						type_select.selected = 0
+						selected_type = "normal"
+						hold_settings.visible = false
+						if moving_settings: moving_settings.visible = false
+					elif note_type == "moving":
+						type_select.selected = 1
+						selected_type = "moving"
+						hold_settings.visible = false
+						if moving_settings: moving_settings.visible = true
+						if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", note.get("x", 960.0)))
+						if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", float(note.get("y", 540.0)) + 300.0))
+					elif note_type == "hold":
+						type_select.selected = 2
+						selected_type = "hold"
+						hold_settings.visible = true
+						if moving_settings: moving_settings.visible = false
+						hold_duration = float(note.get("duration", 3.0))
+						hold_division = int(note.get("beat_division", 16))
+						duration_input.text = str(hold_duration)
+						division_input.text = str(hold_division)
+					preview_canvas.queue_redraw()
+				else:
+					_add_note(snapped_time, logical_pos)
+					
+			elif event.button_index == MOUSE_BUTTON_RIGHT:
+				if hover_note_index != -1:
+					_delete_note(hover_note_index)
+		else:
+			if event.button_index == MOUSE_BUTTON_LEFT and is_dragging_note:
+				is_dragging_note = false
 				_save_chart_file()
 				preview_canvas.queue_redraw()
-				return
-				
-			if hover_note_index != -1:
-				selected_note_index = hover_note_index
-				_show_toast("Note Selected")
-				
-				var note = chart_data["notes"][hover_note_index]
-				var note_type = note.get("type", "normal")
-				if note_type == "normal":
-					type_select.selected = 0
-					selected_type = "normal"
-					hold_settings.visible = false
-					if moving_settings: moving_settings.visible = false
-				elif note_type == "moving":
-					type_select.selected = 1
-					selected_type = "moving"
-					hold_settings.visible = false
-					if moving_settings: moving_settings.visible = true
-					if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", note.get("x", 960.0)))
-					if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", float(note.get("y", 540.0)) + 300.0))
-				elif note_type == "hold":
-					type_select.selected = 2
-					selected_type = "hold"
-					hold_settings.visible = true
-					if moving_settings: moving_settings.visible = false
-					hold_duration = float(note.get("duration", 3.0))
-					hold_division = int(note.get("beat_division", 16))
-					duration_input.text = str(hold_duration)
-					division_input.text = str(hold_division)
-			else:
-				_add_note(snapped_time, logical_pos)
-				
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			if hover_note_index != -1:
-				_delete_note(hover_note_index)
 
 func _update_hover_note(logical_pos: Vector2) -> void:
 	hover_note_index = -1
 	if not chart_data.has("notes"): return
 	
-	var threshold := 40.0
+	var threshold = 40.0
 	var notes: Array = chart_data["notes"]
-	var time_window := 0.4
+	var time_window = 0.4
 	
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
-		var note_time := float(note.get("time", 0.0))
-		var note_type := str(note.get("type", "normal"))
+		var note_time = float(note.get("time", 0.0))
+		var note_type = str(note.get("type", "normal"))
 		
 		if absf(note_time - current_time) > time_window:
 			continue
 			
 		if note_type == "hold":
-			var dist := logical_pos.distance_to(Vector2(960, 540))
+			var dist = logical_pos.distance_to(Vector2(960, 540))
 			if dist < threshold + 20.0:
 				hover_note_index = i
 				return
 		else:
-			var nx := float(note.get("x", 960.0))
-			var ny := float(note.get("y", 540.0))
-			var dist := logical_pos.distance_to(Vector2(nx, ny))
+			var nx = float(note.get("x", 960.0))
+			var ny = float(note.get("y", 540.0))
+			var nx_clamped = clamp(nx, 0.0, 1920.0)
+			var ny_clamped = clamp(ny, 0.0, 1080.0)
+			var dist = logical_pos.distance_to(Vector2(nx_clamped, ny_clamped))
 			if dist < threshold:
 				hover_note_index = i
 				return
 
 func _add_note(time_val: float, logical_pos: Vector2) -> void:
-	var note_node := {}
+	save_state_for_undo()
+	var note_node = {}
 	note_node["time"] = time_val
 	note_node["type"] = selected_type
 	
@@ -524,13 +781,13 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 		note_node["duration"] = hold_duration
 		note_node["beat_division"] = hold_division
 	elif selected_type == "moving":
-		note_node["x"] = clamp(logical_pos.x, 100.0, 1820.0)
-		note_node["y"] = clamp(logical_pos.y, 100.0, 980.0)
+		note_node["x"] = logical_pos.x
+		note_node["y"] = logical_pos.y
 		note_node["start_x"] = note_node["x"]
 		note_node["start_y"] = note_node["y"] + 300.0
 	else:
-		note_node["x"] = clamp(logical_pos.x, 100.0, 1820.0)
-		note_node["y"] = clamp(logical_pos.y, 100.0, 980.0)
+		note_node["x"] = logical_pos.x
+		note_node["y"] = logical_pos.y
 		
 	chart_data["notes"].append(note_node)
 	_save_chart_file()
@@ -545,6 +802,7 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 
 func _delete_note(index: int) -> void:
 	if index >= 0 and index < chart_data["notes"].size():
+		save_state_for_undo()
 		chart_data["notes"].remove_at(index)
 		selected_note_index = -1
 		hover_note_index = -1
@@ -556,18 +814,18 @@ func _delete_note(index: int) -> void:
 # 타임라인 조작
 # ==========================================
 func _on_timeline_gui_input(event: InputEvent) -> void:
-	var timeline_w := timeline.size.x
+	var timeline_w = timeline.size.x
 	if timeline_w == 0: return
 	
-	var pixels_per_second := 150.0
+	var pixels_per_second = 150.0
 	
 	if event is InputEventMouseButton and event.pressed:
 		var local_x: float = event.position.x
-		var dx := local_x - (timeline_w / 2.0)
-		var dt := dx / pixels_per_second
-		var target_time := current_time + dt
+		var dx = local_x - (timeline_w / 2.0)
+		var dt = dx / pixels_per_second
+		var target_time = current_time + dt
 		
-		var is_ctrl := false
+		var is_ctrl = false
 		if event is InputEventWithModifiers:
 			is_ctrl = event.ctrl_pressed
 		if is_ctrl:
@@ -579,12 +837,12 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 # 핑크 테마 렌더링 (_draw)
 # ==========================================
 func _draw_preview_canvas() -> void:
-	var canvas_w := preview_canvas.size.x
-	var canvas_h := preview_canvas.size.y
+	var canvas_w = preview_canvas.size.x
+	var canvas_h = preview_canvas.size.y
 	if canvas_w == 0 or canvas_h == 0: return
 	
-	var sx := canvas_w / 1920.0
-	var sy := canvas_h / 1080.0
+	var sx = canvas_w / 1920.0
+	var sy = canvas_h / 1080.0
 	
 	# 캔버스 핑크 배경 및 핑크 에스테틱 테두리
 	preview_canvas.draw_rect(Rect2(Vector2.ZERO, preview_canvas.size), COLOR_BG_CANVAS, true)
@@ -597,19 +855,19 @@ func _draw_preview_canvas() -> void:
 	if not chart_data.has("notes"): return
 	
 	var notes: Array = chart_data["notes"]
-	var time_window := 0.4
+	var time_window = 0.4
 	
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
-		var note_time := float(note.get("time", 0.0))
-		var note_type := str(note.get("type", "normal"))
+		var note_time = float(note.get("time", 0.0))
+		var note_type = str(note.get("type", "normal"))
 		
-		var diff := note_time - current_time
+		var diff = note_time - current_time
 		if absf(diff) > time_window:
 			continue
 			
 		var alpha: float = 1.0 - (absf(diff) / time_window)
-		var color := COLOR_NOTE_NORMAL
+		var color = COLOR_NOTE_NORMAL
 		
 		match note_type:
 			"normal":
@@ -621,8 +879,8 @@ func _draw_preview_canvas() -> void:
 				
 		color.a = alpha
 		
-		var is_hovered := (i == hover_note_index)
-		var is_selected := (i == selected_note_index)
+		var is_hovered = (i == hover_note_index)
+		var is_selected = (i == selected_note_index)
 		
 		if is_selected:
 			color = COLOR_NOTE_SELECTED
@@ -632,29 +890,54 @@ func _draw_preview_canvas() -> void:
 			color.a = alpha
 			
 		if note_type == "hold":
-			var center := Vector2(canvas_w / 2.0, canvas_h / 2.0)
-			var radius := 80.0 * sx
+			var center = Vector2(canvas_w / 2.0, canvas_h / 2.0)
+			var radius = 80.0 * sx
 			if is_hovered or is_selected:
 				# 핑크 블렌딩 헤일로 링
 				preview_canvas.draw_circle(center, radius + 10.0*sx, Color(1.0, 0.301961, 0.427451, alpha * 0.25))
 			
 			preview_canvas.draw_arc(center, radius, 0.0, TAU, 64, color, 8.0 * sx, true)
 			
-			var font := get_theme_font("font")
-			var text_str := "HOLD (%.1fs)" % float(note.get("duration", 3.0))
-			var text_color = COLOR_TEXT_WINE
-			text_color.a = alpha * 0.85
-			preview_canvas.draw_string(font, center + Vector2(-60.0*sx, 10.0*sy), text_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, text_color)
+			var hold_font = get_theme_font("font")
+			var text_str = "HOLD (%.1fs)" % float(note.get("duration", 3.0))
+			var hold_text_color = COLOR_TEXT_WINE
+			hold_text_color.a = alpha * 0.85
+			preview_canvas.draw_string(hold_font, center + Vector2(-60.0*sx, 10.0*sy), text_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, hold_text_color)
 		else:
-			var nx := float(note.get("x", 960.0)) * sx
-			var ny := float(note.get("y", 540.0)) * sy
-			var pos := Vector2(nx, ny)
-			var radius := 25.0 * sx
+			var nx = float(note.get("x", 960.0))
+			var ny = float(note.get("y", 540.0))
+			var is_offscreen = (nx < 0.0 or nx > 1920.0 or ny < 0.0 or ny > 1080.0)
 			
-			if is_hovered or is_selected:
-				preview_canvas.draw_circle(pos, radius + 8.0*sx, Color(1.0, 0.301961, 0.427451, alpha * 0.25))
+			var rx = clamp(nx, 0.0, 1920.0) * sx
+			var ry = clamp(ny, 0.0, 1080.0) * sy
+			var pos = Vector2(rx, ry)
+			var radius = 25.0 * sx
+			
+			if is_offscreen:
+				var guide_color = color
+				if is_selected:
+					guide_color = COLOR_NOTE_SELECTED
+				elif is_hovered:
+					guide_color = color.lightened(0.2)
+				guide_color.a = alpha * 0.4
 				
-			preview_canvas.draw_circle(pos, radius, color)
+				preview_canvas.draw_circle(pos, radius, guide_color)
+				preview_canvas.draw_circle(pos, radius - 4.0 * sx, COLOR_BG_CANVAS)
+				
+				var real_pos_scaled = Vector2(nx * sx, ny * sy)
+				var dir = (real_pos_scaled - pos).normalized()
+				if dir != Vector2.ZERO:
+					preview_canvas.draw_line(pos, pos + dir * 30.0 * sx, guide_color, 4.0 * sx)
+					
+				var offscreen_font = get_theme_font("font")
+				var offscreen_text_color = COLOR_TEXT_WINE
+				offscreen_text_color.a = alpha * 0.7
+				preview_canvas.draw_string(offscreen_font, pos + Vector2(-12.0 * sx, 4.0 * sy), "OUT", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, offscreen_text_color)
+			else:
+				if is_hovered or is_selected:
+					preview_canvas.draw_circle(pos, radius + 8.0*sx, Color(1.0, 0.301961, 0.427451, alpha * 0.25))
+					
+				preview_canvas.draw_circle(pos, radius, color)
 			
 			# 도넛 형태 내부 (가장자리와 대비되는 어두운 핑크 와인 색상)
 			var inner_dark_color = COLOR_TEXT_WINE
@@ -663,24 +946,24 @@ func _draw_preview_canvas() -> void:
 			preview_canvas.draw_circle(pos, radius - 10.0*sx, color)
 			
 			if note_type == "moving":
-				var start_x := float(note.get("start_x", note.get("x", 960.0))) * sx
-				var start_y := float(note.get("start_y", float(note.get("y", 540.0)) + 300.0)) * sy
-				var start_pos := Vector2(start_x, start_y)
+				var start_x = float(note.get("start_x", note.get("x", 960.0))) * sx
+				var start_y = float(note.get("start_y", float(note.get("y", 540.0)) + 300.0)) * sy
+				var start_pos = Vector2(start_x, start_y)
 				
-				var line_color := Color(1.0, 0.458824, 0.560784, alpha * 0.5)
+				var line_color = Color(1.0, 0.458824, 0.560784, alpha * 0.5)
 				preview_canvas.draw_line(start_pos, pos, line_color, 2.0 * sx)
 				preview_canvas.draw_circle(start_pos, 12.0 * sx, line_color)
 				preview_canvas.draw_circle(start_pos, 8.0 * sx, COLOR_BG_CANVAS)
 				
 				if is_selected:
-					var font := get_theme_font("font")
-					preview_canvas.draw_string(font, start_pos + Vector2(-4.0 * sx, 4.0 * sy), "S", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, COLOR_TEXT_WINE)
+					var sel_font = get_theme_font("font")
+					preview_canvas.draw_string(sel_font, start_pos + Vector2(-4.0 * sx, 4.0 * sy), "S", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, COLOR_TEXT_WINE)
 			
 			# 텍스트 라벨 (딥 와인 색상)
-			var font := get_theme_font("font")
-			var text_color = COLOR_TEXT_WINE
-			text_color.a = alpha * 0.8
-			preview_canvas.draw_string(font, pos + Vector2(15.0*sx, -15.0*sy), "%.2fs" % note_time, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, text_color)
+			var lbl_font = get_theme_font("font")
+			var lbl_text_color = COLOR_TEXT_WINE
+			lbl_text_color.a = alpha * 0.8
+			preview_canvas.draw_string(lbl_font, pos + Vector2(15.0*sx, -15.0*sy), "%.2fs" % note_time, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, lbl_text_color)
 
 func _draw_timeline() -> void:
 	var timeline_w: float = timeline.size.x
@@ -716,7 +999,7 @@ func _draw_timeline() -> void:
 				
 			timeline.draw_line(Vector2(lx, 20), Vector2(lx, timeline_h - 10), COLOR_GRID_TIMELINE_SUB, 1.0)
 			
-	var font := get_theme_font("font")
+	var font = get_theme_font("font")
 	for idx in range(first_beat_index, last_beat_index + 1):
 		var t: float = idx * beat_length
 		var dx: float = (t - current_time) * pixels_per_second
@@ -740,7 +1023,7 @@ func _draw_timeline() -> void:
 		if lx < 0 or lx > timeline_w:
 			continue
 			
-		var color := COLOR_NOTE_NORMAL
+		var color = COLOR_NOTE_NORMAL
 		match note_type:
 			"normal": color = COLOR_NOTE_NORMAL
 			"moving": color = COLOR_NOTE_MOVING
@@ -749,7 +1032,7 @@ func _draw_timeline() -> void:
 		if i == selected_note_index:
 			color = COLOR_NOTE_SELECTED
 			
-		var pts := PackedVector2Array([
+		var pts = PackedVector2Array([
 			Vector2(lx, timeline_h / 2.0 - 10.0),
 			Vector2(lx + 8.0, timeline_h / 2.0),
 			Vector2(lx, timeline_h / 2.0 + 10.0),
@@ -912,3 +1195,36 @@ func _on_set_start_toggled(is_toggled: bool) -> void:
 		if set_start_btn: set_start_btn.text = "Click to set start coordinate"
 	else:
 		if set_start_btn: set_start_btn.text = "Click Canvas to Set Start"
+
+# ==========================================
+# 실행 취소 / 다시 실행 및 복사 붙여넣기 헬퍼
+# ==========================================
+func save_state_for_undo() -> void:
+	undo_stack.append(chart_data.duplicate(true))
+	if undo_stack.size() > MAX_UNDO_DEPTH:
+		undo_stack.pop_front()
+	redo_stack.clear()
+
+func perform_undo() -> void:
+	if undo_stack.is_empty():
+		_show_toast("Nothing to Undo")
+		return
+	redo_stack.append(chart_data.duplicate(true))
+	chart_data = undo_stack.pop_back()
+	selected_note_index = -1
+	hover_note_index = -1
+	_save_chart_file()
+	preview_canvas.queue_redraw()
+	_show_toast("Undo")
+
+func perform_redo() -> void:
+	if redo_stack.is_empty():
+		_show_toast("Nothing to Redo")
+		return
+	undo_stack.append(chart_data.duplicate(true))
+	chart_data = redo_stack.pop_back()
+	selected_note_index = -1
+	hover_note_index = -1
+	_save_chart_file()
+	preview_canvas.queue_redraw()
+	_show_toast("Redo")

@@ -10,7 +10,7 @@ var remaining_time: float = 0.0
 var elapsed_time: float = 0.0
 var beat_interval: float = 0.5
 var beat_timer: float = 0.0
-var is_ending := false
+var is_ending = false
 
 var bg_rect: ColorRect
 var hold_label: Label

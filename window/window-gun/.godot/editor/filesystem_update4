@@ -5,3 +5,9 @@ res://assets/musics/Flower Rocket/chart.json
 res://scripts/gameplay/game_controller.gd
 res://scripts/gameplay/target_note.gd
 res://scripts/ui/effect_editor.gd
+res://assets/musics/R/chart.json
+res://scripts/autoload/global.gd
+res://scripts/effects/audio_stream_player.gd
+res://scripts/effects/background_tilt.gd
+res://scripts/effects/judgment_ring.gd
+res://scripts/ui/escape_to_scene.gd

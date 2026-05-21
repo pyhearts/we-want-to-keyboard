@@ -1,21 +1,21 @@
 extends Control
 
-const NORMAL_NOTE_MODE := "normal"
-const MOVING_NOTE_MODE := "moving"
+const NORMAL_NOTE_MODE = "normal"
+const MOVING_NOTE_MODE = "moving"
 
 # 윈도우 이벤트 상수 (기존)
-const EVENT_STATIC_WINDOW := "window"
-const EVENT_MOVING_LINEAR_WINDOW := "window_moving_linear"
-const EVENT_MOVING_SMOOTH_WINDOW := "window_moving_smooth"
+const EVENT_STATIC_WINDOW = "window"
+const EVENT_MOVING_LINEAR_WINDOW = "window_moving_linear"
+const EVENT_MOVING_SMOOTH_WINDOW = "window_moving_smooth"
 
 # 이미지 노드 이벤트 상수 (신규 추가)
-const EVENT_STATIC_IMAGE := "image"
-const EVENT_MOVING_LINEAR_IMAGE := "image_moving_linear"
-const EVENT_MOVING_SMOOTH_IMAGE := "image_moving_smooth"
+const EVENT_STATIC_IMAGE = "image"
+const EVENT_MOVING_LINEAR_IMAGE = "image_moving_linear"
+const EVENT_MOVING_SMOOTH_IMAGE = "image_moving_smooth"
 
-const MUSIC_BASE_PATH := "res://assets/musics/"
-const MUSIC_SELECT_SCENE := "res://scenes/menu/music_select.tscn"
-const DEFAULT_WINDOW_TEXTURE := "res://assets/image/ingame/과녁.png"
+const MUSIC_BASE_PATH = "res://assets/musics/"
+const MUSIC_SELECT_SCENE = "res://scenes/menu/music_select.tscn"
+const DEFAULT_WINDOW_TEXTURE = "res://assets/image/ingame/과녁.png"
 const TargetNoteScript = preload("res://scripts/gameplay/target_note.gd")
 
 enum MoveType {
@@ -114,7 +114,7 @@ func start_chart() -> void:
 		return
 	
 	# BPM 로드
-	var res_path := MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
+	var res_path = MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
 	if FileAccess.file_exists(res_path):
 		var music_res = load(res_path)
 		if music_res and "bpm" in music_res:
@@ -135,12 +135,12 @@ func load_chart() -> Variant:
 		push_error("No music is selected.")
 		return null
 
-	var path := MUSIC_BASE_PATH + Global.selected_music + "/chart.json"
+	var path = MUSIC_BASE_PATH + Global.selected_music + "/chart.json"
 	if not FileAccess.file_exists(path):
 		push_error("Chart file not found: " + path)
 		return null
 
-	var file := FileAccess.open(path, FileAccess.READ)
+	var file = FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		push_error("Failed to open chart file: " + path)
 		return null
@@ -166,6 +166,20 @@ func load_chart() -> Variant:
 	chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 	chart["events"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 	# ----------------------------------------
+
+	# 구버전 차트 좌표 보정 (offset_corrected 플래그가 없는 경우)
+	if not chart.get("offset_corrected", false):
+		for note in chart["notes"]:
+			if note is Dictionary:
+				if note.has("x"):
+					note["x"] = float(note["x"]) - 230.0
+				if note.has("y"):
+					note["y"] = float(note["y"]) - 90.0
+				if note.has("start_x"):
+					note["start_x"] = float(note["start_x"]) - 230.0
+				if note.has("start_y"):
+					note["start_y"] = float(note["start_y"]) - 90.0
+		chart["offset_corrected"] = true
 
 	return chart
 
@@ -213,8 +227,8 @@ func _process_note(note_info: Dictionary) -> void:
 		push_warning("Skipping invalid note: " + str(note_info))
 		return
 
-	var pos := Vector2(float(note_info["x"]), float(note_info["y"]))
-	var mode := NORMAL_NOTE_MODE
+	var pos = Vector2(float(note_info["x"]), float(note_info["y"]))
+	var mode = NORMAL_NOTE_MODE
 	var start_pos = null
 	if str(note_info.get("type", NORMAL_NOTE_MODE)) == MOVING_NOTE_MODE:
 		mode = MOVING_NOTE_MODE
@@ -225,9 +239,9 @@ func _process_note(note_info: Dictionary) -> void:
 
 
 func _spawn_hold_note(note_info: Dictionary) -> void:
-	var duration := float(note_info.get("duration", 3.0))
-	var beat_division := int(note_info.get("beat_division", 4)) # 기본 4박자(4분음표)
-	var hold_script := load("res://scripts/gameplay/hold_note.gd")
+	var duration = float(note_info.get("duration", 3.0))
+	var beat_division = int(note_info.get("beat_division", 4)) # 기본 4박자(4분음표)
+	var hold_script = load("res://scripts/gameplay/hold_note.gd")
 	if hold_script:
 		var hold_instance = hold_script.new()
 		hold_instance.duration = duration
@@ -243,21 +257,21 @@ func _spawn_hold_note(note_info: Dictionary) -> void:
 
 
 func _process_event(event_info: Dictionary) -> void:
-	var event_type := str(event_info.get("type", ""))
+	var event_type = str(event_info.get("type", ""))
 	if not event_info.has("x") or not event_info.has("y"):
 		push_warning("Skipping invalid event: " + str(event_info))
 		return
 
-	var size := Vector2i(int(event_info.get("width", 200)), int(event_info.get("height", 200)))
-	var pos := Vector2i(int(event_info["x"]), int(event_info["y"]))
-	var target_pos := _get_event_target_position(event_info, pos)
-	var duration := float(event_info.get("duration", 3.0))
-	var title := str(event_info.get("title", "Event Window"))
-	var texture_path := str(event_info.get("texture_path", ""))
+	var size = Vector2i(int(event_info.get("width", 200)), int(event_info.get("height", 200)))
+	var pos = Vector2i(int(event_info["x"]), int(event_info["y"]))
+	var target_pos = _get_event_target_position(event_info, pos)
+	var duration = float(event_info.get("duration", 3.0))
+	var title = str(event_info.get("title", "Event Window"))
+	var texture_path = str(event_info.get("texture_path", ""))
 	if texture_path == "":
 		texture_path = DEFAULT_WINDOW_TEXTURE
 
-	var opacity := float(event_info.get("opacity", 1.0))
+	var opacity = float(event_info.get("opacity", 1.0))
 
 	var node: Node = null
 	match event_type:
@@ -308,7 +322,7 @@ func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_po
 	if _is_headless_display():
 		return null
 
-	var window := _get_or_create_window(size, title, img_path)
+	var window = _get_or_create_window(size, title, img_path)
 	if window == null:
 		return
 
@@ -328,7 +342,7 @@ func create_static_window(size: Vector2i, rel_pos: Vector2i, duration: float, ti
 	if _is_headless_display():
 		return null
 
-	var window := _get_or_create_window(size, title, img_path)
+	var window = _get_or_create_window(size, title, img_path)
 	if window == null:
 		return
 
@@ -337,7 +351,7 @@ func create_static_window(size: Vector2i, rel_pos: Vector2i, duration: float, ti
 	window.show()
 
 	if duration > 0.0:
-		var tween := window.create_tween()
+		var tween = window.create_tween()
 		tween.tween_interval(duration)
 		tween.tween_callback(window.hide)
 	
@@ -352,18 +366,18 @@ func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> W
 		return null
 
 	for i in range(window_pool.size() - 1, -1, -1):
-		var window := window_pool[i]
+		var window = window_pool[i]
 		if not is_instance_valid(window):
 			window_pool.remove_at(i)
 			continue
 		if not window.visible:
 			window.size = size
 			window.title = title
-			var texture_rect := window.get_node("TextureRect") as TextureRect
+			var texture_rect = window.get_node("TextureRect") as TextureRect
 			texture_rect.texture = texture_cache[img_path]
 			return window
 
-	var new_window := Window.new()
+	var new_window = Window.new()
 	new_window.title = title
 	new_window.size = size
 	new_window.transient = true
@@ -371,7 +385,7 @@ func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> W
 	new_window.unfocusable = true
 	new_window.close_requested.connect(new_window.hide)
 
-	var texture_rect := TextureRect.new()
+	var texture_rect = TextureRect.new()
 	texture_rect.name = "TextureRect"
 	texture_rect.texture = texture_cache[img_path]
 	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -385,16 +399,16 @@ func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> W
 	return new_window
 
 func _animate_window_movement_smooth(window: Window, target_rel_pos: Vector2i, duration: float) -> void:
-	var absolute_target_pos := get_window().position + target_rel_pos
-	var tween := window.create_tween()
+	var absolute_target_pos = get_window().position + target_rel_pos
+	var tween = window.create_tween()
 	tween.tween_property(window, "position", absolute_target_pos, duration) \
 		.set_trans(Tween.TRANS_SINE) \
 		.set_ease(Tween.EASE_IN_OUT)
 	tween.tween_callback(window.hide)
 
 func _animate_window_movement_linear(window: Window, target_rel_pos: Vector2i, duration: float) -> void:
-	var absolute_target_pos := get_window().position + target_rel_pos
-	var tween := window.create_tween()
+	var absolute_target_pos = get_window().position + target_rel_pos
+	var tween = window.create_tween()
 	tween.tween_property(window, "position", absolute_target_pos, duration) \
 		.set_trans(Tween.TRANS_LINEAR)
 	tween.tween_callback(window.hide)
@@ -405,7 +419,7 @@ func _animate_window_movement_linear(window: Window, target_rel_pos: Vector2i, d
 # ==========================================
 
 func create_moving_image(size: Vector2i, start_pos: Vector2i, target_pos: Vector2i, move_duration: float, move_type: MoveType, img_path: String) -> TextureRect:
-	var img_node := _get_or_create_image(size, img_path)
+	var img_node = _get_or_create_image(size, img_path)
 	if img_node == null:
 		return null
 
@@ -421,7 +435,7 @@ func create_moving_image(size: Vector2i, start_pos: Vector2i, target_pos: Vector
 
 
 func create_static_image(size: Vector2i, pos: Vector2i, duration: float, img_path: String) -> TextureRect:
-	var img_node := _get_or_create_image(size, img_path)
+	var img_node = _get_or_create_image(size, img_path)
 	if img_node == null:
 		return null
 
@@ -429,7 +443,7 @@ func create_static_image(size: Vector2i, pos: Vector2i, duration: float, img_pat
 	img_node.show()
 
 	if duration > 0.0:
-		var tween := img_node.create_tween()
+		var tween = img_node.create_tween()
 		tween.tween_interval(duration)
 		tween.tween_callback(img_node.hide)
 	
@@ -445,7 +459,7 @@ func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:
 
 	# 풀(Pool)에서 안 쓰고 있는 TextureRect 찾기
 	for i in range(image_pool.size() - 1, -1, -1):
-		var img_node := image_pool[i]
+		var img_node = image_pool[i]
 		if not is_instance_valid(img_node):
 			image_pool.remove_at(i)
 			continue
@@ -457,7 +471,7 @@ func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:
 			return img_node
 
 	# 풀에 없으면 새로 생성하여 게임 화면(씬 트리)에 추가
-	var new_image := TextureRect.new()
+	var new_image = TextureRect.new()
 	
 	# [수정핵심 2] expand_mode를 가장 먼저 설정해야 원본 크기로 튀는 것을 방지함
 	new_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -473,7 +487,7 @@ func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:
 
 
 func _animate_image_movement_smooth(img_node: TextureRect, target_pos: Vector2i, duration: float) -> void:
-	var tween := img_node.create_tween()
+	var tween = img_node.create_tween()
 	tween.tween_property(img_node, "position", Vector2(target_pos), duration) \
 		.set_trans(Tween.TRANS_SINE) \
 		.set_ease(Tween.EASE_IN_OUT)
@@ -481,7 +495,7 @@ func _animate_image_movement_smooth(img_node: TextureRect, target_pos: Vector2i,
 
 
 func _animate_image_movement_linear(img_node: TextureRect, target_pos: Vector2i, duration: float) -> void:
-	var tween := img_node.create_tween()
+	var tween = img_node.create_tween()
 	tween.tween_property(img_node, "position", Vector2(target_pos), duration) \
 		.set_trans(Tween.TRANS_LINEAR)
 	tween.tween_callback(img_node.hide)
