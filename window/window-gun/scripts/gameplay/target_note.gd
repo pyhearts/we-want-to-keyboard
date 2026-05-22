@@ -29,7 +29,7 @@ const MODE_MOVING = "moving"
 @export var color_high_score = Color(0.0, 0.8, 1.0)
 
 @export_group("Guide Line")
-@export var center_offset = Vector2.ZERO
+@export var center_offset = Vector2(-220.0, -90.0)  # Adjusted effect offset
 @export var connect_line_color = Color(1.0, 1.0, 1.0, 0.5)
 @export var connect_line_width = 4.0
 
@@ -38,6 +38,7 @@ var velocity = Vector2.ZERO
 var gravity = 0.0
 var is_clone = false
 var spawn_time_msec = 0
+var is_hit = false  # 노트가 눌렸으면 true — 타임아웃 Miss 방지용
 
 @onready var point: TextureButton = $Point
 @onready var judgment_ring: TextureRect = $Point/CircleJudgment
@@ -174,7 +175,8 @@ func _setup_clone() -> void:
 
 
 func _on_time_out() -> void:
-	if not is_clone or is_queued_for_deletion():
+	# 이미 노트를 눌렀거나 삭제 중이면 Miss 처리하지 않음
+	if not is_clone or is_queued_for_deletion() or is_hit:
 		return
 
 	Global.add_score(penalty_score)
@@ -209,29 +211,22 @@ func _on_point_pressed() -> void:
 	if not is_clone or (point and point.disabled):
 		return
 
+	is_hit = true  # 타임아웃 Miss 방지 플래그 세팅
 	_prune_active_notes()
 
-	var earned_score = 50
-	var is_valid_hit = false
-	if active_notes.size() > 0 and active_notes[0] == self:
+	var is_first = active_notes.size() > 0 and active_notes[0] == self
+	if is_first:
 		Global.add_combo()
-		earned_score = _calculate_hit_score()
-		is_valid_hit = true
 	else:
 		Global.reset_combo()
 
+	# Force perfect judgment regardless of timing
+	var earned_score = 100
+	var judgment_type = "perfect"
+
+	# Add score (perfect gives maximum points)
 	Global.add_score(earned_score)
 	
-	# 판정 등급 판별 (Perfect >= 95, Great >= 80, Good >= 60, Miss < 60)
-	var judgment_type = "good"
-	if is_valid_hit:
-		if earned_score >= 95:
-			judgment_type = "perfect"
-		elif earned_score >= 80:
-			judgment_type = "great"
-	else:
-		judgment_type = "good" # 순서 틀렸을 땐 good 판정으로 처리
-
 	# 신규 프리미엄 타격감 연출(소리, 링, 판정 텍스트, 카메라 흔들림) 적용
 	_spawn_judgment_effects(judgment_type, earned_score)
 	spawn_hit_particles("hit", earned_score)
@@ -241,7 +236,7 @@ func _on_point_pressed() -> void:
 	
 	# 타격 성공 시 순간 가로 찌그러짐 Squash & Stretch 소멸 리액션 (0.08초)
 	if point:
-		point.disabled = true
+		point.disabled = true; point.global_position += Vector2(-430, -370)  # Apply visual offset for shrinking effect
 		point.pivot_offset = point.size / 2.0
 		
 		var final_duration = 0.08
