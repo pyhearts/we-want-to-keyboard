@@ -38,8 +38,16 @@ var note_index: int = 0
 var event_index: int = 0
 var bpm: float = 120.0
 
+# 카메라 셰이크 제어 변수 (옵션 C 완벽 대응)
+var shake_timer: float = 0.0
+var shake_intensity: float = 0.0
+var original_position: Vector2 = Vector2.ZERO
+
 
 func _ready() -> void:
+	original_position = position
+	Global.camera_shake_requested.connect(_on_camera_shake_requested)
+	
 	# 노트를 이펙트보다 위에 표시하기 위한 전용 레이어 생성
 	var note_layer = CanvasLayer.new()
 	note_layer.name = "NoteLayer"
@@ -52,6 +60,7 @@ func _ready() -> void:
 	
 	Global.reset_run()
 	start_chart()
+
 
 
 func _input(event: InputEvent) -> void:
@@ -82,6 +91,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	# 매 프레임 플레이 정지 상태여도 셰이킹은 독립 작동하도록 정지 확인 전에 수행
+	_process_camera_shake(delta)
+
 	if not is_playing:
 		return
 
@@ -104,6 +116,26 @@ func _process(delta: float) -> void:
 		
 	_process_due_notes()
 	_process_due_events()
+
+
+func _on_camera_shake_requested(intensity: float, duration: float) -> void:
+	if not Global.enable_camera_shake:
+		return
+	shake_intensity = intensity
+	shake_timer = duration
+
+
+func _process_camera_shake(delta: float) -> void:
+	if shake_timer > 0.0:
+		shake_timer -= delta
+		if shake_timer <= 0.0:
+			position = original_position
+		else:
+			# 무작위 오프셋 진동 계산 (Perfect/Great 극적 손맛 연출)
+			var offset_x = randf_range(-shake_intensity, shake_intensity)
+			var offset_y = randf_range(-shake_intensity, shake_intensity)
+			position = original_position + Vector2(offset_x, offset_y)
+
 
 
 func start_chart() -> void:

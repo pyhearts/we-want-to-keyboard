@@ -1,294 +1,76 @@
 {
-	"events": [
-		{
-			"duration": 2.0,
-			"height": 300.0,
-			"texture_path": "res://assets/image/ingame/과녁.png",
-			"time": 0.7,
-			"type": "image",
-			"width": 300.0,
-			"x": 200.0,
-			"y": 200.0
-		},
-		{
-			"duration": 3.0,
-			"height": 200.0,
-			"target_x": 1000.0,
-			"target_y": 100.0,
-			"texture_path": "res://assets/image/ingame/과녁.png",
-			"time": 2.5,
-			"type": "image_moving_smooth",
-			"width": 200.0,
-			"x": 0.0,
-			"y": 100.0
-		},
-		{
-			"duration": 1.5,
-			"height": 150.0,
-			"target_x": 500.0,
-			"target_y": 0.0,
-			"texture_path": "res://assets/image/ingame/과녁.png",
-			"time": 4.0,
-			"type": "image_moving_linear",
-			"width": 150.0,
-			"x": 500.0,
-			"y": 800.0
-		},
-		{
-			"duration": 5.0,
-			"height": 300.0,
-			"texture_path": "res://assets/image/ingame/과녁.png",
-			"time": 6.0,
-			"title": "바탕화면 창도 같이 사용 가능",
-			"type": "window",
-			"width": 400.0,
-			"x": 100.0,
-			"y": 100.0
-		}
-	],
+	"version": 1,
+	"song": "Flower Rocket",
 	"notes": [
-		{
-			"start_x": 460.697509765625,
-			"start_y": 505.52700805664,
-			"time": 0.0,
-			"type": "moving",
-			"x": 1000.69073486328,
-			"y": 470.822601318359
-		},
-		{
-			"time": 0.0,
-			"type": "normal",
-			"x": 190.0,
-			"y": 170.0
-		},
-		{
-			"time": 0.130434782608696,
-			"type": "normal",
-			"x": 718.260986328125,
-			"y": 798.260864257813
-		},
-		{
-			"time": 0.3,
-			"type": "normal",
-			"x": 370.0,
-			"y": 370.0
-		},
-		{
-			"time": 0.8,
-			"type": "normal",
-			"x": 615.0,
-			"y": 572.0
-		},
-		{
-			"time": 1.10869565217391,
-			"type": "normal",
-			"x": -32.5325660705566,
-			"y": 80.5141372680664
-		},
-		{
-			"time": 1.10869565217391,
-			"type": "normal",
-			"x": -65.8483428955078,
-			"y": 247.095123291016
-		},
-		{
-			"time": 1.5,
-			"type": "normal",
-			"x": 731.304321289063,
-			"y": 662.608703613281
-		},
-		{
-			"time": 1.6,
-			"type": "moving",
-			"x": 420.0,
-			"y": 170.0
-		},
-		{
-			"time": 2.0,
-			"type": "normal",
-			"x": 937.0,
-			"y": 220.0
-		},
-		{
-			"time": 2.3,
-			"type": "normal",
-			"x": 937.0,
-			"y": 910.0
-		},
-		{
-			"time": 2.67391304347826,
-			"type": "normal",
-			"x": 856.52014160156,
-			"y": 240.0
-		},
-		{
-			"time": 2.8,
-			"type": "moving",
-			"x": 365.0,
-			"y": 410.0
-		},
-		{
-			"time": 4.1,
-			"type": "normal",
-			"x": 1476.0,
-			"y": 780.0
-		},
-		{
-			"time": 4.23913043478261,
-			"type": "normal",
-			"x": 1306.51452636719,
-			"y": 890.0
-		},
-		{
-			"time": 4.23913043478261,
-			"type": "normal",
-			"x": 1053.47424316406,
-			"y": 842.608703613281
-		},
-		{
-			"time": 4.4,
-			"type": "normal",
-			"x": 1226.0,
-			"y": 590.0
-		},
-		{
-			"time": 4.9,
-			"type": "normal",
-			"x": 937.0,
-			"y": 377.0
-		},
-		{
-			"time": 5.7,
-			"type": "moving",
-			"x": 293.0,
-			"y": 827.0
-		},
-		{
-			"time": 6.1,
-			"type": "normal",
-			"x": 937.0,
-			"y": 910.0
-		},
-		{
-			"time": 6.5,
-			"type": "normal",
-			"x": 937.0,
-			"y": 220.0
-		},
-		{
-			"time": 7.0,
-			"type": "moving",
-			"x": 1373.0,
-			"y": 410.0
-		},
-		{
-			"time": 7.8,
-			"type": "moving",
-			"x": 423.0,
-			"y": 410.0
-		},
-		{
-			"time": 8.2,
-			"type": "normal",
-			"x": 1770.0,
-			"y": 100.0
-		},
-		{
-			"time": 8.5,
-			"type": "normal",
-			"x": 1523.0,
-			"y": 250.0
-		},
-		{
-			"time": 9.0,
-			"type": "normal",
-			"x": 1266.0,
-			"y": 433.0
-		},
-		{
-			"time": 9.58695652173913,
-			"type": "normal",
-			"x": 530.437255859375,
-			"y": 204.782623291016
-		},
-		{
-			"time": 9.58695652173913,
-			"type": "normal",
-			"x": 466.525024414063,
-			"y": 450.0
-		},
-		{
-			"time": 9.58695652173913,
-			"type": "normal",
-			"x": 225.223663330078,
-			"y": 344.347839355469
-		},
-		{
-			"time": 10.2,
-			"type": "normal",
-			"x": 230.0,
-			"y": 933.0
-		},
-		{
-			"time": 10.6,
-			"type": "normal",
-			"x": 420.0,
-			"y": 786.0
-		},
-		{
-			"time": 10.8913043478261,
-			"type": "normal",
-			"x": 236.962646484375,
-			"y": 363.913055419922
-		},
-		{
-			"time": 11.2,
-			"type": "normal",
-			"x": 601.0,
-			"y": 587.0
-		},
-		{
-			"time": 12.0,
-			"type": "moving",
-			"x": 1446.0,
-			"y": 933.0
-		},
-		{
-			"time": 12.4,
-			"type": "normal",
-			"x": 645.0,
-			"y": 510.0
-		},
-		{
-			"time": 12.7,
-			"type": "normal",
-			"x": 957.0,
-			"y": 403.0
-		},
-		{
-			"time": 13.2,
-			"type": "normal",
-			"x": 1301.0,
-			"y": 510.0
-		},
-		{
-			"time": 14.0,
-			"type": "normal",
-			"x": 957.0,
-			"y": 653.0
-		},
-		{
-			"time": 14.5,
-			"type": "moving",
-			"x": 202.0,
-			"y": 510.0
-		},
-		{
-			"time": 15.0,
-			"type": "moving",
-			"x": 1366.0,
-			"y": 510.0
-		}
+		{"time":0.00, "x": 420, "y": 260, "type": "normal"},
+		{"time":0.30, "x": 600, "y": 460, "type": "normal"},
+		{"time":0.80, "x": 845,"y": 662, "type": "normal"},
+		{"time":1.60, "x": 650, "y": 260, "type": "moving"},
+		{"time":2.00, "x": 1167, "y": 310, "type": "normal"},
+		{"time":2.30, "x": 1167, "y": 1000, "type": "normal"},
+		{"time":2.80, "x": 595, "y": 500, "type": "moving"},
+		{"time":3.60, "x": 1603, "y": 500, "type": "moving"},
+		{"time":4.10, "x": 1706, "y": 870, "type": "normal"},
+		{"time":4.40, "x": 1456, "y": 680, "type": "normal"},
+		{"time":4.90, "x": 1167, "y": 467, "type": "normal"},
+		{"time":5.70, "x": 523, "y": 917, "type": "moving"},
+		{"time":6.10, "x": 1167, "y": 1000, "type": "normal"},
+		{"time":6.50, "x": 1167, "y": 310, "type": "normal"},
+		{"time":7.00, "x": 1603, "y": 500, "type": "moving"},
+		{"time":7.80, "x": 653, "y": 500, "type": "moving"},
+		{"time":8.20, "x": 2000, "y": 190, "type": "normal"},
+		{"time":8.50, "x": 1753, "y": 340, "type": "normal"},
+		{"time":9.00, "x": 1496, "y": 523, "type": "normal"},
+		{"time":9.80, "x": 375, "y": 260, "type": "moving"},
+		{"time":10.20, "x": 460, "y": 1023, "type": "normal"},
+		{"time":10.60, "x": 650, "y": 876, "type": "normal"},
+		{"time":11.20, "x": 831, "y": 677, "type": "normal"},
+		{"time":12.00, "x": 1676, "y": 1023, "type": "moving"},
+		{"time":12.40, "x": 875, "y": 600, "type": "normal"},
+		{"time":12.70, "x": 1187, "y": 493, "type": "normal"},
+		{"time":13.20, "x": 1531, "y": 600, "type": "normal"},
+		{"time":14.00, "x": 1187, "y": 743, "type": "normal"},
+		{"time":14.50, "x": 432, "y": 600, "type": "moving"},
+		{"time":15.00, "x": 1596, "y": 600, "type": "moving"},
+		{"time":15.50, "x": 1400, "y": 300, "type": "moving"},
+		{"time":15.75, "x": 890, "y": 830, "type": "normal"},
+		{"time":16.00, "x": 1600, "y": 550, "type": "normal"},
+		{"time":16.25, "x": 760, "y": 650, "type": "normal"},
+		{"time":16.50, "x": 1660, "y": 700, "type": "normal"},
+		{"time":16.75, "x": 780, "y": 480, "type": "normal"},
+		{"time":17.00, "x": 1570, "y": 830, "type": "normal"},
+		{"time":17.25, "x": 970, "y": 350, "type": "normal"},
+		{"time":17.50, "x": 1350, "y": 980, "type": "normal"},
+		{"time":17.75, "x": 1167, "y": 290, "type": "normal"},
+		{"time":18.00, "x": 1167, "y": 1000, "type": "normal"},
+		{"time":18.25, "x": 1400, "y": 300, "type": "normal"},
+		{"time":18.50, "x": 890, "y": 830, "type": "normal"},
+		{"time":18.75, "x": 1600, "y": 550, "type": "normal"},
+		{"time":19.00, "x": 760, "y": 650, "type": "normal"},
+		{"time":19.25, "x": 1660, "y": 700, "type": "normal"},
+		{"time":19.50, "x": 780, "y": 480, "type": "normal"},
+		{"time":19.75, "x": 1570, "y": 830, "type": "normal"},
+		{"time":20.00, "x": 970, "y": 350, "type": "normal"},
+		{"time":20.25, "x": 1350, "y": 980, "type": "normal"},
+		{"time":20.50, "x": 1167, "y": 290, "type": "normal"},
+		{"time":20.75, "x": 1167, "y": 1000, "type": "normal"},
+		{"time":21.00, "x": 1400, "y": 300, "type": "normal"},
+		{"time":21.25, "x": 890, "y": 830, "type": "normal"},
+		{"time":21.50, "x": 1600, "y": 550, "type": "normal"},
+		{"time":21.75, "x": 760, "y": 650, "type": "normal"},
+		{"time":22.00, "x": 1660, "y": 700, "type": "normal"},
+		{"time":22.25, "x": 780, "y": 480, "type": "normal"},
+		{"time":22.50, "x": 1570, "y": 830, "type": "normal"},
+		{"time":22.75, "x": 970, "y": 350, "type": "normal"},
+		{"time":23.00, "x": 1350, "y": 980, "type": "normal"},
+		{"time":23.25, "x": 1167, "y": 290, "type": "normal"},
+		{"time":23.50, "x": 1167, "y": 1000, "type": "normal"},
+		{"time":23.85, "x": 650, "y": 460, "type": "moving"},
+		{"time":24.10, "x": 1467, "y": 800, "type": "moving"},
+		{"time":24.35, "x": 1167, "y": 500, "type": "moving"},
+		{"time":24.70, "x": 1167, "y": 1000, "type": "normal"},
+	],
+	"events": [
 	],
 	"offset_corrected": true
 }

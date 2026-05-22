@@ -131,8 +131,8 @@ func _draw() -> void:
 
 	var my_center_local = (size / 2.0) + center_offset
 	var next_center_global: Vector2 = next_note.global_position + (((next_note.size / 2.0) + next_note.get("center_offset")) * next_note.scale)
-	var next_center_local: Vector2 = get_global_transform().affine_inverse() * next_center_global
-	draw_line(my_center_local, next_center_local, connect_line_color, connect_line_width, true)
+	#draw_line(my_center_local, next_center_local, connect_line_color, Global.judgment_line_width, true)
+
 
 
 func _get_spawn_position(target_pos: Variant) -> Vector2:
@@ -179,30 +179,89 @@ func _on_time_out() -> void:
 
 	Global.add_score(penalty_score)
 	Global.reset_combo()
+	
+	# Miss 판정 및 이펙트 호출
+	_spawn_judgment_effects("miss", 0)
 	spawn_hit_particles("miss", 0)
+	
 	active_notes.erase(self)
 	update_target_visuals()
-	queue_free()
+	
+	# 미스 시 서서히 페이드아웃되며 축소 소멸 리액션 (0.15초)
+	if point:
+		point.disabled = true
+		var tween = create_tween().set_parallel(true)
+		tween.tween_property(point, "scale", Vector2.ZERO, 0.15) \
+			.set_trans(Tween.TRANS_QUAD) \
+			.set_ease(Tween.EASE_IN)
+		tween.tween_property(point, "modulate:a", 0.0, 0.15)
+		
+		if judgment_ring:
+			var ring_tween = create_tween()
+			ring_tween.tween_property(judgment_ring, "modulate:a", 0.0, 0.15)
+			
+		tween.chain().tween_callback(queue_free)
+	else:
+		queue_free()
 
 
 func _on_point_pressed() -> void:
-	if not is_clone:
+	if not is_clone or (point and point.disabled):
 		return
 
 	_prune_active_notes()
 
 	var earned_score = 50
+	var is_valid_hit = false
 	if active_notes.size() > 0 and active_notes[0] == self:
 		Global.add_combo()
 		earned_score = _calculate_hit_score()
+		is_valid_hit = true
 	else:
 		Global.reset_combo()
 
 	Global.add_score(earned_score)
+	
+	# 판정 등급 판별 (Perfect >= 95, Great >= 80, Good >= 60, Miss < 60)
+	var judgment_type = "good"
+	if is_valid_hit:
+		if earned_score >= 95:
+			judgment_type = "perfect"
+		elif earned_score >= 80:
+			judgment_type = "great"
+	else:
+		judgment_type = "good" # 순서 틀렸을 땐 good 판정으로 처리
+
+	# 신규 프리미엄 타격감 연출(소리, 링, 판정 텍스트, 카메라 흔들림) 적용
+	_spawn_judgment_effects(judgment_type, earned_score)
 	spawn_hit_particles("hit", earned_score)
+	
 	active_notes.erase(self)
 	update_target_visuals()
-	queue_free()
+	
+	# 타격 성공 시 순간 가로 찌그러짐 Squash & Stretch 소멸 리액션 (0.08초)
+	if point:
+		point.disabled = true
+		point.pivot_offset = point.size / 2.0
+		
+		var final_duration = 0.08
+		var tween = create_tween().set_parallel(true)
+		
+		# 가로 1.5배 늘리고 세로 0.4배 줄임 (순간 납작 타격 찌그러짐)
+		var target_scale = Vector2(point.scale.x * 1.5, point.scale.y * 0.4)
+		tween.tween_property(point, "scale", target_scale, final_duration) \
+			.set_trans(Tween.TRANS_QUAD) \
+			.set_ease(Tween.EASE_OUT)
+		tween.tween_property(point, "modulate:a", 0.0, final_duration) \
+			.set_trans(Tween.TRANS_LINEAR)
+			
+		if judgment_ring:
+			var ring_tween = create_tween()
+			ring_tween.tween_property(judgment_ring, "modulate:a", 0.0, final_duration)
+			
+		tween.chain().tween_callback(queue_free)
+	else:
+		queue_free()
 
 
 func _calculate_hit_score() -> int:
@@ -214,8 +273,67 @@ func _calculate_hit_score() -> int:
 	return 50 + score_step
 
 
+func _spawn_judgment_effects(judgment_type: String, score_value: int) -> void:
+	if _is_headless_run():
+		return
+
+	# 1. 지연 없는 다중 채널 합성 효과음 재생
+	if judgment_type != "miss":
+		Global.play_hit_sound()
+
+	# 2. 판정 텍스트 인스턴스 생성 및 연출 (설정된 위치 적용)
+	var label_scene = load("res://scenes/effects/judgment_label.tscn")
+	if label_scene:
+		var label = label_scene.instantiate()
+		get_parent().add_child(label)
+		
+		var center_pos = global_position + ((size * scale) / 2.0) + Global.effect_offset
+		if Global.judgment_text_pos == "note":
+			# 노트 머리보다 60픽셀 높여 시인성 보장
+			label.global_position = center_pos + Vector2(0, -60.0)
+		else:
+			# 화면 중앙에 고정 팝업
+			label.global_position = Vector2(960.0, 500.0)
+			
+		label.start(judgment_type)
+
+	# 3. 절차적 네온 쇼크웨이브 링 & 센터 플래시 소환
+	if judgment_type != "miss":
+		var ripple_script = load("res://scripts/effects/hit_ripple.gd")
+		if ripple_script:
+			var ripple = Node2D.new()
+			ripple.set_script(ripple_script)
+			
+			# 판정별 고유 네온 색상 연동
+			if judgment_type == "perfect":
+				ripple.color = Color(0.0, 1.0, 0.9, 1.0) # 네온 민트
+			elif judgment_type == "great":
+				ripple.color = Color(0.2, 1.0, 0.3, 1.0) # 네온 그린
+			else:
+				ripple.color = Color(0.8, 0.3, 1.0, 1.0) # 네온 퍼플
+				
+			get_parent().add_child(ripple)
+			ripple.global_position = global_position + ((size * scale) / 2.0) + Global.effect_offset
+
+	# 4. 카메라 흔들림(Camera Shake) 전역 송출 (Perfect, Great)
+	if Global.enable_camera_shake and Global.camera_shake_intensity > 0.0:
+		var base_shake = 0.0
+		if judgment_type == "perfect":
+			base_shake = 10.0
+		elif judgment_type == "great":
+			base_shake = 5.0
+			
+		if base_shake > 0.0:
+			Global.camera_shake_requested.emit(base_shake * Global.camera_shake_intensity, 0.08)
+
+
 func spawn_hit_particles(hit_type: String, score_value: int) -> void:
 	if _is_headless_run():
+		return
+
+	# 전역 설정의 파티클 농도 가중치 반영
+	var final_intensity = Global.particle_intensity
+	if final_intensity <= 0.01:
 		return
 
 	var particles = CPUParticles2D.new()
@@ -235,7 +353,8 @@ func spawn_hit_particles(hit_type: String, score_value: int) -> void:
 		particle_color = color_low_score.lerp(color_high_score, weight)
 		particle_amount = int(lerp(float(particle_min_amount), float(particle_max_amount), weight))
 
-	particles.amount = particle_amount
+	# 파티클 밀도 설정 연동
+	particles.amount = int(particle_amount * final_intensity)
 	particles.color_ramp = _create_particle_gradient(particle_color)
 
 	var scale_curve = Curve.new()
@@ -246,9 +365,10 @@ func spawn_hit_particles(hit_type: String, score_value: int) -> void:
 	particles.scale_amount_max = 10.0
 
 	get_parent().add_child(particles)
-	particles.global_position = global_position + ((size * scale) / 2.0) + particle_offset
+	particles.global_position = global_position + ((size * scale) / 2.0) + Global.effect_offset
 	particles.emitting = true
 	get_tree().create_timer(particles.lifetime).timeout.connect(particles.queue_free)
+
 
 
 func update_target_visuals() -> void:

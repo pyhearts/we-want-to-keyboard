@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://cx60uwt7iirqp"]
+
+[ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="1_font"]
+[ext_resource type="Script" uid="uid://bsy3nnt1c8mhp" path="res://scripts/effects/judgment_label.gd" id="2_script"]
+
+[node name="JudgmentLabel" type="Label"]
+offset_left = -150.0
+offset_top = -25.0
+offset_right = 150.0
+offset_bottom = 25.0
+pivot_offset = Vector2(150, 25)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 48
+text = "PERFECT"
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("2_script")
+duration = 0.5
+drift_distance = 80.0
