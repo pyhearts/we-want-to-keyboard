@@ -11,4 +11,4 @@ func _ready() -> void:
 
 func _on_pressed() -> void:
 	if next_scene:
-		get_tree().change_scene_to_packed(next_scene)
+		SceneTransition.transition_to_scene(next_scene.resource_path)

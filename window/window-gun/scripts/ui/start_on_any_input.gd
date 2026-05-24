@@ -9,15 +9,16 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F4:
 			get_viewport().set_input_as_handled()
-			get_tree().change_scene_to_file(CHART_EDITOR_SCENE)
+			SceneTransition.transition_to_scene(CHART_EDITOR_SCENE)
 			return
 		elif event.keycode == KEY_F10:
 			get_viewport().set_input_as_handled()
-			get_tree().change_scene_to_file(SETTINGS_SCENE)
+			SceneTransition.transition_to_scene(SETTINGS_SCENE)
 			return
 
 	if _is_escape_event(event):
-		get_tree().quit()
+		get_viewport().set_input_as_handled()
+		QuitConfirmation.request_quit()
 		return
 
 
@@ -39,4 +40,4 @@ func _is_start_event(event: InputEvent) -> bool:
 
 func _change_scene() -> void:
 	if next_scene:
-		get_tree().change_scene_to_packed(next_scene)
+		SceneTransition.transition_to_scene(next_scene.resource_path)

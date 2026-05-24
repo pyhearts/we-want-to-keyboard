@@ -30,6 +30,7 @@ func _ready() -> void:
 	if btn_down: btn_down.pressed.connect(_on_down_pressed)
 	
 	update_ui()
+	_update_jacket()
 
 # 배열 인덱스를 계산하는 함수 (루프 및 반복 처리)
 func get_title(offset: int) -> String:

@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1779457745
+::res://::1779633613
 export_presets.cfg::TextFile::-1::1778316025::0::1::::<><><>0<>0<><>::
 ::res://assets/::1778137436
 ::res://assets/fonts/::1778137435
@@ -43,8 +43,9 @@ chart.json::JSON::-1::1779369528::0::1::::<><><>0<>0<><>::
 img.png::CompressedTexture2D::30171420809379480::1778849600::1778850819::1::::<><><>0<>0<>2c69fa11dae970854b8854f06d6d8dd6<>res://.godot/imported/img.png-51735937c089a0568a423768db75bffa.ctex::
 MEGALOVANIA.mp3::AudioStreamMP3::6358923987772931439::1777971583::1777971599::1::::<><><>0<>0<>ff0aa75c69981ab0c74f1306f6a20faf<>res://.godot/imported/MEGALOVANIA.mp3-9b9553fe6be742c6ad2b767dc3db070f.mp3str::
 Res.tres::Resource/MusicData::4892349512371210340::1778853158::0::1::::<><><>0<>0<><>::uid://cwukswxae8st0::::res://assets/musics/MEGALOVANIA/MEGALOVANIA.mp3<>uid://ciljglxaby7qn::::res://scripts/data/music_data.gd
-::res://assets/musics/R/::1779369908
+::res://assets/musics/R/::1779611702
 chart.json::JSON::-1::1779369908::0::1::::<><><>0<>0<><>::
+img.png::CompressedTexture2D::3938389796334840809::1779611697::1779611702::1::::<><><>0<>0<>1703e540366dd646f76431f0c4a01280<>res://.godot/imported/img.png-944392f0ad77c201637740e5667d583b.ctex::
 R.mp3::AudioStreamMP3::8229691309461641894::1777986295::1777996747::1::::<><><>0<>0<>2b301b5a06a1d086ffb258b10e933a07<>res://.godot/imported/R.mp3-7ebfb166d1d8871808e389d3d72d2045.mp3str::
 Res.tres::Resource/MusicData::1945995525735648384::1777901149::0::1::::<><><>0<>0<><>::uid://ciljglxaby7qn::::res://scripts/data/music_data.gd<>uid://dpir2wntfuj07::::res://assets/musics/R/R.mp3
 ::res://build/::1778316085
@@ -53,20 +54,22 @@ Res.tres::Resource/MusicData::1945995525735648384::1777901149::0::1::::<><><>0<>
 ::res://scenes/::1779452851
 ::res://scenes/effects/::1779452851
 judgment_label.tscn::PackedScene::6452735308464005491::1779452851::0::1::::<><><>0<>0<><>::uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://bsy3nnt1c8mhp::::res://scripts/effects/judgment_label.gd
-::res://scenes/game/::1779453883
-game.tscn::PackedScene::8105288312645883185::1779453883::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/gameplay/game_controller.gd<>uid://be2ijsn4bnvdj::::res://scenes/game/target_note.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/ui/score_label.gd<>uid://cq81px2t2a0k6::::res://scripts/ui/combo_label.gd<>uid://c1125ttohes1l::::res://scripts/effects/audio_stream_player.gd
+::res://scenes/game/::1779462270
+game.tscn::PackedScene::8105288312645883185::1779462270::0::1::::<><><>0<>0<><>::uid://ccg5fm80pgwiq::::res://scripts/gameplay/game_controller.gd<>uid://be2ijsn4bnvdj::::res://scenes/game/target_note.tscn<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://l8l3h3p5ygsy::::res://scripts/ui/score_label.gd<>uid://cq81px2t2a0k6::::res://scripts/ui/combo_label.gd<>uid://c1125ttohes1l::::res://scripts/effects/audio_stream_player.gd
 target_note.tscn::PackedScene::2723417032514379291::1778162233::0::1::::<><><>0<>0<><>::uid://b5h7ynn46ri4k::::res://assets/image/ingame/과녁.png<>uid://ngo16177o8ud::::res://scripts/gameplay/target_note.gd<>uid://0blaxdoepjmc::::res://assets/image/ingame/판정-원.png<>uid://be4ep4vw3ir6h::::res://scripts/effects/judgment_ring.gd
-::res://scenes/menu/::1779453463
+::res://scenes/menu/::1779621373
 chart_editor.tscn::PackedScene::8828176373217650405::1779453095::0::1::::<><><>0<>0<><>::uid://cw8ydj2sp82s::::res://scripts/ui/chart_editor.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
 effect_editor.tscn::PackedScene::-1::1779369528::0::1::::<><><>0<>0<><>::res://scripts/ui/effect_editor.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
 img_change.gd::GDScript::3632622255927238416::1778849600::0::1::::<>TextureRect<><>0<>0<><>::
 main_menu.tscn::PackedScene::1805364345342442223::1779453463::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://lqonaeq14cg8::::res://scripts/ui/start_on_any_input.gd<>uid://yhxq1gosjepw::::res://scenes/menu/music_select.tscn<>uid://s08rnnrk6it4::::res://scripts/effects/background_tilt.gd<>uid://c6b1jhnhfsj6y::::res://assets/image/main/i want a gun no title.png<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://18nnuufyapx4::::res://assets/image/main/i want a gun only title (1).png
-music_select.tscn::PackedScene::1700409330663741772::1778853319::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://dohp0de7qvf3a::::res://assets/image/main/우리는 총이 원하다! 흰배경.png<>uid://bim0m10phtnkw::::res://assets/image/music select/하츄핑 타이틀.png<>uid://bip5eikp1c1mm::::res://scripts/ui/VBoxContainerMove.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://ddgk54cu7pkl::::res://scripts/ui/music_select_button.gd<>uid://c1125ttohes1l::::res://scripts/effects/audio_stream_player.gd<>uid://ctox3v2i5efjl::::res://scripts/ui/escape_to_scene.gd<>uid://br0w01bpkuqk3::::res://scenes/menu/img_change.gd
+music_select.tscn::PackedScene::1700409330663741772::1779621373::0::1::::<><><>0<>0<><>::uid://brigg8f1r7c4y::::res://assets/image/main/제목을 입력해주세요. (3).png<>uid://dohp0de7qvf3a::::res://assets/image/main/우리는 총이 원하다! 흰배경.png<>uid://bim0m10phtnkw::::res://assets/image/music select/하츄핑 타이틀.png<>uid://bip5eikp1c1mm::::res://scripts/ui/VBoxContainerMove.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf<>uid://ddgk54cu7pkl::::res://scripts/ui/music_select_button.gd<>uid://c1125ttohes1l::::res://scripts/effects/audio_stream_player.gd<>uid://ctox3v2i5efjl::::res://scripts/ui/escape_to_scene.gd<>uid://br0w01bpkuqk3::::res://scenes/menu/img_change.gd
 settings.tscn::PackedScene::7577175740234495824::1779453676::0::1::::<><><>0<>0<><>::uid://chf83tqp1ld2o::::res://scripts/ui/settings_menu.gd<>uid://c3ajivv3jlthi::::res://assets/fonts/Pretendard-Black.otf
 ::res://scenes/tools/::1778309393
 ::res://scripts/::1778308705
-::res://scripts/autoload/::1779453080
+::res://scripts/autoload/::1779621325
 global.gd::GDScript::5288415493149227183::1779453649::0::1::::<>Node<><>0<>0<><>::
+quit_confirmation.gd::GDScript::1936011883620171075::1779621303::0::1::::<>Node<><>0<>0<><>::
+scene_transition.gd::GDScript::6878717848242540711::1779621037::0::1::::<>CanvasLayer<><>0<>0<><>::
 ::res://scripts/data/::1778137436
 music_data.gd::GDScript::5357618052773116605::1777619177::0::1::::MusicData<>Resource<><>0<>0<><>::
 ::res://scripts/effects/::1779453038
@@ -75,21 +78,21 @@ background_tilt.gd::GDScript::1317043352266757051::1779369528::0::1::::<>Texture
 hit_ripple.gd::GDScript::7046977995135175894::1779452857::0::1::::<>Node2D<><>0<>0<><>::
 judgment_label.gd::GDScript::1094699269563529722::1779452849::0::1::::<>Label<><>0<>0<><>::
 judgment_ring.gd::GDScript::2727314224647982185::1779369528::0::1::::<>TextureRect<><>0<>0<><>::
-::res://scripts/gameplay/::1779453095
-game_controller.gd::GDScript::4927436442354083576::1779452906::0::1::::<>Control<><>0<>0<><>::
+::res://scripts/gameplay/::1779462237
+game_controller.gd::GDScript::4927436442354083576::1779621063::0::1::::<>Control<><>0<>0<><>::
 hold_note.gd::GDScript::3054705766041705536::1779369528::0::1::::HoldNote<>Control<><>0<>0<><>::
-target_note.gd::GDScript::925739372245092127::1779453660::0::1::::TargetNote<>Control<><>0<>0<><>::
+target_note.gd::GDScript::925739372245092127::1779462237::0::1::::TargetNote<>Control<><>0<>0<><>::
 ::res://scripts/tools/::1778309628
-::res://scripts/ui/::1779453041
+::res://scripts/ui/::1779611504
 chart_editor.gd::GDScript::187840690405119972::1779369528::0::1::::<>Control<><>0<>0<><>::
 combo_label.gd::GDScript::5965594010845350311::1779453041::0::1::::<>Label<><>0<>0<><>::
 effect_editor.gd::GDScript::7034372951264949933::1779369528::0::1::::<>Control<><>0<>0<><>::
-escape_to_scene.gd::GDScript::6136778323232429073::1779369528::0::1::::<>Control<><>0<>0<><>::
+escape_to_scene.gd::GDScript::6136778323232429073::1779621058::0::1::::<>Control<><>0<>0<><>::
 music_label.gd::GDScript::561107727416804113::1777716528::0::1::::<>Label<><>0<>0<><>::
-music_select_button.gd::GDScript::217143444690629595::1777725046::0::1::::<>TextureButton<><>0<>0<><>::
+music_select_button.gd::GDScript::217143444690629595::1779621053::0::1::::<>TextureButton<><>0<>0<><>::
 score_label.gd::GDScript::840920046692643988::1778852053::0::1::::<>Label<><>0<>0<><>::
 settings_menu.gd::GDScript::5817215067119464549::1779453694::0::1::::<>Control<><>0<>0<><>::
-start_on_any_input.gd::GDScript::805980584244878333::1779452810::0::1::::<>TextureRect<><>0<>0<><>::
-VBoxContainerMove.gd::GDScript::2980726188418100764::1778853151::0::1::::<>VBoxContainer<><>0<>0<><>::
+start_on_any_input.gd::GDScript::805980584244878333::1779621314::0::1::::<>TextureRect<><>0<>0<><>::
+VBoxContainerMove.gd::GDScript::2980726188418100764::1779611504::0::1::::<>VBoxContainer<><>0<>0<><>::
 ::res://script_templates/::1777619979
 ::res://text_editor_themes/::1777619979

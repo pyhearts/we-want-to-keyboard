@@ -66,7 +66,7 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
-		get_tree().change_scene_to_file(MUSIC_SELECT_SCENE)
+		SceneTransition.transition_to_scene(MUSIC_SELECT_SCENE)
 	
 	# 디버그용 기능 (디버그 빌드에서만 동작)
 	if OS.is_debug_build():

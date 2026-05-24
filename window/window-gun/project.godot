@@ -17,6 +17,8 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 [autoload]
 
 Global="*res://scripts/autoload/global.gd"
+SceneTransition="*res://scripts/autoload/scene_transition.gd"
+QuitConfirmation="*res://scripts/autoload/quit_confirmation.gd"
 
 [display]
 
