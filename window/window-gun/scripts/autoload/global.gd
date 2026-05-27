@@ -7,10 +7,21 @@ signal camera_shake_requested(intensity: float, duration: float)
 
 var score = 0
 var combo = 0
+var max_combo = 0
 var time: float = 0.0
 var music_titles : Array
 var selected_music: String = ""
 var music_offset: float = 0.0
+
+# 1,000,000점 스케일링을 위한 점수 계산 변수
+var max_base_score: int = 100
+var current_base_score: int = 0
+
+# 판정 통계 개수 카운트
+var perfect_count: int = 0
+var great_count: int = 0
+var good_count: int = 0
+var miss_count: int = 0
 
 var audio_player: AudioStreamPlayer = null
 
@@ -147,21 +158,55 @@ func _process(delta: float) -> void:
 func reset_run() -> void:
 	score = 0
 	combo = 0
+	max_combo = 0
 	time = 0.0
+	current_base_score = 0
+	perfect_count = 0
+	great_count = 0
+	good_count = 0
+	miss_count = 0
 	score_changed.emit(score)
 	combo_changed.emit(combo)
 
 
 func add_score(amount: int) -> void:
-	score += amount
+	current_base_score += amount
+	if current_base_score < 0:
+		current_base_score = 0
+	# 100만점 만점으로 실시간 보정 계산
+	score = calculate_scaled_score()
 	score_changed.emit(score)
 
 
 func add_combo() -> void:
 	combo += 1
+	if combo > max_combo:
+		max_combo = combo
 	combo_changed.emit(combo)
 
 
 func reset_combo() -> void:
 	combo = 0
 	combo_changed.emit(combo)
+
+
+# 판정 카운트 수집 함수
+func add_judgment(judgment_type: String) -> void:
+	match judgment_type.to_lower():
+		"perfect":
+			perfect_count += 1
+		"great":
+			great_count += 1
+		"good":
+			good_count += 1
+		"miss":
+			miss_count += 1
+
+
+# 1,000,000점 스케일링 계산식
+func calculate_scaled_score() -> int:
+	if max_base_score <= 0:
+		return 0
+	var ratio = float(current_base_score) / float(max_base_score)
+	# 0~100만 점 사이로 보정
+	return int(clamp(ratio * 1000000.0, 0.0, 1000000.0))

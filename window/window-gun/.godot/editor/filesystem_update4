@@ -1,1 +1,4 @@
+res://scripts/ui/result_scene.gd
+res://scenes/menu/result_scene.tscn
 res://assets/musics/Flower Rocket/chart.json
+res://assets/musics/R/chart.json

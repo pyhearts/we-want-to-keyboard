@@ -1,0 +1,243 @@
+[gd_scene format=3 uid="uid://cb45jtvsf2se"]
+
+[ext_resource type="Script" uid="uid://t3cmk0i5jirv" path="res://scripts/ui/result_scene.gd" id="1_1"]
+
+[node name="ResultScene" type="Control" unique_id=1577196960]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1444264764]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.8784314, 0.8980392, 1)
+
+[node name="MainContainer" type="VBoxContainer" parent="." unique_id=992243902]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -600.0
+offset_top = -350.0
+offset_right = 600.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="TopInfo" type="VBoxContainer" parent="MainContainer" unique_id=1482414371]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MainContainer/TopInfo" unique_id=1760234044]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.18, 0.035, 0.106, 1)
+theme_override_font_sizes/font_size = 64
+text = "곡 제목"
+horizontal_alignment = 1
+
+[node name="ArtistLabel" type="Label" parent="MainContainer/TopInfo" unique_id=90995495]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.18, 0.035, 0.106, 0.75)
+theme_override_font_sizes/font_size = 28
+text = "아티스트"
+horizontal_alignment = 1
+
+[node name="DifficultyLabel" type="Label" parent="MainContainer/TopInfo" unique_id=1786833192]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.18, 0.035, 0.106, 1)
+theme_override_font_sizes/font_size = 24
+text = "BPM: 120"
+horizontal_alignment = 1
+
+[node name="CenterLayout" type="HBoxContainer" parent="MainContainer" unique_id=2046420577]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 80
+alignment = 1
+
+[node name="LeftCard" type="PanelContainer" parent="MainContainer/CenterLayout" unique_id=430736392]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LeftPanel" type="CenterContainer" parent="MainContainer/CenterLayout/LeftCard" unique_id=1493466285]
+layout_mode = 2
+
+[node name="RankLabel" type="Label" parent="MainContainer/CenterLayout/LeftCard/LeftPanel" unique_id=1858590728]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 240
+text = "S"
+horizontal_alignment = 1
+
+[node name="AllPerfectBadge" type="Label" parent="MainContainer/CenterLayout/LeftCard/LeftPanel" unique_id=1638259674]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.525, 0.647, 1)
+theme_override_font_sizes/font_size = 32
+text = "ALL PERFECT"
+horizontal_alignment = 1
+
+[node name="RightCard" type="PanelContainer" parent="MainContainer/CenterLayout" unique_id=109217825]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MainContainer/CenterLayout/RightCard" unique_id=495834624]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="RightPanel" type="VBoxContainer" parent="MainContainer/CenterLayout/RightCard/MarginContainer" unique_id=183454082]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="ScoreRow" type="HBoxContainer" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel" unique_id=665622395]
+layout_mode = 2
+
+[node name="ScoreLabel" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/ScoreRow" unique_id=2060034120]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 32
+text = "Score"
+
+[node name="ScoreVal" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/ScoreRow" unique_id=1258602417]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "0000000"
+
+[node name="ComboRow" type="HBoxContainer" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel" unique_id=603268052]
+layout_mode = 2
+
+[node name="ComboLabel" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/ComboRow" unique_id=1386350386]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 32
+text = "Max Combo"
+
+[node name="ComboVal" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/ComboRow" unique_id=1419628414]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "0"
+
+[node name="Separator" type="HSeparator" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel" unique_id=140053242]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="JudgmentsGrid" type="GridContainer" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel" unique_id=920451564]
+layout_mode = 2
+theme_override_constants/h_separation = 40
+theme_override_constants/v_separation = 12
+columns = 2
+
+[node name="PerfectLabel" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/JudgmentsGrid" unique_id=1360190582]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.525, 0.647, 1)
+theme_override_font_sizes/font_size = 28
+text = "PERFECT"
+
+[node name="PerfectVal" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/JudgmentsGrid" unique_id=1293703430]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "0"
+
+[node name="GreatLabel" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/JudgmentsGrid" unique_id=589970115]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "GREAT"
+
+[node name="GreatVal" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/JudgmentsGrid" unique_id=493945835]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "0"
+
+[node name="GoodLabel" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/JudgmentsGrid" unique_id=1065339919]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.5, 0.9, 0.4, 1)
+theme_override_font_sizes/font_size = 28
+text = "GOOD"
+
+[node name="GoodVal" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/JudgmentsGrid" unique_id=1202324286]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "0"
+
+[node name="MissLabel" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/JudgmentsGrid" unique_id=648915955]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 28
+text = "MISS"
+
+[node name="MissVal" type="Label" parent="MainContainer/CenterLayout/RightCard/MarginContainer/RightPanel/JudgmentsGrid" unique_id=1057058122]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "0"
+
+[node name="BottomButtons" type="HBoxContainer" parent="MainContainer" unique_id=1562222010]
+layout_mode = 2
+theme_override_constants/separation = 60
+alignment = 1
+
+[node name="RetryButton" type="Button" parent="MainContainer/BottomButtons" unique_id=1445515186]
+custom_minimum_size = Vector2(240, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 0.525, 0.647, 1)
+theme_override_font_sizes/font_size = 26
+text = "다시하기"
+
+[node name="SelectButton" type="Button" parent="MainContainer/BottomButtons" unique_id=1253425835]
+custom_minimum_size = Vector2(240, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 0.525, 0.647, 1)
+theme_override_font_sizes/font_size = 26
+text = "악곡 선택하기"
+
+[node name="ScoreParticles" type="CPUParticles2D" parent="." unique_id=1037996526]
+position = Vector2(643, 694)
+emitting = false
+amount = 60
+lifetime = 1.8
+explosiveness = 0.05
+randomness = 0.6
+emission_shape = 1
+emission_sphere_radius = 60.0
+direction = Vector2(0, -1)
+spread = 70.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 220.0
+initial_velocity_max = 440.0
+scale_amount_min = 5.0
+scale_amount_max = 14.0
+
+[connection signal="pressed" from="MainContainer/BottomButtons/RetryButton" to="." method="_on_retry_button_pressed"]
+[connection signal="pressed" from="MainContainer/BottomButtons/SelectButton" to="." method="_on_select_button_pressed"]

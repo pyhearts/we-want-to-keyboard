@@ -116,6 +116,7 @@ func _process(delta: float) -> void:
 		
 	_process_due_notes()
 	_process_due_events()
+	_check_song_finished()
 
 
 func _on_camera_shake_requested(intensity: float, duration: float) -> void:
@@ -144,6 +145,24 @@ func start_chart() -> void:
 	if chart_data == null:
 		push_error("Cannot start chart.")
 		return
+
+	# 이론상 최대 기본 점수(max_base_score) 계산 로직
+	var total_max_score = 0
+	for note in chart_data.get("notes", []):
+		if not note is Dictionary:
+			continue
+		var note_type = str(note.get("type", "normal"))
+		if note_type == "hold":
+			var dur = float(note.get("duration", 3.0))
+			var beat_div = int(note.get("beat_division", 4))
+			var interval = (60.0 / bpm) * (4.0 / float(beat_div))
+			var ticks = int(dur / interval)
+			total_max_score += ticks * 10
+		else:
+			total_max_score += 100
+
+	Global.max_base_score = max(total_max_score, 100)
+	print("Max theoretical base score calculated: ", Global.max_base_score)
 	
 	# BPM 로드
 	var res_path = MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
@@ -536,3 +555,52 @@ func _animate_image_movement_linear(img_node: TextureRect, target_pos: Vector2i,
 # 유틸리티 함수
 func _is_headless_display() -> bool:
 	return OS.has_feature("headless") or "--headless" in OS.get_cmdline_args() or "--headless-test" in OS.get_cmdline_user_args() or OS.get_environment("GODOT_HEADLESS_TEST") == "1"
+
+
+# 곡 완료 여부 체크 함수
+func _check_song_finished() -> void:
+	if not is_playing:
+		return
+
+	# 차트의 모든 노트가 방출되었는지 확인
+	if note_index < chart_data.get("notes", []).size():
+		return
+
+	# 현재 화면에 살아 있는 TargetNote 개수 확인
+	var has_active_notes = false
+	if target_spawner:
+		for child in target_spawner.get_children():
+			if "TargetNote" in child.name or child.has_method("activate_stationary"):
+				has_active_notes = true
+				break
+
+	# 현재 화면에 살아 있는 HoldNote 개수 확인
+	var hold_notes_active = false
+	var note_layer = get_node_or_null("NoteLayer")
+	if note_layer:
+		for child in note_layer.get_children():
+			if "HoldNote" in child.name or child.has_method("_is_holding"):
+				hold_notes_active = true
+				break
+
+	if not has_active_notes and not hold_notes_active:
+		# 마지막 노트의 릴리즈 이후 지연 시간 확보
+		var last_note_time = 0.0
+		var notes = chart_data.get("notes", [])
+		if notes.size() > 0:
+			var last_note = notes[-1]
+			last_note_time = float(last_note.get("time", 0.0)) + float(last_note.get("duration", 2.0))
+
+		# 오디오 스트림이 멈췄거나 마지막 노트 플레이 시간이 충분히 흘렀을 때 종료
+		var audio_stopped = Global.audio_player != null and not Global.audio_player.playing
+		if (audio_stopped and current_time > last_note_time) or (current_time > last_note_time + 3.0):
+			is_playing = false
+			_transition_to_result_scene()
+
+
+# 결과 화면 씬 전환
+func _transition_to_result_scene() -> void:
+	print("Song complete! Transitioning to result scene...")
+	# SceneTransition 전역 자동로드를 이용해 자연스러운 페이드 전환
+	var result_path = "res://scenes/menu/result_scene.tscn"
+	SceneTransition.transition_to_scene(result_path)

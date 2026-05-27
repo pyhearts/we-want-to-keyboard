@@ -181,6 +181,7 @@ func _on_time_out() -> void:
 
 	Global.add_score(penalty_score)
 	Global.reset_combo()
+	Global.add_judgment("miss")
 	
 	# Miss 판정 및 이펙트 호출
 	_spawn_judgment_effects("miss", 0)
@@ -226,6 +227,7 @@ func _on_point_pressed() -> void:
 
 	# Add score (perfect gives maximum points)
 	Global.add_score(earned_score)
+	Global.add_judgment(judgment_type)
 	
 	# 신규 프리미엄 타격감 연출(소리, 링, 판정 텍스트, 카메라 흔들림) 적용
 	_spawn_judgment_effects(judgment_type, earned_score)
