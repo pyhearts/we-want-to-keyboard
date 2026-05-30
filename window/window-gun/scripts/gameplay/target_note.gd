@@ -36,6 +36,15 @@ const MODE_MOVING = "moving"
 var is_moving = false
 var velocity = Vector2.ZERO
 var gravity = 0.0
+
+# --- 베지에 커브 및 중력 확장 변수 ---
+var curve_control_point: Variant = null  # Vector2 또는 null (직선이면 null)
+var use_curve_gravity: bool = false      # 중력 이징 적용 여부
+var move_target_pos: Vector2 = Vector2.ZERO
+var move_start_pos: Vector2 = Vector2.ZERO
+var move_elapsed: float = 0.0
+var move_total_duration: float = 0.0
+var use_bezier_mode: bool = false
 var is_clone = false
 var spawn_time_msec = 0
 var is_hit = false  # 노트가 눌렸으면 true — 타임아웃 Miss 방지용
@@ -67,7 +76,7 @@ static func reset_state() -> void:
 	recent_positions.clear()
 
 
-func spawn_node(mode: String = MODE_NORMAL, target_pos: Variant = null, start_pos: Variant = null) -> void:
+func spawn_node(mode: String = MODE_NORMAL, target_pos: Variant = null, start_pos: Variant = null, curve_control: Variant = null, use_gravity: bool = false, move_duration: float = 0.0) -> void:
 	var final_pos = _get_spawn_position(target_pos)
 	_remember_spawn_position(final_pos)
 
@@ -81,7 +90,7 @@ func spawn_node(mode: String = MODE_NORMAL, target_pos: Variant = null, start_po
 			final_start_pos = start_pos
 		else:
 			final_start_pos = Vector2(final_pos.x + randf_range(-100.0, 100.0), max_y + 300.0)
-		clone.call_deferred("activate_moving", final_pos, final_start_pos)
+		clone.call_deferred("activate_moving", final_pos, final_start_pos, curve_control, use_gravity, move_duration)
 	else:
 		clone.call_deferred("activate_stationary", final_pos)
 
@@ -92,18 +101,44 @@ func activate_stationary(new_pos: Vector2) -> void:
 	global_position = new_pos - ((size / 2.0) * scale + center_offset)
 	_setup_clone()
 
-func activate_moving(target_pos: Vector2, start_pos: Vector2) -> void:
+func activate_moving(target_pos: Vector2, start_pos_arg: Vector2, p_curve_control: Variant = null, p_use_gravity: bool = false, p_move_duration: float = 0.0) -> void:
 	is_moving = true
-	# 시작 위치도 동일하게 중심을 맞춰줍니다.
-	global_position = start_pos - ((size / 2.0) * scale + center_offset)
-
-	var travel_time = judgment_time
-	gravity = (2.0 * (start_pos.y - target_pos.y)) / (travel_time * travel_time)
-	velocity = Vector2(
-		(target_pos.x - start_pos.x) / travel_time,
-		-gravity * travel_time
-	)
-
+	move_target_pos = target_pos
+	move_start_pos = start_pos_arg
+	move_elapsed = 0.0
+	
+	# 시작 위치에 일치하게 중심을 맞춰줍니다.
+	global_position = start_pos_arg - ((size / 2.0) * scale + center_offset)
+	
+	# 베지에 커브 모드 설정
+	if p_curve_control is Vector2:
+		curve_control_point = p_curve_control
+		use_bezier_mode = true
+	else:
+		curve_control_point = null
+		use_bezier_mode = false
+	
+	use_curve_gravity = p_use_gravity
+	
+	# 이동 총 시간 설정 (0이면 기존 judgment_time 사용)
+	if p_move_duration > 0.01:
+		move_total_duration = p_move_duration
+	else:
+		move_total_duration = judgment_time
+	
+	if use_bezier_mode:
+		# 베지에 모드에서는 velocity/gravity를 사용하지 않음 (직접 보간)
+		velocity = Vector2.ZERO
+		gravity = 0.0
+	else:
+		# 기존 물리 기반 이동 (레거시 호환)
+		var travel_time = judgment_time
+		gravity = (2.0 * (start_pos_arg.y - target_pos.y)) / (travel_time * travel_time)
+		velocity = Vector2(
+			(target_pos.x - start_pos_arg.x) / travel_time,
+			-gravity * travel_time
+		)
+	
 	_setup_clone()
 
 
@@ -111,8 +146,31 @@ func _process(delta: float) -> void:
 	if not is_clone or not is_moving:
 		return
 
-	velocity.y += gravity * delta
-	global_position += velocity * delta
+	if use_bezier_mode:
+		# 베지에 커브 기반 이동
+		move_elapsed += delta
+		var t = clamp(move_elapsed / move_total_duration, 0.0, 1.0)
+		
+		# 중력 이징: t^2 가속 적용 (포물선 낙하 느낌)
+		if use_curve_gravity:
+			t = t * t
+		
+		var new_pos: Vector2
+		if curve_control_point is Vector2:
+			# 2차 베지에 보간
+			var q0 = move_start_pos.lerp(curve_control_point, t)
+			var q1 = curve_control_point.lerp(move_target_pos, t)
+			new_pos = q0.lerp(q1, t)
+		else:
+			# 직선 보간
+			new_pos = move_start_pos.lerp(move_target_pos, t)
+		
+		global_position = new_pos - ((size / 2.0) * scale + center_offset)
+	else:
+		# 기존 물리 기반 이동 (레거시 호환)
+		velocity.y += gravity * delta
+		global_position += velocity * delta
+	
 	if not _is_headless_run():
 		queue_redraw()
 		_redraw_previous_note()

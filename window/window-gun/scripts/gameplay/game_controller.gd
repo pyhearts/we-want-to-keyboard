@@ -287,7 +287,14 @@ func _process_note(note_info: Dictionary) -> void:
 		if note_info.has("start_x") and note_info.has("start_y"):
 			start_pos = Vector2(float(note_info["start_x"]), float(note_info["start_y"]))
 
-	_spawn_note(mode, pos, start_pos)
+	# 커브 및 중력 데이터 추출 (하위 호환: 없으면 null/false)
+	var curve_control = null
+	if note_info.has("curve_control_x") and note_info.has("curve_control_y"):
+		curve_control = Vector2(float(note_info["curve_control_x"]), float(note_info["curve_control_y"]))
+	var use_gravity = note_info.get("use_gravity", false)
+	var move_duration = float(note_info.get("move_duration", 0.0))
+	
+	_spawn_note(mode, pos, start_pos, curve_control, use_gravity, move_duration)
 
 
 func _spawn_hold_note(note_info: Dictionary) -> void:
@@ -361,9 +368,9 @@ func _get_event_target_position(event_info: Dictionary, fallback_pos: Vector2i) 
 	)
 
 
-func _spawn_note(mode: String, target_pos: Variant = null, start_pos: Variant = null) -> void:
+func _spawn_note(mode: String, target_pos: Variant = null, start_pos: Variant = null, curve_control: Variant = null, use_gravity: bool = false, move_duration: float = 0.0) -> void:
 	if target_spawner and target_spawner.has_method("spawn_node"):
-		target_spawner.spawn_node(mode, target_pos, start_pos)
+		target_spawner.spawn_node(mode, target_pos, start_pos, curve_control, use_gravity, move_duration)
 
 
 # ==========================================

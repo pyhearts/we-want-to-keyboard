@@ -29,6 +29,21 @@ var start_y_input: LineEdit
 var set_start_btn: Button
 var is_setting_start_pos: bool = false
 
+# --- 포물선 드래그 모드 상태 ---
+var is_curve_draw_mode: bool = false       # 곡선 드래그 모드 활성화 여부
+var is_curve_dragging: bool = false        # 현재 마우스 드래그 중 여부
+var curve_drag_start: Vector2 = Vector2.ZERO   # 마우스 누른 시작점 (논리 좌표)
+var curve_drag_end: Vector2 = Vector2.ZERO     # 마우스 뗀 끝점 (논리 좌표)
+var curve_drag_current: Vector2 = Vector2.ZERO # 실시간 마우스 위치 (논리 좌표)
+var curve_drag_max_deviation: float = 0.0  # 드래그 중 최대 이탈 거리
+var curve_drag_side: float = 1.0           # 이탈 방향 부호 (+1 또는 -1)
+
+# --- 중력 토글 및 이동 시간 ---
+var use_gravity_check: CheckBox = null
+var moving_duration_input: LineEdit = null
+var draw_curve_btn: Button = null
+var moving_duration: float = 1.0
+
 # 에디터 상태 변수
 var music_list: Array = []
 var selected_song: String = ""
@@ -655,6 +670,24 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 	)
 	
 	if event is InputEventMouseMotion:
+		# 곡선 드래그 모드: 실시간 제어점 업데이트
+		if is_curve_draw_mode and is_curve_dragging:
+			curve_drag_current = logical_pos
+			var seg = curve_drag_end - curve_drag_start
+			var seg_len = seg.length()
+			if seg_len > 0.01:
+				var seg_norm = seg / seg_len
+				var to_mouse = logical_pos - curve_drag_start
+				var proj = to_mouse.dot(seg_norm)
+				var closest = curve_drag_start + seg_norm * clamp(proj, 0.0, seg_len)
+				var deviation = logical_pos.distance_to(closest)
+				var cross = seg.x * to_mouse.y - seg.y * to_mouse.x
+				var side_v = sign(cross) if abs(cross) > 0.01 else 1.0
+				if deviation > curve_drag_max_deviation:
+					curve_drag_max_deviation = deviation
+					curve_drag_side = side_v
+			preview_canvas.queue_redraw()
+			return
 		if is_dragging_note and selected_note_index != -1:
 			var note = chart_data["notes"][selected_note_index]
 			var old_x = float(note.get("x", 960.0))
@@ -685,6 +718,16 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 			var snapped_time = get_snapped_time(current_time)
 			
 			if event.button_index == MOUSE_BUTTON_LEFT:
+				if is_curve_draw_mode and selected_note_index != -1:
+					is_curve_dragging = true
+					var c_note = chart_data["notes"][selected_note_index]
+					curve_drag_start = Vector2(float(c_note.get("start_x", c_note.get("x", 960.0))), float(c_note.get("start_y", float(c_note.get("y", 540.0)) + 300.0)))
+					curve_drag_end = Vector2(float(c_note.get("x", 960.0)), float(c_note.get("y", 540.0)))
+					curve_drag_current = logical_pos
+					curve_drag_max_deviation = 0.0
+					curve_drag_side = 1.0
+					preview_canvas.queue_redraw()
+					return
 				if is_setting_start_pos and selected_note_index != -1:
 					var note = chart_data["notes"][selected_note_index]
 					note["start_x"] = logical_pos.x
@@ -718,6 +761,10 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 						if moving_settings: moving_settings.visible = true
 						if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", note.get("x", 960.0)))
 						if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", float(note.get("y", 540.0)) + 300.0))
+						if use_gravity_check: use_gravity_check.button_pressed = note.get("use_gravity", false)
+						if moving_duration_input:
+							moving_duration = float(note.get("move_duration", 1.0))
+							moving_duration_input.text = "%.1f" % moving_duration
 					elif note_type == "hold":
 						type_select.selected = 2
 						selected_type = "hold"
@@ -735,7 +782,24 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 				if hover_note_index != -1:
 					_delete_note(hover_note_index)
 		else:
-			if event.button_index == MOUSE_BUTTON_LEFT and is_dragging_note:
+			if event.button_index == MOUSE_BUTTON_LEFT and is_curve_dragging:
+				is_curve_dragging = false
+				if selected_note_index != -1 and curve_drag_max_deviation > 5.0:
+					save_state_for_undo()
+					var c_note2 = chart_data["notes"][selected_note_index]
+					var control = _calculate_bezier_control_from_drag(curve_drag_start, curve_drag_end, curve_drag_max_deviation, curve_drag_side)
+					c_note2["curve_control_x"] = control.x
+					c_note2["curve_control_y"] = control.y
+					_save_chart_file()
+					_show_toast("Curve Saved!")
+				elif selected_note_index != -1:
+					var c_note3 = chart_data["notes"][selected_note_index]
+					c_note3.erase("curve_control_x")
+					c_note3.erase("curve_control_y")
+					_save_chart_file()
+					_show_toast("Linear Path Set")
+				preview_canvas.queue_redraw()
+			elif event.button_index == MOUSE_BUTTON_LEFT and is_dragging_note:
 				is_dragging_note = false
 				_save_chart_file()
 				preview_canvas.queue_redraw()
@@ -785,6 +849,8 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 		note_node["y"] = logical_pos.y
 		note_node["start_x"] = note_node["x"]
 		note_node["start_y"] = note_node["y"] + 300.0
+		note_node["move_duration"] = moving_duration
+		note_node["use_gravity"] = use_gravity_check.button_pressed if use_gravity_check else false
 	else:
 		note_node["x"] = logical_pos.x
 		note_node["y"] = logical_pos.y
@@ -796,6 +862,9 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 	if selected_type == "moving":
 		if start_x_input: start_x_input.text = "%.1f" % note_node["start_x"]
 		if start_y_input: start_y_input.text = "%.1f" % note_node["start_y"]
+		if moving_duration_input: moving_duration_input.text = "%.1f" % moving_duration
+		if use_gravity_check: use_gravity_check.button_pressed = note_node.get("use_gravity", false)
+		if moving_settings: moving_settings.visible = true
 		
 	_update_hover_note(logical_pos)
 	preview_canvas.queue_redraw()
@@ -946,24 +1015,76 @@ func _draw_preview_canvas() -> void:
 			preview_canvas.draw_circle(pos, radius - 10.0*sx, color)
 			
 			if note_type == "moving":
-				var start_x = float(note.get("start_x", note.get("x", 960.0))) * sx
-				var start_y = float(note.get("start_y", float(note.get("y", 540.0)) + 300.0)) * sy
-				var start_pos = Vector2(start_x, start_y)
-				
+				var s_x = float(note.get("start_x", note.get("x", 960.0))) * sx
+				var s_y = float(note.get("start_y", float(note.get("y", 540.0)) + 300.0)) * sy
+				var start_pos_v = Vector2(s_x, s_y)
 				var line_color = Color(1.0, 0.458824, 0.560784, alpha * 0.5)
-				preview_canvas.draw_line(start_pos, pos, line_color, 2.0 * sx)
-				preview_canvas.draw_circle(start_pos, 12.0 * sx, line_color)
-				preview_canvas.draw_circle(start_pos, 8.0 * sx, COLOR_BG_CANVAS)
+				var has_curve = note.has("curve_control_x") and note.has("curve_control_y")
+				var has_gravity = note.get("use_gravity", false)
 				
+				if has_curve:
+					var ctrl_x = float(note["curve_control_x"]) * sx
+					var ctrl_y = float(note["curve_control_y"]) * sy
+					var ctrl_pos = Vector2(ctrl_x, ctrl_y)
+					var curve_segments = 24
+					var curve_points_arr = PackedVector2Array()
+					for seg_i in range(curve_segments + 1):
+						var t_val = float(seg_i) / float(curve_segments)
+						var pt = _quadratic_bezier(start_pos_v, ctrl_pos, pos, t_val)
+						curve_points_arr.append(pt)
+					preview_canvas.draw_polyline(curve_points_arr, line_color, 2.5 * sx, true)
+					for dot_i in range(1, 8):
+						var t_dot = float(dot_i) / 8.0
+						if has_gravity:
+							t_dot = t_dot * t_dot
+						var dot_pt = _quadratic_bezier(start_pos_v, ctrl_pos, pos, t_dot)
+						preview_canvas.draw_circle(dot_pt, 3.5 * sx, Color(1.0, 1.0, 1.0, alpha * 0.6))
+					if is_selected:
+						var ctrl_color = Color(1.0, 0.8, 0.2, alpha * 0.7)
+						preview_canvas.draw_circle(ctrl_pos, 8.0 * sx, ctrl_color)
+						preview_canvas.draw_circle(ctrl_pos, 5.0 * sx, COLOR_BG_CANVAS)
+						preview_canvas.draw_dashed_line(start_pos_v, ctrl_pos, Color(1.0, 0.8, 0.2, alpha * 0.3), 1.0 * sx)
+						preview_canvas.draw_dashed_line(ctrl_pos, pos, Color(1.0, 0.8, 0.2, alpha * 0.3), 1.0 * sx)
+				else:
+					preview_canvas.draw_line(start_pos_v, pos, line_color, 2.0 * sx)
+				preview_canvas.draw_circle(start_pos_v, 12.0 * sx, line_color)
+				preview_canvas.draw_circle(start_pos_v, 8.0 * sx, COLOR_BG_CANVAS)
 				if is_selected:
 					var sel_font = get_theme_font("font")
-					preview_canvas.draw_string(sel_font, start_pos + Vector2(-4.0 * sx, 4.0 * sy), "S", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, COLOR_TEXT_WINE)
+					preview_canvas.draw_string(sel_font, start_pos_v + Vector2(-4.0 * sx, 4.0 * sy), "S", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, COLOR_TEXT_WINE)
+				if has_gravity:
+					var grav_font = get_theme_font("font")
+					var grav_color = Color(0.4, 0.7, 1.0, alpha * 0.9)
+					preview_canvas.draw_string(grav_font, pos + Vector2(15.0 * sx, 25.0 * sy), "G", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, grav_color)
 			
 			# 텍스트 라벨 (딥 와인 색상)
 			var lbl_font = get_theme_font("font")
 			var lbl_text_color = COLOR_TEXT_WINE
 			lbl_text_color.a = alpha * 0.8
 			preview_canvas.draw_string(lbl_font, pos + Vector2(15.0*sx, -15.0*sy), "%.2fs" % note_time, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, lbl_text_color)
+
+
+	# --- 실시간 곡선 드래그 미리보기 렌더링 ---
+	if is_curve_draw_mode and is_curve_dragging and selected_note_index != -1:
+		var c_note_p = chart_data["notes"][selected_note_index]
+		var d_sx = float(c_note_p.get("start_x", c_note_p.get("x", 960.0))) * sx
+		var d_sy = float(c_note_p.get("start_y", float(c_note_p.get("y", 540.0)) + 300.0)) * sy
+		var d_ex = float(c_note_p.get("x", 960.0)) * sx
+		var d_ey = float(c_note_p.get("y", 540.0)) * sy
+		var d_start = Vector2(d_sx, d_sy)
+		var d_end = Vector2(d_ex, d_ey)
+		var pv_ctrl = _calculate_bezier_control_from_drag(curve_drag_start, curve_drag_end, curve_drag_max_deviation, curve_drag_side)
+		var pv_ctrl_s = Vector2(pv_ctrl.x * sx, pv_ctrl.y * sy)
+		var pv_segs = 30
+		var pv_pts = PackedVector2Array()
+		for pv_i in range(pv_segs + 1):
+			var t_pv = float(pv_i) / float(pv_segs)
+			pv_pts.append(_quadratic_bezier(d_start, pv_ctrl_s, d_end, t_pv))
+		preview_canvas.draw_polyline(pv_pts, Color(1.0, 0.3, 0.5, 0.7), 3.0 * sx, true)
+		preview_canvas.draw_circle(pv_ctrl_s, 10.0 * sx, Color(1.0, 0.85, 0.2, 0.8))
+		preview_canvas.draw_circle(pv_ctrl_s, 6.0 * sx, Color(1.0, 1.0, 1.0, 0.9))
+		preview_canvas.draw_dashed_line(d_start, pv_ctrl_s, Color(1.0, 0.85, 0.2, 0.4), 1.5 * sx)
+		preview_canvas.draw_dashed_line(pv_ctrl_s, d_end, Color(1.0, 0.85, 0.2, 0.4), 1.5 * sx)
 
 func _draw_timeline() -> void:
 	var timeline_w: float = timeline.size.x
@@ -1168,6 +1289,63 @@ func _setup_moving_settings_ui() -> void:
 	set_start_btn.toggled.connect(_on_set_start_toggled)
 	moving_settings.add_child(set_start_btn)
 	
+	var sep1 = HSeparator.new()
+	moving_settings.add_child(sep1)
+	
+	var hbox_dur = HBoxContainer.new()
+	var lbl_dur = Label.new()
+	lbl_dur.text = "Duration:"
+	lbl_dur.custom_minimum_size = Vector2(60, 0)
+	lbl_dur.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	lbl_dur.add_theme_font_size_override("font_size", 12)
+	hbox_dur.add_child(lbl_dur)
+	moving_duration_input = LineEdit.new()
+	moving_duration_input.text = "1.0"
+	moving_duration_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	moving_duration_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	moving_duration_input.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	moving_duration_input.text_submitted.connect(_on_moving_duration_submitted)
+	hbox_dur.add_child(moving_duration_input)
+	var lbl_dur_unit = Label.new()
+	lbl_dur_unit.text = "s"
+	lbl_dur_unit.add_theme_color_override("font_color", COLOR_TEXT_WINE_MUTED)
+	lbl_dur_unit.add_theme_font_size_override("font_size", 12)
+	hbox_dur.add_child(lbl_dur_unit)
+	moving_settings.add_child(hbox_dur)
+	
+	use_gravity_check = CheckBox.new()
+	use_gravity_check.text = "Use Gravity"
+	use_gravity_check.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	use_gravity_check.add_theme_font_size_override("font_size", 12)
+	use_gravity_check.toggled.connect(_on_use_gravity_toggled)
+	moving_settings.add_child(use_gravity_check)
+	
+	var sep2 = HSeparator.new()
+	moving_settings.add_child(sep2)
+	
+	draw_curve_btn = Button.new()
+	draw_curve_btn.text = "Draw Curve (Drag on Canvas)"
+	draw_curve_btn.toggle_mode = true
+	draw_curve_btn.add_theme_color_override("font_color", Color.WHITE)
+	draw_curve_btn.add_theme_font_size_override("font_size", 12)
+	var curve_btn_style = StyleBoxFlat.new()
+	curve_btn_style.bg_color = Color(0.788235, 0.0941176, 0.290196, 0.9)
+	curve_btn_style.set_corner_radius_all(5)
+	curve_btn_style.set_content_margin_all(8)
+	draw_curve_btn.add_theme_stylebox_override("normal", curve_btn_style)
+	var curve_btn_pressed = StyleBoxFlat.new()
+	curve_btn_pressed.bg_color = Color(1.0, 0.0, 0.329412, 1.0)
+	curve_btn_pressed.set_corner_radius_all(5)
+	curve_btn_pressed.set_content_margin_all(8)
+	draw_curve_btn.add_theme_stylebox_override("pressed", curve_btn_pressed)
+	var curve_btn_hover = StyleBoxFlat.new()
+	curve_btn_hover.bg_color = Color(1.0, 0.301961, 0.427451, 1.0)
+	curve_btn_hover.set_corner_radius_all(5)
+	curve_btn_hover.set_content_margin_all(8)
+	draw_curve_btn.add_theme_stylebox_override("hover", curve_btn_hover)
+	draw_curve_btn.toggled.connect(_on_draw_curve_toggled)
+	moving_settings.add_child(draw_curve_btn)
+	
 	var controls_parent = hold_settings.get_parent()
 	controls_parent.add_child(moving_settings)
 	var hold_idx = hold_settings.get_index()
@@ -1193,8 +1371,50 @@ func _on_set_start_toggled(is_toggled: bool) -> void:
 	is_setting_start_pos = is_toggled
 	if is_toggled:
 		if set_start_btn: set_start_btn.text = "Click to set start coordinate"
+		if is_curve_draw_mode:
+			is_curve_draw_mode = false
+			if draw_curve_btn: draw_curve_btn.button_pressed = false
 	else:
 		if set_start_btn: set_start_btn.text = "Click Canvas to Set Start"
+
+func _on_draw_curve_toggled(is_toggled: bool) -> void:
+	is_curve_draw_mode = is_toggled
+	is_curve_dragging = false
+	if is_toggled:
+		if draw_curve_btn: draw_curve_btn.text = "Drag on Canvas to Draw Curve..."
+		if is_setting_start_pos:
+			is_setting_start_pos = false
+			if set_start_btn: set_start_btn.button_pressed = false
+	else:
+		if draw_curve_btn: draw_curve_btn.text = "Draw Curve (Drag on Canvas)"
+	preview_canvas.queue_redraw()
+
+func _on_use_gravity_toggled(is_toggled: bool) -> void:
+	if selected_note_index != -1:
+		var note = chart_data["notes"][selected_note_index]
+		note["use_gravity"] = is_toggled
+		_save_chart_file()
+		preview_canvas.queue_redraw()
+
+func _on_moving_duration_submitted(new_text: String) -> void:
+	moving_duration = max(0.1, float(new_text))
+	if selected_note_index != -1:
+		var note = chart_data["notes"][selected_note_index]
+		note["move_duration"] = moving_duration
+		_save_chart_file()
+		preview_canvas.queue_redraw()
+	if moving_duration_input: moving_duration_input.release_focus()
+
+func _quadratic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, t: float) -> Vector2:
+	var q0 = p0.lerp(p1, t)
+	var q1 = p1.lerp(p2, t)
+	return q0.lerp(q1, t)
+
+func _calculate_bezier_control_from_drag(start: Vector2, end_pt: Vector2, max_dev: float, side: float) -> Vector2:
+	var midpoint = (start + end_pt) / 2.0
+	var direction = end_pt - start
+	var perpendicular = Vector2(-direction.y, direction.x).normalized()
+	return midpoint + perpendicular * max_dev * side
 
 # ==========================================
 # 실행 취소 / 다시 실행 및 복사 붙여넣기 헬퍼
