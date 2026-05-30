@@ -1,7 +1,9 @@
 [gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://c8ar1q2hc1xt2"]
 
 [ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_obb1c"]
+[ext_resource type="AudioStream" uid="uid://kmdxbn6ax64x" path="res://assets/musics/귀엽기만 하면 안 되나요/귀엽기만 하면 안 되나요.mp3" id="1_yxhqj"]
 
 [resource]
 script = ExtResource("1_obb1c")
+audio_stream = ExtResource("1_yxhqj")
 metadata/_custom_type_script = "uid://ciljglxaby7qn"

@@ -101,34 +101,34 @@ func _setup_aspect_ratio_wrapper() -> void:
 func _process(delta: float) -> void:
 	if not bga_loaded or stream == null:
 		return
-		
-	var audio = Global.audio_player
-	if audio == null:
-		return
-		
-	# A. 일시정지 상태 실시간 동기화
-	if paused != audio.stream_paused:
-		paused = audio.stream_paused
-		
-	# B. 재생 시작 타이밍 동기화 (Start-up Sync)
-	if not bga_started:
-		if audio.playing:
-			var audio_pos = audio.get_playback_position()
-			if audio_pos > 0.0:
-				play()
-				bga_started = true
-				print("[VideoStreamPlayer] BGA 자동 동작!")
-		return
 
-	# C. [실시간 비디오 실제 종횡비 추출 및 화면 맞춤 보정]
-	# 영상이 실제 구동되어 텍스처 프레임이 나오는 순간 해당 규격을 추출해 비율 자동 조율
+	# A. [실시간 비디오 실제 종횡비 추출 및 화면 맞춤 보정]
+	# 동기화 지연이나 시작 지연에 영향받지 않도록 최상단에서 상시 종횡비 보정
 	if ratio_container and is_playing():
 		var tex = get_video_texture()
 		if tex:
 			var tex_size = tex.get_size()
 			if tex_size.y > 0:
 				var current_ratio = tex_size.x / tex_size.y
-				# 기존에 설정된 컨테이너의 비율과 오차가 발생한 경우 갱신
+				# 기존 비율과 차이가 나면 정확한 원본 비율로 갱신 (4:3, 16:9 등 늘어남 방지)
 				if abs(ratio_container.ratio - current_ratio) > 0.01:
 					ratio_container.ratio = current_ratio
-					print("[VideoStreamPlayer] 동적 비디오 종횡비 갱신: ", tex_size.x, "x", tex_size.y, " (비율: ", current_ratio, ")")
+					print("[VideoStreamPlayer] 동적 종횡비 보정 완료: ", tex_size.x, "x", tex_size.y, " (비율: ", current_ratio, ")")
+					
+	var audio = Global.audio_player
+	if audio == null:
+		return
+		
+	# B. 일시정지 상태 동기화
+	if paused != audio.stream_paused:
+		paused = audio.stream_paused
+		
+	# C. 재생 시작 타이밍 동기화 (Start-up Sync)
+	if not bga_started:
+		if audio.playing:
+			var audio_pos = audio.get_playback_position()
+			if audio_pos > 0.0:
+				play()
+				bga_started = true
+				print("[VideoStreamPlayer] BGA 자동 시작!")
+		return
