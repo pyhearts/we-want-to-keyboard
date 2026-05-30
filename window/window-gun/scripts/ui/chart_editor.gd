@@ -54,6 +54,19 @@ var is_autoplay: bool = false
 var autoplay_hit_notes: Dictionary = {}
 var autoplay_ripples: Array = []
 
+# --- 구간 재생 및 반복 재생 (Region Selection & Looping) ---
+var region_start_time: float = -1.0
+var region_end_time: float = -1.0
+var is_region_loop: bool = true
+var is_playing_region: bool = false
+var is_dragging_region: bool = false
+var drag_start_time: float = 0.0
+
+var region_settings_box: VBoxContainer = null
+var region_lbl_info: Label = null
+var region_loop_check: CheckBox = null
+var region_play_btn: Button = null
+
 # 에디터 상태 변수
 var music_list: Array = []
 var selected_song: String = ""
@@ -138,6 +151,7 @@ func _ready() -> void:
 	
 	_setup_top_bar()
 	_setup_moving_settings_ui()
+	_setup_region_settings_ui()
 	
 	# 에디터 테스트 모드에서 회귀 시 시간 복구 및 정리
 	if Global.is_editor_test_mode:
@@ -314,6 +328,17 @@ func _process(delta: float) -> void:
 		
 	# 시간 표시 갱신
 	_update_time_label()
+	
+	# 구간 재생 루프 및 정지 처리
+	if is_playing and is_playing_region and region_end_time > 0.0:
+		if current_time >= region_end_time:
+			if is_region_loop:
+				_seek_time(region_start_time)
+			else:
+				if is_playing:
+					_on_play_pressed()
+				is_playing_region = false
+				_show_toast("Region Completed")
 	
 	# 자동 저장 타이머 처리
 	autosave_timer += delta
@@ -753,6 +778,7 @@ func _on_play_pressed() -> void:
 	else:
 		play_button.text = "Play"
 		audio_player.stop()
+		is_playing_region = false # 수동 정지 시 구간 재생 오프
 
 func _on_song_selected_item(index: int) -> void:
 	_on_song_selected(index)
@@ -820,6 +846,32 @@ func _on_hold_division_submitted(new_text: String) -> void:
 # 캔버스 2D 조작
 # ==========================================
 func _on_canvas_gui_input(event: InputEvent) -> void:
+	# --- 구간(Region) 선택 영역 및 경계 렌더링 ---
+	if region_start_time >= 0.0 and region_end_time >= 0.0 and region_end_time > region_start_time:
+		var dx_start = (region_start_time - current_time) * pixels_per_second
+		var dx_end = (region_end_time - current_time) * pixels_per_second
+		var lx_start = center_x + dx_start
+		var lx_end = center_x + dx_end
+		
+		var rx_start = clamp(lx_start, 0.0, timeline_w)
+		var rx_end = clamp(lx_end, 0.0, timeline_w)
+		
+		if rx_end > rx_start:
+			# 반투명 딥 와인 색상으로 영역을 그림
+			var overlay_rect = Rect2(Vector2(rx_start, 0.0), Vector2(rx_end - rx_start, timeline_h))
+			timeline.draw_rect(overlay_rect, Color(0.788235, 0.0941176, 0.290196, 0.22), true)
+			
+			# 경계선 점선/실선 렌더링
+			timeline.draw_line(Vector2(lx_start, 0.0), Vector2(lx_start, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
+			timeline.draw_line(Vector2(lx_end, 0.0), Vector2(lx_end, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
+			
+			# 시작/종료 시간 텍스트 표기
+			var r_font = get_theme_font("font")
+			if lx_start >= 0.0 and lx_start <= timeline_w:
+				timeline.draw_string(r_font, Vector2(lx_start + 4, timeline_h - 6), "[Start", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
+			if lx_end >= 0.0 and lx_end <= timeline_w:
+				timeline.draw_string(r_font, Vector2(lx_end - 45, timeline_h - 6), "End]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
+
 	if not chart_data.has("notes"): return
 	
 	var canvas_w = preview_canvas.size.x
@@ -969,6 +1021,32 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 
 func _update_hover_note(logical_pos: Vector2) -> void:
 	hover_note_index = -1
+	# --- 구간(Region) 선택 영역 및 경계 렌더링 ---
+	if region_start_time >= 0.0 and region_end_time >= 0.0 and region_end_time > region_start_time:
+		var dx_start = (region_start_time - current_time) * pixels_per_second
+		var dx_end = (region_end_time - current_time) * pixels_per_second
+		var lx_start = center_x + dx_start
+		var lx_end = center_x + dx_end
+		
+		var rx_start = clamp(lx_start, 0.0, timeline_w)
+		var rx_end = clamp(lx_end, 0.0, timeline_w)
+		
+		if rx_end > rx_start:
+			# 반투명 딥 와인 색상으로 영역을 그림
+			var overlay_rect = Rect2(Vector2(rx_start, 0.0), Vector2(rx_end - rx_start, timeline_h))
+			timeline.draw_rect(overlay_rect, Color(0.788235, 0.0941176, 0.290196, 0.22), true)
+			
+			# 경계선 점선/실선 렌더링
+			timeline.draw_line(Vector2(lx_start, 0.0), Vector2(lx_start, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
+			timeline.draw_line(Vector2(lx_end, 0.0), Vector2(lx_end, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
+			
+			# 시작/종료 시간 텍스트 표기
+			var r_font = get_theme_font("font")
+			if lx_start >= 0.0 and lx_start <= timeline_w:
+				timeline.draw_string(r_font, Vector2(lx_start + 4, timeline_h - 6), "[Start", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
+			if lx_end >= 0.0 and lx_end <= timeline_w:
+				timeline.draw_string(r_font, Vector2(lx_end - 45, timeline_h - 6), "End]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
+
 	if not chart_data.has("notes"): return
 	
 	var threshold = 40.0
@@ -1051,6 +1129,40 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 	
 	var pixels_per_second = 150.0 * timeline_zoom
 	
+	# Shift + 드래그를 이용한 구간 마우스 지정 처리
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.shift_pressed:
+			var local_x: float = event.position.x
+			var dx = local_x - (timeline_w / 2.0)
+			var dt = dx / pixels_per_second
+			var target_time = clamp(current_time + dt, 0.0, song_duration)
+			
+			if event.pressed:
+				is_dragging_region = true
+				drag_start_time = target_time
+				region_start_time = target_time
+				region_end_time = target_time
+			else:
+				is_dragging_region = false
+				_save_chart_file()
+				_update_region_ui()
+			timeline.queue_redraw()
+			get_viewport().set_input_as_handled()
+			return
+			
+	if event is InputEventMouseMotion and is_dragging_region:
+		var local_x: float = event.position.x
+		var dx = local_x - (timeline_w / 2.0)
+		var dt = dx / pixels_per_second
+		var target_time = clamp(current_time + dt, 0.0, song_duration)
+		
+		region_start_time = min(drag_start_time, target_time)
+		region_end_time = max(drag_start_time, target_time)
+		_update_region_ui()
+		timeline.queue_redraw()
+		get_viewport().set_input_as_handled()
+		return
+	
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			timeline_zoom = min(4.0, timeline_zoom + 0.1)
@@ -1096,6 +1208,32 @@ func _draw_preview_canvas() -> void:
 	preview_canvas.draw_line(Vector2(canvas_w/2, 0), Vector2(canvas_w/2, canvas_h), COLOR_GRID_CANVAS, 1.0)
 	preview_canvas.draw_line(Vector2(0, canvas_h/2), Vector2(canvas_w, canvas_h/2), COLOR_GRID_CANVAS, 1.0)
 	
+	# --- 구간(Region) 선택 영역 및 경계 렌더링 ---
+	if region_start_time >= 0.0 and region_end_time >= 0.0 and region_end_time > region_start_time:
+		var dx_start = (region_start_time - current_time) * pixels_per_second
+		var dx_end = (region_end_time - current_time) * pixels_per_second
+		var lx_start = center_x + dx_start
+		var lx_end = center_x + dx_end
+		
+		var rx_start = clamp(lx_start, 0.0, timeline_w)
+		var rx_end = clamp(lx_end, 0.0, timeline_w)
+		
+		if rx_end > rx_start:
+			# 반투명 딥 와인 색상으로 영역을 그림
+			var overlay_rect = Rect2(Vector2(rx_start, 0.0), Vector2(rx_end - rx_start, timeline_h))
+			timeline.draw_rect(overlay_rect, Color(0.788235, 0.0941176, 0.290196, 0.22), true)
+			
+			# 경계선 점선/실선 렌더링
+			timeline.draw_line(Vector2(lx_start, 0.0), Vector2(lx_start, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
+			timeline.draw_line(Vector2(lx_end, 0.0), Vector2(lx_end, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
+			
+			# 시작/종료 시간 텍스트 표기
+			var r_font = get_theme_font("font")
+			if lx_start >= 0.0 and lx_start <= timeline_w:
+				timeline.draw_string(r_font, Vector2(lx_start + 4, timeline_h - 6), "[Start", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
+			if lx_end >= 0.0 and lx_end <= timeline_w:
+				timeline.draw_string(r_font, Vector2(lx_end - 45, timeline_h - 6), "End]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
+
 	if not chart_data.has("notes"): return
 	
 	var notes: Array = chart_data["notes"]
@@ -1334,6 +1472,32 @@ func _draw_timeline() -> void:
 		
 		timeline.draw_string(font, Vector2(lx + 4, 15), str(idx + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, COLOR_TEXT_WINE_MUTED)
 	
+	# --- 구간(Region) 선택 영역 및 경계 렌더링 ---
+	if region_start_time >= 0.0 and region_end_time >= 0.0 and region_end_time > region_start_time:
+		var dx_start = (region_start_time - current_time) * pixels_per_second
+		var dx_end = (region_end_time - current_time) * pixels_per_second
+		var lx_start = center_x + dx_start
+		var lx_end = center_x + dx_end
+		
+		var rx_start = clamp(lx_start, 0.0, timeline_w)
+		var rx_end = clamp(lx_end, 0.0, timeline_w)
+		
+		if rx_end > rx_start:
+			# 반투명 딥 와인 색상으로 영역을 그림
+			var overlay_rect = Rect2(Vector2(rx_start, 0.0), Vector2(rx_end - rx_start, timeline_h))
+			timeline.draw_rect(overlay_rect, Color(0.788235, 0.0941176, 0.290196, 0.22), true)
+			
+			# 경계선 점선/실선 렌더링
+			timeline.draw_line(Vector2(lx_start, 0.0), Vector2(lx_start, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
+			timeline.draw_line(Vector2(lx_end, 0.0), Vector2(lx_end, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
+			
+			# 시작/종료 시간 텍스트 표기
+			var r_font = get_theme_font("font")
+			if lx_start >= 0.0 and lx_start <= timeline_w:
+				timeline.draw_string(r_font, Vector2(lx_start + 4, timeline_h - 6), "[Start", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
+			if lx_end >= 0.0 and lx_end <= timeline_w:
+				timeline.draw_string(r_font, Vector2(lx_end - 45, timeline_h - 6), "End]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
+
 	if not chart_data.has("notes"): return
 	
 	var notes: Array = chart_data["notes"]
@@ -1764,3 +1928,89 @@ func _get_note_warnings(idx: int) -> String:
 			return "TOO_FAR"
 			
 	return ""
+
+
+# --- 구간 재생 및 반복 재생 UI 바인딩 및 헬퍼 ---
+func _setup_region_settings_ui() -> void:
+	region_settings_box = VBoxContainer.new()
+	region_settings_box.name = "RegionSettings"
+	
+	var label = Label.new()
+	label.text = "Region Loop Settings"
+	label.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	label.add_theme_font_size_override("font_size", 14)
+	region_settings_box.add_child(label)
+	
+	region_lbl_info = Label.new()
+	region_lbl_info.text = "Start: -- / End: --"
+	region_lbl_info.add_theme_color_override("font_color", COLOR_TEXT_WINE_MUTED)
+	region_lbl_info.add_theme_font_size_override("font_size", 12)
+	region_settings_box.add_child(region_lbl_info)
+	
+	region_loop_check = CheckBox.new()
+	region_loop_check.text = "Loop Region"
+	region_loop_check.button_pressed = is_region_loop
+	region_loop_check.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	region_loop_check.add_theme_font_size_override("font_size", 12)
+	region_loop_check.toggled.connect(func(is_toggled):
+		is_region_loop = is_toggled
+		_show_toast("Region Loop: ON" if is_toggled else "Region Loop: OFF")
+	)
+	region_settings_box.add_child(region_loop_check)
+	
+	var hbox_btns = HBoxContainer.new()
+	
+	region_play_btn = Button.new()
+	region_play_btn.text = "Play Region (Shift+Space)"
+	region_play_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	region_play_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	region_play_btn.add_theme_font_size_override("font_size", 12)
+	region_play_btn.pressed.connect(_on_play_region_pressed)
+	hbox_btns.add_child(region_play_btn)
+	
+	var clear_btn = Button.new()
+	clear_btn.text = "Clear"
+	clear_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	clear_btn.add_theme_font_size_override("font_size", 12)
+	clear_btn.pressed.connect(func():
+		region_start_time = -1.0
+		region_end_time = -1.0
+		is_playing_region = false
+		_update_region_ui()
+		timeline.queue_redraw()
+		_show_toast("Region Cleared")
+	)
+	hbox_btns.add_child(clear_btn)
+	
+	region_settings_box.add_child(hbox_btns)
+	
+	var sep = HSeparator.new()
+	region_settings_box.add_child(sep)
+	
+	# 사이드바 컨트롤즈 자식 목록에 RegionSettings 삽입 (MovingSettings 아래에 배치)
+	var controls_parent = hold_settings.get_parent()
+	controls_parent.add_child(region_settings_box)
+	var moving_idx = moving_settings.get_index() if moving_settings else hold_settings.get_index()
+	controls_parent.move_child(region_settings_box, moving_idx + 1)
+
+func _update_region_ui() -> void:
+	if region_lbl_info == null:
+		return
+	if region_start_time >= 0.0 and region_end_time >= 0.0:
+		region_lbl_info.text = "Start: %.2fs / End: %.2fs" % [region_start_time, region_end_time]
+	elif region_start_time >= 0.0:
+		region_lbl_info.text = "Start: %.2fs / End: --" % region_start_time
+	elif region_end_time >= 0.0:
+		region_lbl_info.text = "Start: -- / End: %.2fs" % region_end_time
+	else:
+		region_lbl_info.text = "Start: -- / End: --"
+
+func _on_play_region_pressed() -> void:
+	if region_start_time < 0.0 or region_end_time < 0.0 or region_end_time <= region_start_time:
+		_show_toast("Set Start & End first!")
+		return
+	is_playing_region = true
+	_seek_time(region_start_time)
+	if not is_playing:
+		_on_play_pressed()
+	_show_toast("Playing Region...")
