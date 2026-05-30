@@ -109,7 +109,7 @@ func _process(delta: float) -> void:
 		
 		# 보다 단순하고 정확한 방식:
 		# 오디오 재생 전까지는 delta로 누적하다가, 재생이 시작되면 오디오 위치를 기준으로 보정
-		var target_time = audio_pos + 0.7 # GLOBAL_TIMING_OFFSET 보정 (judgment_time 일치)
+		var target_time = audio_pos + 0.7 - Global.music_offset # GLOBAL_TIMING_OFFSET 보정 및 개별 음원 오프셋 차감
 		current_time = lerp(current_time, target_time, 0.1) # 급격한 튐 방지
 	else:
 		current_time += delta
@@ -176,7 +176,7 @@ func start_chart() -> void:
 	else:
 		print("Res.tres not found, using default 120.0")
 		
-	current_time = Global.music_offset
+	current_time = 0.0
 	is_playing = true
 	print("차트 로드 성공: ", chart_data.get("notes", []).size(), "개의 노트")
 

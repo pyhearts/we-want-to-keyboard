@@ -2,6 +2,18 @@
 	"events": [],
 	"notes": [
 		{
+			"curve_control_x": 886.427673339844,
+			"curve_control_y": 299.922882080078,
+			"move_duration": 1.0,
+			"start_x": 1559.68395996094,
+			"start_y": 449.922882080078,
+			"time": 0.0,
+			"type": "moving",
+			"use_gravity": false,
+			"x": 1559.68395996094,
+			"y": 149.922882080078
+		},
+		{
 			"time": 0.0,
 			"type": "normal",
 			"x": 420.0,
