@@ -222,6 +222,36 @@ func load_chart() -> Variant:
 
 	# --- 추가된 부분: time 기준으로 자동 정렬 ---
 	chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
+	
+	# 칠 수 없는 노트 필터링 (시간 대비 거리가 속도 한도 초과)
+	var filtered_notes = []
+	var last_hittable_note = null
+	
+	for note in chart["notes"]:
+		if not note is Dictionary:
+			continue
+		
+		if last_hittable_note == null:
+			filtered_notes.append(note)
+			last_hittable_note = note
+		else:
+			var t1 = float(last_hittable_note.get("time", 0.0))
+			var t2 = float(note.get("time", 0.0))
+			var dt = t2 - t1
+			
+			var p1 = Vector2(float(last_hittable_note.get("x", 960.0)), float(last_hittable_note.get("y", 540.0)))
+			var p2 = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
+			var dist = p1.distance_to(p2)
+			
+			var speed = dist / dt if dt > 0.001 else 999999.0
+			
+			if speed <= Global.max_note_speed:
+				filtered_notes.append(note)
+				last_hittable_note = note
+			else:
+				print("Unhittable note blocked! Speed: ", speed, " px/s, Limit: ", Global.max_note_speed)
+				
+	chart["notes"] = filtered_notes
 	chart["events"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 	# ----------------------------------------
 

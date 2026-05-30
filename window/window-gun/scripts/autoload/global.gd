@@ -14,6 +14,7 @@ var selected_music: String = ""
 var music_offset: float = 0.0
 var editor_test_start_time: float = 0.0
 var is_editor_test_mode: bool = false
+var max_note_speed: float = 4000.0
 
 # 1,000,000점 스케일링을 위한 점수 계산 변수
 var max_base_score: int = 100
@@ -119,6 +120,7 @@ func save_settings() -> void:
 	config.set_value("settings", "judgment_line_width", judgment_line_width)
 	config.set_value("settings", "particle_intensity", particle_intensity)
 	config.set_value("settings", "effect_offset", effect_offset)
+	config.set_value("settings", "max_note_speed", max_note_speed)
 	config.save(SAVE_PATH)
 	print("Settings saved to: ", SAVE_PATH)
 
@@ -136,6 +138,7 @@ func load_settings() -> void:
 		judgment_line_width = config.get_value("settings", "judgment_line_width", 4.0)
 		particle_intensity = config.get_value("settings", "particle_intensity", 1.0)
 		effect_offset = config.get_value("settings", "effect_offset", Vector2(-220.0, -90.0))
+		max_note_speed = config.get_value("settings", "max_note_speed", 4000.0)
 		print("Settings loaded successfully.")
 	else:
 		print("No settings file found, using defaults.")

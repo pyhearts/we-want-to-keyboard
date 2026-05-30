@@ -48,6 +48,38 @@ func _ready() -> void:
 	
 	btn_reset.pressed.connect(_on_reset_pressed)
 	btn_back.pressed.connect(_on_back_pressed)
+	
+	# Programmatic Addition of Max Note Speed Slider to Grid
+	var grid = check_shake.get_parent() as GridContainer
+	if grid:
+		var lbl_speed = Label.new()
+		lbl_speed.text = "Max Note Speed Limit"
+		lbl_speed.add_theme_font_size_override("font_size", 14)
+		grid.add_child(lbl_speed)
+		
+		var spacer = Control.new()
+		grid.add_child(spacer)
+		
+		var slider_speed = HSlider.new()
+		slider_speed.name = "SliderSpeed"
+		slider_speed.min_value = 1000.0
+		slider_speed.max_value = 10000.0
+		slider_speed.step = 100.0
+		slider_speed.value = Global.max_note_speed
+		slider_speed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(slider_speed)
+		
+		var lbl_speed_val = Label.new()
+		lbl_speed_val.name = "LabelSpeedValue"
+		lbl_speed_val.text = "%d px/s" % int(Global.max_note_speed)
+		lbl_speed_val.add_theme_font_size_override("font_size", 14)
+		grid.add_child(lbl_speed_val)
+		
+		slider_speed.value_changed.connect(func(val):
+			Global.max_note_speed = val
+			lbl_speed_val.text = "%d px/s" % int(val)
+			Global.save_settings()
+		)
 
 
 func _input(event: InputEvent) -> void:
@@ -84,6 +116,13 @@ func _load_values_to_ui() -> void:
 	
 	slider_offset_y.value = Global.effect_offset.y
 	label_offset_y.text = "%d" % int(Global.effect_offset.y)
+	
+	var slider_speed = check_shake.get_parent().get_node_or_null("SliderSpeed") as HSlider
+	var lbl_speed_val = check_shake.get_parent().get_node_or_null("LabelSpeedValue") as Label
+	if slider_speed:
+		slider_speed.value = Global.max_note_speed
+	if lbl_speed_val:
+		lbl_speed_val.text = "%d px/s" % int(Global.max_note_speed)
 
 
 func _on_shake_toggled(button_pressed: bool) -> void:
@@ -148,6 +187,7 @@ func _on_reset_pressed() -> void:
 	Global.judgment_line_width = 4.0
 	Global.judgment_text_pos = "note"
 	Global.effect_offset = Vector2(-220.0, -90.0)
+	Global.max_note_speed = 4000.0
 	
 	Global.save_settings()
 	_load_values_to_ui()

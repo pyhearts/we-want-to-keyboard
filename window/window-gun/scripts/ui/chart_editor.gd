@@ -1248,6 +1248,10 @@ func _draw_preview_canvas() -> void:
 						# 겹침 배치 차폐 경고 (노랑)
 						preview_canvas.draw_circle(pos, 30.0 * sx, Color(1.0, 0.8, 0.0, alpha * 0.7), 1.5 * sx)
 						preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Hidden Note", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.85, 0.2, alpha * 0.9))
+					elif warning == "TOO_FAR":
+						# 칠 수 없는 노트 경고 (자주색)
+						preview_canvas.draw_circle(pos, 38.0 * sx, Color(0.7, 0.0, 0.7, alpha * 0.9), 3.0 * sx)
+						preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠️ Too Far (Unhittable)", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.9, alpha * 0.9))
 			
 			# 텍스트 라벨 (딥 와인 색상)
 			var lbl_font = get_theme_font("font")
@@ -1742,5 +1746,21 @@ func _get_note_warnings(idx: int) -> String:
 		# 3. 위치 및 시간 겹침 차폐 경고 (반경 65px 이내 및 시간차 0.4초 이내)
 		elif pos.distance_to(other_pos) < 65.0 and abs(t - other_t) < 0.4:
 			return "OVERLAP"
+			
+	# 4. 시간 대비 거리가 너무 먼 노트 (칠 수 없는 노트 경고)
+	var prev_note = null
+	for i in range(idx - 1, -1, -1):
+		var potential = notes[i]
+		prev_note = potential
+		break
+		
+	if prev_note != null:
+		var t1 = float(prev_note.get("time", 0.0))
+		var dt = t - t1
+		var p1 = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
+		var dist = pos.distance_to(p1)
+		var speed = dist / dt if dt > 0.001 else 999999.0
+		if speed > Global.max_note_speed:
+			return "TOO_FAR"
 			
 	return ""
