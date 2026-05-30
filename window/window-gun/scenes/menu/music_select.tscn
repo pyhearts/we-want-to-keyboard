@@ -7,6 +7,7 @@
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="4_2ybb2"]
 [ext_resource type="Script" uid="uid://ddgk54cu7pkl" path="res://scripts/ui/music_select_button.gd" id="4_sm0ga"]
 [ext_resource type="Script" uid="uid://c1125ttohes1l" path="res://scripts/effects/audio_stream_player.gd" id="7_rvwer"]
+[ext_resource type="Script" uid="uid://rpf6wf8lga5v" path="res://scripts/ui/label.gd" id="8_mvubq"]
 [ext_resource type="Script" uid="uid://ctox3v2i5efjl" path="res://scripts/ui/escape_to_scene.gd" id="9_escape"]
 [ext_resource type="Script" uid="uid://br0w01bpkuqk3" path="res://scenes/menu/img_change.gd" id="10_mvubq"]
 
@@ -69,7 +70,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 28.0
-offset_right = -780.0
+offset_right = -783.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -81,6 +82,9 @@ theme_override_fonts/font = ExtResource("4_2ybb2")
 theme_override_font_sizes/font_size = 100
 text = "we want a keyboard"
 vertical_alignment = 1
+clip_text = true
+script = ExtResource("8_mvubq")
+max_width = 1109.0
 
 [node name="Up" type="Button" parent="." unique_id=1457289231]
 layout_mode = 1

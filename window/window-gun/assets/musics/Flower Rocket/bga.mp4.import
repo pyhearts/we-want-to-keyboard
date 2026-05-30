@@ -1,0 +1,18 @@
+[remap]
+
+importer="antigravity.mp4.importer"
+type="VideoStreamTheora"
+uid="uid://ddxdk8iu8ji6h"
+path="res://.godot/imported/bga.mp4-de94ba0b3550037960364d5a5d46beef.res"
+
+[deps]
+
+files=["res://.godot/imported/bga.mp4-de94ba0b3550037960364d5a5d46beef.ogv"]
+
+source_file="res://assets/musics/Flower Rocket/bga.mp4"
+dest_files=["res://.godot/imported/bga.mp4-de94ba0b3550037960364d5a5d46beef.res", "res://.godot/imported/bga.mp4-de94ba0b3550037960364d5a5d46beef.ogv"]
+
+[params]
+
+quality=6
+mute=true

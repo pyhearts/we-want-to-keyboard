@@ -1,0 +1,18 @@
+[remap]
+
+importer="antigravity.mp4.importer"
+type="VideoStreamTheora"
+uid="uid://cuf6ntx5sxery"
+path="res://.godot/imported/bga.mp4-1fd2fac988f701208799a480551be8da.res"
+
+[deps]
+
+files=["res://.godot/imported/bga.mp4-1fd2fac988f701208799a480551be8da.ogv"]
+
+source_file="res://assets/musics/빈왕립미술대학 떨어지고 내 인생이 달라졌다/bga.mp4"
+dest_files=["res://.godot/imported/bga.mp4-1fd2fac988f701208799a480551be8da.res", "res://.godot/imported/bga.mp4-1fd2fac988f701208799a480551be8da.ogv"]
+
+[params]
+
+quality=6
+mute=true

@@ -1,0 +1,18 @@
+[remap]
+
+importer="antigravity.mp4.importer"
+type="VideoStreamTheora"
+uid="uid://dsibknsddccp2"
+path="res://.godot/imported/bga.mp4-582176be7075e48ff07b694493440200.res"
+
+[deps]
+
+files=["res://.godot/imported/bga.mp4-582176be7075e48ff07b694493440200.ogv"]
+
+source_file="res://scenes/game/bga.mp4"
+dest_files=["res://.godot/imported/bga.mp4-582176be7075e48ff07b694493440200.res", "res://.godot/imported/bga.mp4-582176be7075e48ff07b694493440200.ogv"]
+
+[params]
+
+quality=6
+mute=true

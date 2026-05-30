@@ -1,4 +1,4 @@
-res://scripts/ui/result_scene.gd
-res://scenes/menu/result_scene.tscn
-res://assets/musics/Flower Rocket/chart.json
-res://assets/musics/R/chart.json
+res://scripts/ui/VBoxContainerMove.gd
+res://scenes/menu/music_select.tscn
+res://scripts/ui/label.gd
+res://assets/musics/빈왕립미술대학 떨어지고 내 인생이 달라졌다/chart.json
