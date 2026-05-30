@@ -57,18 +57,21 @@ func _setup_aspect_ratio_wrapper() -> void:
 	ratio_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	# 2. 현재 VideoStreamPlayer의 레이아웃 설정을 AspectRatioContainer로 이전
-	ratio_container.layout_mode = layout_mode
-	ratio_container.anchors_preset = anchors_preset
-	ratio_container.anchor_left = anchor_left
-	ratio_container.anchor_top = anchor_top
-	ratio_container.anchor_right = anchor_right
-	ratio_container.anchor_bottom = anchor_bottom
-	ratio_container.offset_left = offset_left
-	ratio_container.offset_top = offset_top
-	ratio_container.offset_right = offset_right
-	ratio_container.offset_bottom = offset_bottom
-	ratio_container.grow_horizontal = grow_horizontal
-	ratio_container.grow_vertical = grow_vertical
+	# 2. BGA를 화면 전체 크기(Full Screen Rect) 및 중앙 정렬로 강제 설정
+	ratio_container.layout_mode = 1
+	ratio_container.anchors_preset = Control.PRESET_FULL_RECT
+	ratio_container.anchor_left = 0.0
+	ratio_container.anchor_top = 0.0
+	ratio_container.anchor_right = 1.0
+	ratio_container.anchor_bottom = 1.0
+	ratio_container.offset_left = 0.0
+	ratio_container.offset_top = 0.0
+	ratio_container.offset_right = 0.0
+	ratio_container.offset_bottom = 0.0
+	ratio_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	ratio_container.grow_vertical = Control.GROW_DIRECTION_BOTH
+	ratio_container.alignment_horizontal = AspectRatioContainer.ALIGNMENT_CENTER
+	ratio_container.alignment_vertical = AspectRatioContainer.ALIGNMENT_CENTER
 	
 	# 3. 씬 트리 재배치
 	var orig_parent = get_parent()
