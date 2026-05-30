@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://wv2qssre7ojc"
+path="res://.godot/imported/입대와 전역.mp3-19065c88a2318bd7bebf16344ed34123.mp3str"
+
+[deps]
+
+source_file="res://assets/musics/입대와 전역/입대와 전역.mp3"
+dest_files=["res://.godot/imported/입대와 전역.mp3-19065c88a2318bd7bebf16344ed34123.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

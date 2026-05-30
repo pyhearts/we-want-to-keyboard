@@ -14,6 +14,10 @@ config/name="window_gun"
 run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 
+[audio]
+
+buses/default_bus_layout="uid://b5qyetxfdb1gp"
+
 [autoload]
 
 Global="*res://scripts/autoload/global.gd"
@@ -28,10 +32,6 @@ window/size/mode=3
 window/subwindows/embed_subwindows=false
 mouse_cursor/custom_image="uid://b105qshtlkvw2"
 mouse_cursor/custom_image_hotspot=Vector2(32, 32)
-
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/mp4_importer/plugin.cfg")
 
 [input]
 

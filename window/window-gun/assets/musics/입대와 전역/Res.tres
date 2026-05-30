@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://cwtyqeunphj3w"]
+
+[ext_resource type="AudioStream" uid="uid://wv2qssre7ojc" path="res://assets/musics/입대와 전역/입대와 전역.mp3" id="1_kqt13"]
+[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="2_dy68s"]
+
+[resource]
+script = ExtResource("2_dy68s")
+bpm = 194
+audio_stream = ExtResource("1_kqt13")
+metadata/_custom_type_script = "uid://ciljglxaby7qn"

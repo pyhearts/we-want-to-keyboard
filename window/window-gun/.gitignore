@@ -1,2 +1,8 @@
 # Godot editor temp files
 *.tmp
+
+# Video files (transcoded to OGV externally)
+*.mp4
+*.mp4.import
+
+.godot/

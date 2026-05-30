@@ -84,7 +84,6 @@ text = "we want a keyboard"
 vertical_alignment = 1
 clip_text = true
 script = ExtResource("8_mvubq")
-max_width = 1109.0
 
 [node name="Up" type="Button" parent="." unique_id=1457289231]
 layout_mode = 1

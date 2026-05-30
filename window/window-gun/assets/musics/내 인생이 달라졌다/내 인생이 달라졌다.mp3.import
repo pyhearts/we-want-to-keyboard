@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://drc763kxrwj4i"
+path="res://.godot/imported/내 인생이 달라졌다.mp3-8c53abf4973199635200676e8ce7f3b7.mp3str"
+
+[deps]
+
+source_file="res://assets/musics/내 인생이 달라졌다/내 인생이 달라졌다.mp3"
+dest_files=["res://.godot/imported/내 인생이 달라졌다.mp3-8c53abf4973199635200676e8ce7f3b7.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

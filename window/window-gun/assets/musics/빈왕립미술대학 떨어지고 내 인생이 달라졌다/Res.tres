@@ -1,7 +1,0 @@
-[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://bopvygmlw6whh"]
-
-[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_0s6f2"]
-
-[resource]
-script = ExtResource("1_0s6f2")
-metadata/_custom_type_script = "uid://ciljglxaby7qn"

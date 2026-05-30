@@ -1,136 +1,221 @@
 {
-	"version": 1,
-	"song": "MEGALOVANIA",
-	"notes": [
-		{ "time": 0.00, "x": 420, "y": 260, "type": "normal" },
-		{ "time": 1.35, "x": 650, "y": 260, "type": "normal" },
-		{ "time": 1.70, "x": 880, "y": 260, "type": "normal" },
-		{ "time": 2.05, "x": 1110, "y": 260, "type": "normal" },
-		{ "time": 2.45, "x": 1340, "y": 320, "type": "moving" },
-		{ "time": 2.85, "x": 1110, "y": 420, "type": "normal" },
-		{ "time": 3.20, "x": 880, "y": 520, "type": "normal" },
-		{ "time": 3.55, "x": 650, "y": 420, "type": "moving" },
-		{ "time": 3.90, "x": 420, "y": 320, "type": "normal" },
-		{ "time": 4.30, "x": 520, "y": 640, "type": "normal" },
-		{ "time": 4.65, "x": 760, "y": 640, "type": "normal" },
-		{ "time": 5.00, "x": 1000, "y": 640, "type": "moving" },
-		{ "time": 5.35, "x": 1240, "y": 640, "type": "normal" },
-		{ "time": 5.75, "x": 1440, "y": 520, "type": "normal" },
-		{ "time": 6.10, "x": 1240, "y": 400, "type": "moving" },
-		{ "time": 6.45, "x": 1000, "y": 300, "type": "normal" },
-		{ "time": 6.80, "x": 760, "y": 400, "type": "normal" },
-		{ "time": 7.15, "x": 520, "y": 520, "type": "moving" },
-		{ "time": 7.60, "x": 700, "y": 220, "type": "normal" },
-		{ "time": 7.90, "x": 940, "y": 220, "type": "normal" },
-		{ "time": 8.20, "x": 1180, "y": 220, "type": "normal" },
-		{ "time": 8.55, "x": 1420, "y": 360, "type": "moving" },
-		{ "time": 8.90, "x": 1180, "y": 560, "type": "normal" },
-		{ "time": 9.25, "x": 940, "y": 560, "type": "normal" },
-		{ "time": 9.60, "x": 700, "y": 560, "type": "moving" },
-		{ "time": 10.00, "x": 460, "y": 360, "type": "normal" },
-		{ "time": 10.40, "x": 820, "y": 390, "type": "normal" },
-		{ "time": 10.75, "x": 1060, "y": 390, "type": "normal" },
-		{ "time": 11.10, "x": 1300, "y": 390, "type": "moving" },
-		{ "time": 11.55, "x": 960, "y": 500, "type": "normal" },
-		{"time": 13.0,"type": "hold","duration": 5.0,"beat_division": 16},
-	],
 	"events": [
+	],
+	"notes": [
 		{
-			"time": 2.20,
-			"type": "window",
-			"title": "Warning",
-			"x": 90,
-			"y": 120,
-			"width": 180,
-			"height": 180,
-			"duration": 1.20,
-			"texture_path": "res://assets/image/ingame/과녁.png"
+			"time": 0.0,
+			"type": "normal",
+			"x": 338.10546875,
+			"y": 355.372741699219
 		},
 		{
-			"time": 4.80,
-			"type": "window_moving_linear",
-			"title": "Linear",
-			"x": 80,
-			"y": 420,
-			"target_x": 760,
-			"target_y": 420,
-			"width": 160,
-			"height": 160,
-			"duration": 1.40,
-			"texture_path": "res://assets/image/ingame/과녁.png"
-		},
-		{
-			"time": 7.30,
-			"type": "window_moving_smooth",
-			"title": "Smooth",
-			"x": 1180,
-			"y": 160,
-			"target_x": 540,
-			"target_y": 620,
-			"width": 190,
-			"height": 190,
-			"duration": 1.70,
-			"texture_path": "res://assets/image/ingame/과녁.png"
-		},
-		{
-			"time": 10.20,
-			"type": "window",
-			"title": "Final",
-			"x": 1380,
-			"y": 620,
-			"width": 210,
-			"height": 210,
-			"duration": 1.10,
-			"texture_path": "res://assets/image/ingame/과녁.png"
+			"time": 0.25,
+			"type": "normal",
+			"x": 664.322448730469,
+			"y": 805.141418457031
 		},
 		{
 			"time": 0.5,
-			"type": "image",
-			"x": 200,
-			"y": 200,
-			"width": 300,
-			"height": 300,
-			"duration": 2.0,
-			"opacity": 0.5,
-			"texture_path": "res://assets/image/ingame/과녁.png"
+			"type": "normal",
+			"x": 973.881591796875,
+			"y": 546.940856933594
 		},
 		{
-			"time": 2.5,
-			"type": "image_moving_smooth",
-			"x": 0,
-			"y": 100,
-			"target_x": 1000,
-			"target_y": 100,
-			"width": 200,
-			"height": 200,
-			"duration": 3.0,
-			"opacity": 0.7,
-			"texture_path": "res://assets/image/ingame/과녁.png"
+			"start_x": 152.092376708984,
+			"start_y": 956.452453613281,
+			"time": 0.875,
+			"type": "moving",
+			"x": 271.473907470703,
+			"y": 345.655517578125
 		},
 		{
-			"time": 4.0,
-			"type": "image_moving_linear",
-			"x": 500,
-			"y": 800,
-			"target_x": 500,
-			"target_y": 0,
-			"width": 150,
-			"height": 150,
-			"duration": 1.5,
-			"opacity": 0.3,
-			"texture_path": "res://assets/image/ingame/과녁.png"
+			"start_x": 1827.59838867188,
+			"start_y": 1046.68383789063,
+			"time": 1.125,
+			"type": "moving",
+			"x": 1444.46691894531,
+			"y": 353.984588623047
 		},
 		{
-			"time": 6.0,
-			"type": "window",
-			"x": 100,
-			"y": 100,
-			"width": 400,
-			"height": 300,
+			"time": 1.375,
+			"type": "normal",
+			"x": 611.572448730469,
+			"y": 462.26220703125
+		},
+		{
+			"time": 1.75,
+			"type": "normal",
+			"x": 1227.91442871094,
+			"y": 267.917724609375
+		},
+		{
+			"time": 1.875,
+			"type": "normal",
+			"x": 801.750061035156,
+			"y": 767.66064453125
+		},
+		{
+			"time": 2.125,
+			"type": "normal",
+			"x": 1084.93420410156,
+			"y": 662.159393310547
+		},
+		{
+			"time": 2.375,
+			"type": "normal",
+			"x": 594.914489746094,
+			"y": 458.09765625
+		},
+		{
+			"start_x": 1744.30895996094,
+			"start_y": 363.701812744141,
+			"time": 2.75,
+			"type": "moving",
+			"x": 865.605285644531,
+			"y": 194.344467163086
+		},
+		{
+			"start_x": 72.967399597168,
+			"start_y": 867.609252929688,
+			"time": 3.0,
+			"type": "moving",
+			"x": 978.046020507813,
+			"y": 763.496154785156
+		},
+		{
+			"time": 4.3,
+			"type": "normal",
+			"x": 290.0,
+			"y": 550.0
+		},
+		{
+			"time": 4.65,
+			"type": "normal",
+			"x": 530.0,
+			"y": 550.0
+		},
+		{
+			"time": 5.0,
+			"type": "moving",
+			"x": 770.0,
+			"y": 550.0
+		},
+		{
+			"time": 5.35,
+			"type": "normal",
+			"x": 1010.0,
+			"y": 550.0
+		},
+		{
+			"time": 5.75,
+			"type": "normal",
+			"x": 1210.0,
+			"y": 430.0
+		},
+		{
+			"time": 6.1,
+			"type": "moving",
+			"x": 1010.0,
+			"y": 310.0
+		},
+		{
+			"time": 6.45,
+			"type": "normal",
+			"x": 770.0,
+			"y": 210.0
+		},
+		{
+			"time": 6.8,
+			"type": "normal",
+			"x": 530.0,
+			"y": 310.0
+		},
+		{
+			"time": 7.15,
+			"type": "moving",
+			"x": 290.0,
+			"y": 430.0
+		},
+		{
+			"time": 7.6,
+			"type": "normal",
+			"x": 470.0,
+			"y": 130.0
+		},
+		{
+			"time": 7.9,
+			"type": "normal",
+			"x": 710.0,
+			"y": 130.0
+		},
+		{
+			"time": 8.2,
+			"type": "normal",
+			"x": 950.0,
+			"y": 130.0
+		},
+		{
+			"time": 8.55,
+			"type": "moving",
+			"x": 1190.0,
+			"y": 270.0
+		},
+		{
+			"time": 8.9,
+			"type": "normal",
+			"x": 950.0,
+			"y": 470.0
+		},
+		{
+			"time": 9.25,
+			"type": "normal",
+			"x": 710.0,
+			"y": 470.0
+		},
+		{
+			"time": 9.6,
+			"type": "moving",
+			"x": 470.0,
+			"y": 470.0
+		},
+		{
+			"time": 10.0,
+			"type": "normal",
+			"x": 230.0,
+			"y": 270.0
+		},
+		{
+			"time": 10.4,
+			"type": "normal",
+			"x": 590.0,
+			"y": 300.0
+		},
+		{
+			"time": 10.75,
+			"type": "normal",
+			"x": 830.0,
+			"y": 300.0
+		},
+		{
+			"time": 11.1,
+			"type": "moving",
+			"x": 1070.0,
+			"y": 300.0
+		},
+		{
+			"time": 11.55,
+			"type": "normal",
+			"x": 730.0,
+			"y": 410.0
+		},
+		{
+			"beat_division": 16.0,
 			"duration": 5.0,
-			"opacity": 0.8,
-			"title": "투명도가 적용된 창",
-			"texture_path": "res://assets/image/ingame/과녁.png"
+			"time": 13.0,
+			"type": "hold"
 		}
-	]
+	],
+	"offset_corrected": true,
+	"song": "MEGALOVANIA",
+	"version": 1.0
 }
