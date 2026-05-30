@@ -44,6 +44,11 @@ var moving_duration_input: LineEdit = null
 var draw_curve_btn: Button = null
 var moving_duration: float = 1.0
 
+# --- 편의 기능 관련 추가 변수 ---
+var bookmarks: Dictionary = {}             # 북마크 (Alt+1~5 저장, 1~5 이동)
+var timeline_zoom: float = 1.0             # 타임라인 마우스 휠 줌 배율
+var autosave_timer: float = 0.0            # 자동 저장용 누적 타이머
+
 # 에디터 상태 변수
 var music_list: Array = []
 var selected_song: String = ""
@@ -299,6 +304,12 @@ func _process(delta: float) -> void:
 	# 시간 표시 갱신
 	_update_time_label()
 	
+	# 자동 저장 타이머 처리
+	autosave_timer += delta
+	if autosave_timer >= 60.0:
+		autosave_timer = 0.0
+		_auto_save_backup()
+	
 	# 캔버스 및 타임라인 갱신
 	preview_canvas.queue_redraw()
 	timeline.queue_redraw()
@@ -344,6 +355,113 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_on_play_pressed()
 			return
+			
+	# --- 편의 기능 단축키 모음 ---
+	if event is InputEventKey and event.pressed and not event.echo:
+		var focus_owner = get_viewport().gui_get_focus_owner()
+		if focus_owner == null or not (focus_owner is LineEdit):
+			# A. 북마크 기능 (Alt+1~5 저장, 1~5 이동)
+			var code_val = event.keycode
+			if code_val >= KEY_1 and code_val <= KEY_5:
+				var idx = code_val - KEY_0
+				var is_alt = false
+				if event is InputEventWithModifiers:
+					is_alt = event.alt_pressed
+				
+				if is_alt:
+					get_viewport().set_input_as_handled()
+					bookmarks[idx] = current_time
+					_show_toast("Bookmark %d set at %.2fs" % [idx, current_time])
+					return
+				else:
+					if bookmarks.has(idx):
+						get_viewport().set_input_as_handled()
+						_seek_time(bookmarks[idx])
+						_show_toast("Jumped to Bookmark %d" % idx)
+						return
+						
+			# B. 노트 미러링 (H: 좌우 반전, V: 상하 반전)
+			elif selected_note_index != -1 and code_val == KEY_H:
+				get_viewport().set_input_as_handled()
+				save_state_for_undo()
+				var note = chart_data["notes"][selected_note_index]
+				note["x"] = 1920.0 - float(note.get("x", 960.0))
+				if note.get("type", "normal") == "moving":
+					if note.has("start_x"):
+						note["start_x"] = 1920.0 - float(note["start_x"])
+					if note.has("curve_control_x"):
+						note["curve_control_x"] = 1920.0 - float(note["curve_control_x"])
+					if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", note["x"]))
+				_save_chart_file()
+				_show_toast("Mirrored Horizontally")
+				preview_canvas.queue_redraw()
+				return
+				
+			elif selected_note_index != -1 and code_val == KEY_V:
+				get_viewport().set_input_as_handled()
+				save_state_for_undo()
+				var note = chart_data["notes"][selected_note_index]
+				note["y"] = 1080.0 - float(note.get("y", 540.0))
+				if note.get("type", "normal") == "moving":
+					if note.has("start_y"):
+						note["start_y"] = 1080.0 - float(note["start_y"])
+					if note.has("curve_control_y"):
+						note["curve_control_y"] = 1080.0 - float(note["curve_control_y"])
+					if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", note["y"] + 300.0))
+				_save_chart_file()
+				_show_toast("Mirrored Vertically")
+				preview_canvas.queue_redraw()
+				return
+				
+			# C. 선택된 노트 시간 미세 이동 (PageUp: 한 스냅 비트 뒤로, PageDown: 한 스냅 비트 앞으로)
+			elif selected_note_index != -1 and code_val == KEY_PAGEUP:
+				get_viewport().set_input_as_handled()
+				save_state_for_undo()
+				var note = chart_data["notes"][selected_note_index]
+				var beat_length = 60.0 / bpm
+				var step = beat_length * (4.0 / snap_division)
+				note["time"] = max(0.0, float(note.get("time", 0.0)) - step)
+				_sort_chart()
+				selected_note_index = chart_data["notes"].find(note)
+				_save_chart_file()
+				_show_toast("Shifted Note Backward")
+				preview_canvas.queue_redraw()
+				timeline.queue_redraw()
+				return
+				
+			elif selected_note_index != -1 and code_val == KEY_PAGEDOWN:
+				get_viewport().set_input_as_handled()
+				save_state_for_undo()
+				var note = chart_data["notes"][selected_note_index]
+				var beat_length = 60.0 / bpm
+				var step = beat_length * (4.0 / snap_division)
+				note["time"] = float(note.get("time", 0.0)) + step
+				_sort_chart()
+				selected_note_index = chart_data["notes"].find(note)
+				_save_chart_file()
+				_show_toast("Shifted Note Forward")
+				preview_canvas.queue_redraw()
+				timeline.queue_redraw()
+				return
+				
+			# D. 재생 배속 단축키 ([ : 감속, ] : 가속)
+			elif code_val == KEY_BRACKETLEFT:
+				get_viewport().set_input_as_handled()
+				var new_sel = max(0, speed_select.selected - 1)
+				if new_sel != speed_select.selected:
+					speed_select.selected = new_sel
+					_on_speed_selected(new_sel)
+					_show_toast("Speed: %s" % speed_select.get_item_text(new_sel))
+				return
+				
+			elif code_val == KEY_BRACKETRIGHT:
+				get_viewport().set_input_as_handled()
+				var new_sel = min(speed_select.item_count - 1, speed_select.selected + 1)
+				if new_sel != speed_select.selected:
+					speed_select.selected = new_sel
+					_on_speed_selected(new_sel)
+					_show_toast("Speed: %s" % speed_select.get_item_text(new_sel))
+				return
 
 	# Ctrl 단축키 처리 (Undo / Redo / Copy / Paste)
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -886,7 +1004,19 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 	var timeline_w = timeline.size.x
 	if timeline_w == 0: return
 	
-	var pixels_per_second = 150.0
+	var pixels_per_second = 150.0 * timeline_zoom
+	
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			timeline_zoom = min(4.0, timeline_zoom + 0.1)
+			timeline.queue_redraw()
+			get_viewport().set_input_as_handled()
+			return
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			timeline_zoom = max(0.4, timeline_zoom - 0.1)
+			timeline.queue_redraw()
+			get_viewport().set_input_as_handled()
+			return
 	
 	if event is InputEventMouseButton and event.pressed:
 		var local_x: float = event.position.x
@@ -1097,7 +1227,7 @@ func _draw_timeline() -> void:
 	var center_x: float = timeline_w / 2.0
 	timeline.draw_line(Vector2(center_x, 0), Vector2(center_x, timeline_h), COLOR_HEADER_TIMELINE, 2.0)
 	
-	var pixels_per_second: float = 150.0
+	var pixels_per_second: float = 150.0 * timeline_zoom
 	var beat_length: float = 60.0 / bpm
 	var view_start_time: float = current_time - (center_x / pixels_per_second)
 	var view_end_time: float = current_time + (center_x / pixels_per_second)
@@ -1448,3 +1578,15 @@ func perform_redo() -> void:
 	_save_chart_file()
 	preview_canvas.queue_redraw()
 	_show_toast("Redo")
+
+
+# --- 자동 저장 백업 기능 ---
+func _auto_save_backup() -> void:
+	if selected_song == "" or not chart_data.has("notes") or chart_data["notes"].is_empty():
+		return
+	var song_path = MUSIC_BASE_PATH + selected_song + "/chart_backup.json"
+	var file = FileAccess.open(song_path, FileAccess.WRITE)
+	if file:
+		var json_str = JSON.stringify(chart_data, "\t")
+		file.store_string(json_str)
+		_show_toast("Auto-backup saved!")
