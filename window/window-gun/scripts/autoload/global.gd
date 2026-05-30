@@ -12,6 +12,8 @@ var time: float = 0.0
 var music_titles : Array
 var selected_music: String = ""
 var music_offset: float = 0.0
+var editor_test_start_time: float = 0.0
+var is_editor_test_mode: bool = false
 
 # 1,000,000점 스케일링을 위한 점수 계산 변수
 var max_base_score: int = 100

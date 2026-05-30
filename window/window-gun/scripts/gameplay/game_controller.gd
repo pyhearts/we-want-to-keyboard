@@ -66,7 +66,10 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
-		SceneTransition.transition_to_scene(MUSIC_SELECT_SCENE)
+		if Global.is_editor_test_mode:
+			SceneTransition.transition_to_scene("res://scenes/menu/chart_editor.tscn")
+		else:
+			SceneTransition.transition_to_scene(MUSIC_SELECT_SCENE)
 	
 	# 디버그용 기능 (디버그 빌드에서만 동작)
 	if OS.is_debug_build():
@@ -176,7 +179,10 @@ func start_chart() -> void:
 	else:
 		print("Res.tres not found, using default 120.0")
 		
-	current_time = 0.0
+	if Global.is_editor_test_mode and Global.editor_test_start_time > 0.01:
+		current_time = max(0.0, Global.editor_test_start_time - 1.0)
+	else:
+		current_time = 0.0
 	is_playing = true
 	print("차트 로드 성공: ", chart_data.get("notes", []).size(), "개의 노트")
 

@@ -28,18 +28,21 @@ func _ready() -> void:
 		music_offset = GLOBAL_TIMING_OFFSET
 		print("Music resource or offset not found. Using default timing.")
 
-	if music_offset > 0.0:
-		await get_tree().create_timer(music_offset).timeout
+	if Global.is_editor_test_mode and Global.editor_test_start_time > 0.01:
+		var actual_start = max(0.0, Global.editor_test_start_time - 1.0)
+		play_selected_music(Global.selected_music, actual_start)
+	else:
+		if music_offset > 0.0:
+			await get_tree().create_timer(music_offset).timeout
+		play_selected_music(Global.selected_music)
 
-	play_selected_music(Global.selected_music)
 
-
-func play_selected_music(music_name: String) -> void:
+func play_selected_music(music_name: String, start_pos: float = 0.0) -> void:
 	var audio_path = MUSIC_BASE_PATH + music_name + "/" + music_name + ".mp3"
 	var song = load(audio_path)
 	if song:
 		stream = song
-		play()
+		play(start_pos)
 		print("Music started: ", audio_path)
 	else:
 		push_error("Music file not found: " + audio_path)

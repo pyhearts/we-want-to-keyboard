@@ -49,6 +49,11 @@ var bookmarks: Dictionary = {}             # 북마크 (Alt+1~5 저장, 1~5 이�
 var timeline_zoom: float = 1.0             # 타임라인 마우스 휠 줌 배율
 var autosave_timer: float = 0.0            # 자동 저장용 누적 타이머
 
+# --- 오토플레이 및 리플 효과 변수 ---
+var is_autoplay: bool = false
+var autoplay_hit_notes: Dictionary = {}
+var autoplay_ripples: Array = []
+
 # 에디터 상태 변수
 var music_list: Array = []
 var selected_song: String = ""
@@ -133,6 +138,12 @@ func _ready() -> void:
 	
 	_setup_top_bar()
 	_setup_moving_settings_ui()
+	
+	# 에디터 테스트 모드에서 회귀 시 시간 복구 및 정리
+	if Global.is_editor_test_mode:
+		current_time = Global.editor_test_start_time
+		Global.is_editor_test_mode = false
+		_seek_time(current_time)
 
 func _setup_dropdowns() -> void:
 	# 그리드 스냅 분주 설정
@@ -309,6 +320,24 @@ func _process(delta: float) -> void:
 	if autosave_timer >= 60.0:
 		autosave_timer = 0.0
 		_auto_save_backup()
+		
+	# 오토플레이 히트 및 이펙트 처리
+	if is_playing and is_autoplay:
+		var notes = chart_data.get("notes", [])
+		for i in range(notes.size()):
+			var note = notes[i]
+			var note_time = float(note.get("time", 0.0))
+			if current_time >= note_time and current_time < note_time + 0.15:
+				if not autoplay_hit_notes.has(i):
+					autoplay_hit_notes[i] = true
+					Global.play_hit_sound()
+					_trigger_autoplay_hit_effect(note)
+					
+	# 오토플레이 리플 수명 갱신
+	for i in range(autoplay_ripples.size() - 1, -1, -1):
+		autoplay_ripples[i]["life"] -= delta
+		if autoplay_ripples[i]["life"] <= 0.0:
+			autoplay_ripples.remove_at(i)
 	
 	# 캔버스 및 타임라인 갱신
 	preview_canvas.queue_redraw()
@@ -445,6 +474,21 @@ func _input(event: InputEvent) -> void:
 				return
 				
 			# D. 재생 배속 단축키 ([ : 감속, ] : 가속)
+			elif code_val == KEY_BRACKETLEFT:
+				get_viewport().set_input_as_handled()
+				var new_sel = max(0, speed_select.selected - 1)
+				if new_sel != speed_select.selected:
+					speed_select.selected = new_sel
+					_on_speed_selected(new_sel)
+					_show_toast("Speed: %s" % speed_select.get_item_text(new_sel))
+				return
+				
+			# E. 즉시 테스트 단축키 (F5)
+			elif code_val == KEY_F5:
+				get_viewport().set_input_as_handled()
+				_on_instant_test_pressed()
+				return
+			
 			elif code_val == KEY_BRACKETLEFT:
 				get_viewport().set_input_as_handled()
 				var new_sel = max(0, speed_select.selected - 1)
@@ -696,6 +740,7 @@ func _input(event: InputEvent) -> void:
 				preview_canvas.queue_redraw()
 func _seek_time(target: float) -> void:
 	current_time = clamp(target, 0.0, song_duration)
+	autoplay_hit_notes.clear()
 	if audio_player.playing:
 		audio_player.seek(current_time)
 
@@ -1186,6 +1231,23 @@ func _draw_preview_canvas() -> void:
 					var grav_font = get_theme_font("font")
 					var grav_color = Color(0.4, 0.7, 1.0, alpha * 0.9)
 					preview_canvas.draw_string(grav_font, pos + Vector2(15.0 * sx, 25.0 * sy), "G", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, grav_color)
+					
+				# --- 불가능한 패턴 자동 검출 및 시각 경고 ---
+				var warning = _get_note_warnings(i)
+				if warning != "":
+					var w_font = get_theme_font("font")
+					if warning == "SIMULTANEOUS":
+						# 동시치기 불가 경고 (빨강)
+						preview_canvas.draw_circle(pos, 35.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), 2.5 * sx)
+						preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Double Key", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
+					elif warning == "TOO_CLOSE":
+						# 초고속 피지컬 경고 (오렌지)
+						preview_canvas.draw_circle(pos, 32.0 * sx, Color(1.0, 0.5, 0.0, alpha * 0.8), 2.0 * sx)
+						preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Extreme Speed", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.6, 0.2, alpha * 0.9))
+					elif warning == "OVERLAP":
+						# 겹침 배치 차폐 경고 (노랑)
+						preview_canvas.draw_circle(pos, 30.0 * sx, Color(1.0, 0.8, 0.0, alpha * 0.7), 1.5 * sx)
+						preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Hidden Note", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.85, 0.2, alpha * 0.9))
 			
 			# 텍스트 라벨 (딥 와인 색상)
 			var lbl_font = get_theme_font("font")
@@ -1193,6 +1255,14 @@ func _draw_preview_canvas() -> void:
 			lbl_text_color.a = alpha * 0.8
 			preview_canvas.draw_string(lbl_font, pos + Vector2(15.0*sx, -15.0*sy), "%.2fs" % note_time, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, lbl_text_color)
 
+
+	# --- 오토플레이 리플 효과 렌더링 ---
+	for rip in autoplay_ripples:
+		var r_pos = rip["pos"] * Vector2(sx, sy)
+		var progress = 1.0 - (rip["life"] / 0.3)
+		var radius = lerp(15.0, 65.0, progress) * sx
+		var rip_color = Color(1.0, 0.0, 0.329412, lerp(0.8, 0.0, progress))
+		preview_canvas.draw_circle(r_pos, radius, rip_color, 2.0 * sx)
 
 	# --- 실시간 곡선 드래그 미리보기 렌더링 ---
 	if is_curve_draw_mode and is_curve_dragging and selected_note_index != -1:
@@ -1353,6 +1423,36 @@ func _setup_top_bar() -> void:
 	
 	to_effect_editor_btn.pressed.connect(_on_go_to_effect_editor)
 	hbox.add_child(to_effect_editor_btn)
+	
+	# 즉시 테스트 (F5) 버튼 추가
+	var test_btn = Button.new()
+	test_btn.text = "Instant Test (F5)"
+	test_btn.add_theme_color_override("font_color", Color.WHITE)
+	test_btn.add_theme_font_size_override("font_size", 13)
+	var test_btn_style = StyleBoxFlat.new()
+	test_btn_style.bg_color = Color(0.788235, 0.0941176, 0.290196, 1.0)
+	test_btn_style.set_corner_radius_all(5)
+	test_btn_style.set_content_margin_all(8)
+	test_btn.add_theme_stylebox_override("normal", test_btn_style)
+	test_btn.add_theme_stylebox_override("hover", btn_style_hover)
+	test_btn.add_theme_stylebox_override("pressed", btn_style_pressed)
+	test_btn.pressed.connect(_on_instant_test_pressed)
+	hbox.add_child(test_btn)
+	
+	# 오토 플레이 버튼 추가
+	var autoplay_btn = Button.new()
+	autoplay_btn.text = "Auto-Play: OFF"
+	autoplay_btn.toggle_mode = true
+	autoplay_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	autoplay_btn.add_theme_font_size_override("font_size", 13)
+	autoplay_btn.add_theme_stylebox_override("normal", btn_style_normal)
+	var play_pressed_style = StyleBoxFlat.new()
+	play_pressed_style.bg_color = Color(1.0, 0.7, 0.8, 1.0)
+	play_pressed_style.set_corner_radius_all(5)
+	play_pressed_style.set_content_margin_all(8)
+	autoplay_btn.add_theme_stylebox_override("pressed", play_pressed_style)
+	autoplay_btn.toggled.connect(_on_autoplay_toggled)
+	hbox.add_child(autoplay_btn)
 	
 	margin.add_child(hbox)
 	top_bar.add_child(margin)
@@ -1590,3 +1690,57 @@ func _auto_save_backup() -> void:
 		var json_str = JSON.stringify(chart_data, "\t")
 		file.store_string(json_str)
 		_show_toast("Auto-backup saved!")
+
+
+# --- 오토플레이 및 불가능한 패턴 검출 도우미 함수 ---
+func _on_autoplay_toggled(is_toggled: bool) -> void:
+	is_autoplay = is_toggled
+	autoplay_hit_notes.clear()
+	var btn = get_viewport().gui_get_focus_owner() as Button
+	# 버튼 텍스트 동적 업데이트
+	for child in top_bar.get_child(0).get_child(0).get_children():
+		if child is Button and "Auto-Play:" in child.text:
+			child.text = "Auto-Play: ON" if is_toggled else "Auto-Play: OFF"
+	if is_toggled:
+		_show_toast("Auto-Play Enabled")
+	else:
+		_show_toast("Auto-Play Disabled")
+
+func _on_instant_test_pressed() -> void:
+	if is_playing:
+		audio_player.stop()
+	Global.is_editor_test_mode = true
+	Global.editor_test_start_time = current_time
+	_save_chart_file()
+	_show_toast("Launching Instant Test...")
+	# 씬 페이드 트랜지션을 이용해 자연스럽게 전환
+	SceneTransition.transition_to_scene("res://scenes/game/game.tscn")
+
+func _trigger_autoplay_hit_effect(note: Dictionary) -> void:
+	var pos = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
+	autoplay_ripples.append({"pos": pos, "life": 0.3})
+
+func _get_note_warnings(idx: int) -> String:
+	var notes = chart_data.get("notes", [])
+	if idx >= notes.size(): return ""
+	var note = notes[idx]
+	var t = float(note.get("time", 0.0))
+	var pos = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
+	
+	for i in range(notes.size()):
+		if i == idx: continue
+		var other = notes[i]
+		var other_t = float(other.get("time", 0.0))
+		var other_pos = Vector2(float(other.get("x", 960.0)), float(other.get("y", 540.0)))
+		
+		# 1. 동시 치기 불가 경고 (0.01초 이내 동일 시간대 타격 요구)
+		if abs(t - other_t) < 0.01:
+			return "SIMULTANEOUS"
+		# 2. 초고속 피지컬 경고 (0.07초 이내 타격 요구 - 80ms 미만)
+		elif abs(t - other_t) < 0.07:
+			return "TOO_CLOSE"
+		# 3. 위치 및 시간 겹침 차폐 경고 (반경 65px 이내 및 시간차 0.4초 이내)
+		elif pos.distance_to(other_pos) < 65.0 and abs(t - other_t) < 0.4:
+			return "OVERLAP"
+			
+	return ""
