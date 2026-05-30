@@ -16,13 +16,13 @@ func _ready() -> void:
 		visible = false
 		return
 		
-	# 2. AspectRatioContainer 마스킹 랩핑 자동 생성 (비율 왜곡 방지 및 화면 맞춤)
-	_setup_aspect_ratio_wrapper()
+	# 2. AspectRatioContainer 마스킹 래핑 지연 생성 (Parent busy 스레드 충돌 완벽 방지)
+	call_deferred("_setup_aspect_ratio_wrapper")
 	
 	visible = true
-	volume_db = -80.0  # 자체 사운드 음소거 (성능 극대화)
+	volume_db = -80.0  # 전체 사운드 감쇠
 	audio_track = -1
-	expand = true      # 전체 영역으로 늘어나도록 설정 (컨테이너 내에서 비율을 유지하며 맞춤)
+	expand = true      # 컨테이너 비율 유지 정렬 사용
 	
 	if Global.selected_music == "":
 		return
