@@ -41,7 +41,7 @@ var effect_offset: Vector2 = Vector2(-220.0, -90.0)
 
 const SAVE_PATH = "user://settings.cfg"
 
-#var hit_sfx_stream: AudioStreamWav = null
+var hit_sfx_stream: AudioStreamWAV = null
 
 var sfx_players: Array[AudioStreamPlayer] = []
 const MAX_SFX_PLAYERS = 8
@@ -56,10 +56,10 @@ func _ready() -> void:
 
 func _init_sfx() -> void:
 	# 찰진 비프/클랩 타격감 효과음 WAV 실시간 생성
-	#hit_sfx_stream = AudioStreamWav.new()
-	#hit_sfx_stream.format = AudioStreamWav.FORMAT_16_BITS
-	#hit_sfx_stream.mix_rate = 44100
-	#hit_sfx_stream.stereo = false
+	hit_sfx_stream = AudioStreamWAV.new()
+	hit_sfx_stream.format = AudioStreamWAV.FORMAT_16_BITS
+	hit_sfx_stream.mix_rate = 44100
+	hit_sfx_stream.stereo = false
 	
 	var sample_rate = 44100.0
 	var duration = 0.08 # 80ms
@@ -81,12 +81,16 @@ func _init_sfx() -> void:
 		var int_val = int(sample_val * 32767.0)
 		data.encode_s16(i * 2, int_val)
 		
-	#hit_sfx_stream.data = data
+	hit_sfx_stream.data = data
 	
-	# 효과음 중첩 재생을 위한 폴리포니 오디오 풀 구성
+	# 효과음 중첩 재생을 위한 폴리포니 오디오 풀 구성 (SFX 버스가 없을 경우 Master로 안전한 폴백)
 	for i in range(MAX_SFX_PLAYERS):
 		var asp = AudioStreamPlayer.new()
-		#asp.stream = hit_sfx_stream
+		asp.stream = hit_sfx_stream
+		if AudioServer.get_bus_index("SFX") != -1:
+			asp.bus = "SFX"
+		else:
+			asp.bus = "Master"
 		add_child(asp)
 		sfx_players.append(asp)
 

@@ -177,7 +177,8 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	if not is_clone or _is_headless_run():
+	# 안전성 검사: 복제본이거나 씬 트리 밖에 있거나 헤드리스 환경인 경우 즉시 리턴
+	if not is_clone or not is_inside_tree() or _is_headless_run():
 		return
 
 	var my_index = active_notes.find(self)
@@ -185,12 +186,26 @@ func _draw() -> void:
 		return
 
 	var next_note = active_notes[my_index + 1]
-	if not is_instance_valid(next_note):
+	# 다음 노트의 인스턴스 유효성 및 씬 트리 소속 검증 (런타임 Parent node is not inside tree 버그 예방)
+	if not is_instance_valid(next_note) or not next_note.is_inside_tree():
 		return
 
+	# 로컬 좌표계 시작 중심점
 	var my_center_local = (size / 2.0) + center_offset
-	var next_center_global: Vector2 = next_note.global_position + (((next_note.size / 2.0) + next_note.get("center_offset")) * next_note.scale)
-	#draw_line(my_center_local, next_center_local, connect_line_color, Global.judgment_line_width, true)
+	
+	# 다음 노트의 center_offset 안전 검사 (Invalid operands 'Vector2' and 'Nil' 버그 원천 예방)
+	var next_offset = Vector2.ZERO
+	if next_note.get("center_offset") is Vector2:
+		next_offset = next_note.center_offset
+	
+	# 다음 노트의 글로벌 중심점 계산
+	var next_center_global: Vector2 = next_note.global_position + (((next_note.size / 2.0) + next_offset) * next_note.scale)
+	
+	# 글로벌 중심점을 자신의 로컬 좌표계로 변환 (좌표계 버그 수정!)
+	var next_center_local = get_global_transform().affine_inverse() * next_center_global
+	
+	# 가이드라인 연결선 그리기 복구 및 활성화
+	draw_line(my_center_local, next_center_local, connect_line_color, Global.judgment_line_width, true)
 
 
 
@@ -279,11 +294,39 @@ func _on_point_pressed() -> void:
 	else:
 		Global.reset_combo()
 
-	# Force perfect judgment regardless of timing
-	var earned_score = 100
-	var judgment_type = "perfect"
+	# 타이밍 오차 계산 및 판정 적용
+	var time_alive = (Time.get_ticks_msec() - spawn_time_msec) / 1000.0
+	var diff = abs(time_alive - judgment_time)
 
-	# Add score (perfect gives maximum points)
+	var judgment_type = "miss"
+	var earned_score = 0
+
+	# 수학적 등비 분할 판정 범위 계산 (유효 범위 perfect_margin 기준)
+	# - Perfect: 유효 범위의 50%
+	# - Great: 이전 판정 제외 남은 범위의 50%
+	# - Good: 마지막 잔여 범위 100% 전체 할당 (Miss 직전 단계)
+	var max_window = perfect_margin
+	var perfect_limit = max_window * 0.5
+	var great_limit = perfect_limit + (max_window - perfect_limit) * 0.5
+	var good_limit = max_window
+
+	if diff <= perfect_limit:
+		judgment_type = "perfect"
+		earned_score = 100
+	elif diff <= great_limit:
+		judgment_type = "great"
+		earned_score = 80
+	elif diff <= good_limit:
+		judgment_type = "good"
+		earned_score = 50
+	else:
+		judgment_type = "miss"
+		earned_score = 0
+
+	if judgment_type == "miss":
+		Global.reset_combo()
+
+	# 점수 및 판정 반영
 	Global.add_score(earned_score)
 	Global.add_judgment(judgment_type)
 	

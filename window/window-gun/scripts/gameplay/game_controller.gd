@@ -215,10 +215,6 @@ func load_chart() -> Variant:
 		chart["notes"] = []
 	if not chart.has("events") or not chart["events"] is Array:
 		chart["events"] = []
-	if not chart.has("notes") or not chart["notes"] is Array:
-		chart["notes"] = []
-	if not chart.has("events") or not chart["events"] is Array:
-		chart["events"] = []
 
 	# --- 추가된 부분: time 기준으로 자동 정렬 ---
 	chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))

@@ -58,6 +58,10 @@ var autoplay_ripples: Array = []
 var region_start_time: float = -1.0
 var region_end_time: float = -1.0
 var is_region_loop: bool = true
+
+# --- 파형 고해상도 시각화 변수 ---
+var waveform_data: Dictionary = {}
+var is_waveform_loaded: bool = false
 var is_playing_region: bool = false
 var is_dragging_region: bool = false
 var drag_start_time: float = 0.0
@@ -224,6 +228,9 @@ func _on_song_selected(index: int) -> void:
 		song_duration = audio_player.stream.get_length()
 	else:
 		song_duration = 180.0 # 예비 3분
+
+	# 고해상도 주파수별 파형 로딩 시작
+	_load_waveform_data()
 	
 	current_time = 0.0
 	is_playing = false
@@ -1358,6 +1365,8 @@ func _draw_timeline() -> void:
 	timeline.draw_rect(Rect2(Vector2.ZERO, timeline.size), COLOR_BG_TIMELINE, true)
 	timeline.draw_line(Vector2(0, 0), Vector2(timeline_w, 0), COLOR_BORDER_CANVAS, 1.5)
 	
+
+	
 	var center_x: float = timeline_w / 2.0
 	timeline.draw_line(Vector2(center_x, 0), Vector2(center_x, timeline_h), COLOR_HEADER_TIMELINE, 2.0)
 	
@@ -1365,6 +1374,39 @@ func _draw_timeline() -> void:
 	var beat_length: float = 60.0 / bpm
 	var view_start_time: float = current_time - (center_x / pixels_per_second)
 	var view_end_time: float = current_time + (center_x / pixels_per_second)
+	# --- 고해상도 주파수별 색상화 오디오 파형 렌더링 ---
+	if is_waveform_loaded and waveform_data.has("low"):
+		var samples_per_second: float = float(waveform_data.get("samples_per_second", 60.0))
+		var low_arr: Array = waveform_data["low"]
+		var mid_arr: Array = waveform_data["mid"]
+		var high_arr: Array = waveform_data["high"]
+		var center_y: float = timeline_h / 2.0
+		
+		# 2픽셀 간격으로 촘촘히 렌더링하여 고해상도 속도 보장
+		var step: int = 2
+		for x in range(0, int(timeline_w), step):
+			var dx: float = x - center_x
+			var t: float = current_time + (dx / pixels_per_second)
+			
+			if t < 0.0 or t >= song_duration:
+				continue
+				
+			var idx: int = int(t * samples_per_second)
+			if idx >= 0 and idx < low_arr.size():
+				var low_val: float = float(low_arr[idx])
+				var mid_val: float = float(mid_arr[idx])
+				var high_val: float = float(high_arr[idx])
+				
+				# 킥(빨강 - 저역), 스네어(파랑 - 중역), 보컬/멜로디(초록 - 고역) 주파수 대역 반투명 대칭형 중첩 그리기
+				if low_val > 0.01:
+					var lh = low_val * (timeline_h * 0.45)
+					timeline.draw_line(Vector2(x, center_y - lh), Vector2(x, center_y + lh), Color(0.9, 0.25, 0.25, 0.38), 2.0)
+				if mid_val > 0.01:
+					var mh = mid_val * (timeline_h * 0.38)
+					timeline.draw_line(Vector2(x, center_y - mh), Vector2(x, center_y + mh), Color(0.25, 0.45, 0.9, 0.38), 2.0)
+				if high_val > 0.01:
+					var hh = high_val * (timeline_h * 0.28)
+					timeline.draw_line(Vector2(x, center_y - hh), Vector2(x, center_y + hh), Color(0.25, 0.85, 0.35, 0.38), 2.0)
 	
 	var first_beat_index: int = ceili(view_start_time / beat_length)
 	var last_beat_index: int = floori(view_end_time / beat_length)
@@ -1946,3 +1988,60 @@ func _on_play_region_pressed() -> void:
 	if not is_playing:
 		_on_play_pressed()
 	_show_toast("Playing Region...")
+
+
+# ==========================================
+# 고해상도 주파수 분할 색상 오디오 파형 처리 시스템
+# ==========================================
+
+func _load_waveform_data() -> void:
+	is_waveform_loaded = false
+	waveform_data = {}
+	
+	if selected_song == "":
+		return
+		
+	var song_folder = MUSIC_BASE_PATH + selected_song + "/"
+	var mp3_path = ProjectSettings.globalize_path(song_folder + selected_song + ".mp3")
+	var json_path = ProjectSettings.globalize_path(song_folder + "waveform_data.json")
+	
+	# 1. 이미 파형 JSON이 존재할 경우 파일 Access로 즉각 파싱
+	if FileAccess.file_exists(song_folder + "waveform_data.json"):
+		_parse_waveform_json(song_folder + "waveform_data.json")
+		return
+		
+	# 2. 캐시 데이터가 없으면 백그라운드로 파이썬 스펙트럼 추출 스크립트 실행
+	var script_path = ProjectSettings.globalize_path("res://scripts/ui/extract_waveform.py")
+	var ffmpeg_path = ProjectSettings.globalize_path("res://ffmpeg.exe")
+	
+	if not FileAccess.file_exists("res://scripts/ui/extract_waveform.py"):
+		push_error("extract_waveform.py not found.")
+		return
+		
+	print("Starting high-res colorful waveform generation process...")
+	
+	var args = [script_path, mp3_path, json_path, ffmpeg_path]
+	var output = []
+	
+	# 파이썬 실행
+	var exit_code = OS.execute("python", args, output, true, false)
+	if exit_code != 0:
+		exit_code = OS.execute("python3", args, output, true, false)
+		
+	if exit_code == 0:
+		if FileAccess.file_exists(song_folder + "waveform_data.json"):
+			_parse_waveform_json(song_folder + "waveform_data.json")
+	else:
+		push_error("Failed to generate waveform data: " + str(output))
+
+func _parse_waveform_json(path: String) -> void:
+	var file = FileAccess.open(path, FileAccess.READ)
+	if file:
+		var json_str = file.get_as_text()
+		var parsed = JSON.parse_string(json_str)
+		if parsed is Dictionary:
+			waveform_data = parsed
+			is_waveform_loaded = true
+			print("Colorful dynamic waveform successfully loaded and cached!")
+			if timeline:
+				timeline.queue_redraw()
