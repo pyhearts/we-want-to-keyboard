@@ -219,7 +219,7 @@ func _calculate_rank(score_val_int: int) -> String:
 func _display_song_info() -> void:
 	if Global.selected_music != "":
 		# 곡 정보를 Res.tres에서 가져오기
-		var res_path = "res://assets/musics/" + Global.selected_music + "/Res.tres"
+		var res_path = Global.get_music_res_path(Global.selected_music)
 		if FileAccess.file_exists(res_path):
 			var music_res = load(res_path)
 			if music_res:

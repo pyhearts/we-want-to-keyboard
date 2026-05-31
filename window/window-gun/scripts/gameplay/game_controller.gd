@@ -168,7 +168,7 @@ func start_chart() -> void:
 	print("Max theoretical base score calculated: ", Global.max_base_score)
 	
 	# BPM 로드
-	var res_path = MUSIC_BASE_PATH + Global.selected_music + "/Res.tres"
+	var res_path = Global.get_music_res_path(Global.selected_music)
 	if FileAccess.file_exists(res_path):
 		var music_res = load(res_path)
 		if music_res and "bpm" in music_res:
@@ -193,7 +193,7 @@ func load_chart() -> Variant:
 		push_error("No music is selected.")
 		return null
 
-	var path = MUSIC_BASE_PATH + Global.selected_music + "/chart.json"
+	var path = Global.get_music_chart_path(Global.selected_music)
 	if not FileAccess.file_exists(path):
 		push_error("Chart file not found: " + path)
 		return null
@@ -277,7 +277,7 @@ func _ensure_selected_music() -> void:
 		return
 
 	if Global.music_titles.size() == 0:
-		Global.music_titles = Global.get_folder_list(MUSIC_BASE_PATH)
+		Global.music_titles = Global.get_folder_list(Global.MUSIC_BASE_PATH)
 
 	if "R" in Global.music_titles:
 		Global.selected_music = "R"
@@ -453,10 +453,18 @@ func create_static_window(size: Vector2i, rel_pos: Vector2i, duration: float, ti
 	return window
 
 
-func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> Window:
+
+func _get_cached_texture(img_path: String) -> Texture2D:
 	if not texture_cache.has(img_path):
-		texture_cache[img_path] = load(img_path)
-	if texture_cache[img_path] == null:
+		if ResourceLoader.exists(img_path):
+			texture_cache[img_path] = load(img_path)
+		else:
+			texture_cache[img_path] = null
+	return texture_cache[img_path]
+
+func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> Window:
+	var texture = _get_cached_texture(img_path)
+	if texture == null:
 		push_error("Window texture not found: " + img_path)
 		return null
 
@@ -469,7 +477,7 @@ func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> W
 			window.size = size
 			window.title = title
 			var texture_rect = window.get_node("TextureRect") as TextureRect
-			texture_rect.texture = texture_cache[img_path]
+			texture_rect.texture = texture
 			return window
 
 	var new_window = Window.new()
@@ -482,7 +490,7 @@ func _get_or_create_window(size: Vector2i, title: String, img_path: String) -> W
 
 	var texture_rect = TextureRect.new()
 	texture_rect.name = "TextureRect"
-	texture_rect.texture = texture_cache[img_path]
+	texture_rect.texture = texture
 	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	texture_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -546,9 +554,8 @@ func create_static_image(size: Vector2i, pos: Vector2i, duration: float, img_pat
 
 
 func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:
-	if not texture_cache.has(img_path):
-		texture_cache[img_path] = load(img_path)
-	if texture_cache[img_path] == null:
+	var texture = _get_cached_texture(img_path)
+	if texture == null:
 		push_error("Image texture not found: " + img_path)
 		return null
 
@@ -560,7 +567,7 @@ func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:
 			continue
 		if not img_node.visible:
 			# [수정핵심 1] 텍스처를 넣고 이전 크기 기억을 강제로 지운 뒤 새 크기 덮어쓰기
-			img_node.texture = texture_cache[img_path]
+			img_node.texture = texture
 			img_node.reset_size() 
 			img_node.size = size
 			return img_node
@@ -573,7 +580,7 @@ func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:
 	new_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	new_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	new_image.texture = texture_cache[img_path]
+	new_image.texture = texture
 	new_image.size = size # 오류를 일으키던 custom_minimum_size 속성 삭제
 
 	add_child(new_image)

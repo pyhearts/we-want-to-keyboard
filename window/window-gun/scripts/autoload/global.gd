@@ -215,3 +215,21 @@ func calculate_scaled_score() -> int:
 	var ratio = float(current_base_score) / float(max_base_score)
 	# 0~100만 점 사이로 보정
 	return int(clamp(ratio * 1000000.0, 0.0, 1000000.0))
+
+const MUSIC_BASE_PATH = "res://assets/musics/"
+
+# Helper functions to build clean and centralized resource paths
+func get_music_folder_path(song_name: String) -> String:
+	return MUSIC_BASE_PATH + song_name + "/"
+
+func get_music_audio_path(song_name: String) -> String:
+	return get_music_folder_path(song_name) + song_name + ".mp3"
+
+func get_music_jacket_path(song_name: String) -> String:
+	return get_music_folder_path(song_name) + "img.png"
+
+func get_music_chart_path(song_name: String) -> String:
+	return get_music_folder_path(song_name) + "chart.json"
+
+func get_music_res_path(song_name: String) -> String:
+	return get_music_folder_path(song_name) + "Res.tres"

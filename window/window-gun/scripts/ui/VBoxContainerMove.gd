@@ -109,14 +109,14 @@ func _on_down_pressed() -> void:
 
 func _play_preview() -> void:
 	if audio_stream_player:
-		var audio_path = "res://assets/musics/" + Global.selected_music + "/" + Global.selected_music + ".mp3"
+		var audio_path = Global.get_music_audio_path(Global.selected_music)
 		if FileAccess.file_exists(audio_path):
 			audio_stream_player.stream = load(audio_path)
 			audio_stream_player.play()
 
 
 func _update_jacket() -> void:
-	var jacket_path = "res://assets/musics/" + Global.selected_music + "/img.png"
+	var jacket_path = Global.get_music_jacket_path(Global.selected_music)
 	var jacket_rect = $"../TextureRect"
 	if jacket_rect and FileAccess.file_exists(jacket_path):
 		jacket_rect.texture = load(jacket_path)

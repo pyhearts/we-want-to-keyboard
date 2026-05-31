@@ -50,8 +50,7 @@ func load_bga(song_name: String) -> void:
 	
 	# 곡 경로 패턴 매칭 (기존 music_base_path에 어울리도록 세팅)
 	# 예: "res://assets/musics/곡이름/bga.ogv"
-	var base_path = "res://assets/musics/"
-	var bga_path = base_path + song_name + "/bga.ogv"
+	var bga_path = Global.get_music_folder_path(song_name) + "bga.ogv"
 	
 	# 파일 존재 유무 검증
 	if not ResourceLoader.exists(bga_path):
