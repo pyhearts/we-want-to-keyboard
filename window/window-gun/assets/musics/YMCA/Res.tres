@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://c3tmrn470doq1"]
+
+[ext_resource type="AudioStream" uid="uid://cddkj0m5hqqjb" path="res://assets/musics/YMCA/YMCA.mp3" id="1_ju7l4"]
+[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_sbr8m"]
+
+[resource]
+script = ExtResource("1_sbr8m")
+bpm = 126
+audio_stream = ExtResource("1_ju7l4")
+metadata/_custom_type_script = "uid://ciljglxaby7qn"

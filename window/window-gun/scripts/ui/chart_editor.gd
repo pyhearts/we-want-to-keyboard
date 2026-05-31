@@ -1529,6 +1529,21 @@ func _setup_top_bar() -> void:
 	test_btn.pressed.connect(_on_instant_test_pressed)
 	hbox.add_child(test_btn)
 	
+	# 모든 채보 지우기 버튼 추가
+	var clear_chart_btn = Button.new()
+	clear_chart_btn.text = "Clear All Notes"
+	clear_chart_btn.add_theme_color_override("font_color", Color.WHITE)
+	clear_chart_btn.add_theme_font_size_override("font_size", 13)
+	var clear_btn_style = StyleBoxFlat.new()
+	clear_btn_style.bg_color = Color(0.65, 0.1, 0.1, 1.0)
+	clear_btn_style.set_corner_radius_all(5)
+	clear_btn_style.set_content_margin_all(8)
+	clear_chart_btn.add_theme_stylebox_override("normal", clear_btn_style)
+	clear_chart_btn.add_theme_stylebox_override("hover", btn_style_hover)
+	clear_chart_btn.add_theme_stylebox_override("pressed", btn_style_pressed)
+	clear_chart_btn.pressed.connect(_on_clear_all_notes_pressed)
+	hbox.add_child(clear_chart_btn)
+	
 	# 오토 플레이 버튼 추가
 	var autoplay_btn = Button.new()
 	autoplay_btn.text = "Auto-Play: OFF"
@@ -1795,6 +1810,25 @@ func _on_autoplay_toggled(is_toggled: bool) -> void:
 		_show_toast("Auto-Play Enabled")
 	else:
 		_show_toast("Auto-Play Disabled")
+
+func _on_clear_all_notes_pressed() -> void:
+	var confirm = ConfirmationDialog.new()
+	confirm.title = "Warning / 경고"
+	confirm.dialog_text = "Are you sure you want to delete all notes in this chart?\n현재 열린 곡의 모든 채보(노트)를 삭제하시겠습니까?"
+	confirm.confirmed.connect(func():
+		chart_data["notes"] = []
+		selected_note_index = -1
+		_save_chart_file()
+		if preview_canvas:
+			preview_canvas.queue_redraw()
+		_show_toast("All notes deleted and saved!")
+		confirm.queue_free()
+	)
+	confirm.canceled.connect(func():
+		confirm.queue_free()
+	)
+	add_child(confirm)
+	confirm.popup_centered()
 
 func _on_instant_test_pressed() -> void:
 	if is_playing:

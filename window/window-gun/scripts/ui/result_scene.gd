@@ -223,8 +223,16 @@ func _display_song_info() -> void:
 		if FileAccess.file_exists(res_path):
 			var music_res = load(res_path)
 			if music_res:
-				title_label.text = music_res.title
-				artist_label.text = music_res.composer
+				if music_res.title == "" or music_res.title == "Unknown Title":
+					title_label.text = Global.selected_music
+				else:
+					title_label.text = music_res.title
+				
+				if music_res.composer == "" or music_res.composer == "Unknown Composer":
+					artist_label.text = "Unknown Composer"
+				else:
+					artist_label.text = music_res.composer
+				
 				difficulty_label.text = "BPM: %d" % music_res.bpm
 				return
 		title_label.text = Global.selected_music

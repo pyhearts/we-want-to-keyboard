@@ -4,4 +4,5 @@
 
 [resource]
 script = ExtResource("1_papyv")
+bpm = 153
 metadata/_custom_type_script = "uid://ciljglxaby7qn"

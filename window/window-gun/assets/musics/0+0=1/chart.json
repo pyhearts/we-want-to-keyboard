@@ -1,19 +1,6 @@
 {
 	"events": [],
-	"notes": [
-		{
-			"time": 0.0,
-			"type": "normal",
-			"x": 961.38818359375,
-			"y": 546.940856933594
-		},
-		{
-			"time": 50.5555555555556,
-			"type": "normal",
-			"x": 973.881591796875,
-			"y": 546.940856933594
-		}
-	],
+	"notes": [],
 	"offset_corrected": true,
 	"region_end_time": -1.0,
 	"region_start_time": -1.0
