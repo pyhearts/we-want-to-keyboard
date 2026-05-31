@@ -1,8 +1,10 @@
 [gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://pykwnpx6vnv3"]
 
+[ext_resource type="AudioStream" uid="uid://djw6dabqj37tf" path="res://assets/musics/빨간펜/빨간펜.mp3" id="1_mcqo3"]
 [ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_papyv"]
 
 [resource]
 script = ExtResource("1_papyv")
 bpm = 153
+audio_stream = ExtResource("1_mcqo3")
 metadata/_custom_type_script = "uid://ciljglxaby7qn"

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://cpwieelksd1ly"]
+
+[ext_resource type="AudioStream" uid="uid://x8cyta3nhb7q" path="res://assets/musics/파자마여도 달려와줘/파자마여도 달려와줘.mp3" id="1_2ogbp"]
+[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_eufnn"]
+
+[resource]
+script = ExtResource("1_eufnn")
+bpm = 172
+audio_stream = ExtResource("1_2ogbp")
+metadata/_custom_type_script = "uid://ciljglxaby7qn"
