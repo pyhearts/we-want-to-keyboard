@@ -1815,39 +1815,15 @@ func _get_note_warnings(idx: int) -> String:
 	if idx >= notes.size(): return ""
 	var note = notes[idx]
 	var t = float(note.get("time", 0.0))
-	var pos = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
 	
 	for i in range(notes.size()):
 		if i == idx: continue
 		var other = notes[i]
 		var other_t = float(other.get("time", 0.0))
-		var other_pos = Vector2(float(other.get("x", 960.0)), float(other.get("y", 540.0)))
 		
 		# 1. 동시 치기 불가 경고 (0.01초 이내 동일 시간대 타격 요구)
 		if abs(t - other_t) < 0.01:
 			return "SIMULTANEOUS"
-		# 2. 초고속 피지컬 경고 (0.07초 이내 타격 요구 - 80ms 미만)
-		elif abs(t - other_t) < 0.07:
-			return "TOO_CLOSE"
-		# 3. 위치 및 시간 겹침 차폐 경고 (반경 65px 이내 및 시간차 0.4초 이내)
-		elif pos.distance_to(other_pos) < 65.0 and abs(t - other_t) < 0.4:
-			return "OVERLAP"
-			
-	# 4. 시간 대비 거리가 너무 먼 노트 (칠 수 없는 노트 경고)
-	var prev_note = null
-	for i in range(idx - 1, -1, -1):
-		var potential = notes[i]
-		prev_note = potential
-		break
-		
-	if prev_note != null:
-		var t1 = float(prev_note.get("time", 0.0))
-		var dt = t - t1
-		var p1 = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
-		var dist = pos.distance_to(p1)
-		var speed = dist / dt if dt > 0.001 else 999999.0
-		if speed > Global.max_note_speed:
-			return "TOO_FAR"
 			
 	return ""
 
