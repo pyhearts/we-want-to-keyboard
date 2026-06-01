@@ -1,10 +1,11 @@
 [gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://bsqhxs6e0okpv"]
 
-[ext_resource type="AudioStream" uid="uid://dfwyvs4do6vey" path="res://assets/musics/0+0=1/0+0=1.mp3" id="1_b2m3i"]
+[ext_resource type="AudioStream" uid="uid://ovj8tflc27tu" path="res://assets/musics/0+0=1/0+0=1.mp3" id="1_b2m3i"]
 [ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_day34"]
 
 [resource]
 script = ExtResource("1_day34")
+composer = "강남스타일"
 bpm = 162
 offset = 0.13
 audio_stream = ExtResource("1_b2m3i")

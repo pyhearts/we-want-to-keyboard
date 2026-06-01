@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://cq81px2t2a0k6" path="res://scripts/ui/combo_label.gd" id="5_3rdkh"]
 [ext_resource type="Script" uid="uid://c1125ttohes1l" path="res://scripts/effects/audio_stream_player.gd" id="6_5i0tg"]
 
+[ext_resource type="Script" path="res://scripts/effects/audio_visualizer.gd" id="7_visualizer"]
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ej7j1"]
 bg_color = Color(0.9999998, 0.87686116, 0.8996086, 1)
 
@@ -38,6 +39,40 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_bdhmt")
 
+
+[node name="LeftBgaVisualizer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 9
+anchor_left = 0.01
+anchor_top = 0.12
+anchor_right = 0.15
+anchor_bottom = 0.88
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+script = ExtResource("7_visualizer")
+bar_count = 16
+max_bar_width = 135.0
+bar_color = Color(1, 1, 1, 0.35)
+separation = 6
+is_left_aligned = true
+
+[node name="RightBgaVisualizer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 0.85
+anchor_top = 0.12
+anchor_right = 0.99
+anchor_bottom = 0.88
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+script = ExtResource("7_visualizer")
+bar_count = 16
+max_bar_width = 135.0
+bar_color = Color(1, 1, 1, 0.35)
+separation = 6
+is_left_aligned = false
 [node name="TargetNoteSpawner" parent="." unique_id=962535481 instance=ExtResource("2_rs7p2")]
 layout_mode = 1
 offset_left = 0.0

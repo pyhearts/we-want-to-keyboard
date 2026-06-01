@@ -244,7 +244,7 @@ func _setup_clone() -> void:
 		judgment_ring.start(judgment_time)
 
 	update_target_visuals()
-	get_tree().create_timer(judgment_time + perfect_margin).timeout.connect(_on_time_out)
+	get_tree().create_timer(judgment_time + perfect_margin * 1.8).timeout.connect(_on_time_out)
 
 
 func _on_time_out() -> void:
@@ -296,7 +296,7 @@ func _on_point_pressed() -> void:
 
 	# 타이밍 오차 계산 및 판정 적용
 	var time_alive = (Time.get_ticks_msec() - spawn_time_msec) / 1000.0
-	var diff = abs(time_alive - judgment_time)
+	var diff_time = time_alive - judgment_time
 
 	var judgment_type = "miss"
 	var earned_score = 0
@@ -310,18 +310,36 @@ func _on_point_pressed() -> void:
 	var great_limit = perfect_limit + (max_window - perfect_limit) * 0.5
 	var good_limit = max_window
 
-	if diff <= perfect_limit:
-		judgment_type = "perfect"
-		earned_score = 100
-	elif diff <= great_limit:
-		judgment_type = "great"
-		earned_score = 80
-	elif diff <= good_limit:
-		judgment_type = "good"
-		earned_score = 50
+	if diff_time < 0.0:
+		# 일찍 누른 경우 (Early)
+		var diff = abs(diff_time)
+		if diff <= perfect_limit:
+			judgment_type = "perfect"
+			earned_score = 100
+		elif diff <= great_limit:
+			judgment_type = "great"
+			earned_score = 80
+		elif diff <= good_limit:
+			judgment_type = "good"
+			earned_score = 50
+		else:
+			judgment_type = "miss"
+			earned_score = 0
 	else:
-		judgment_type = "miss"
-		earned_score = 0
+		# 늦게 누른 경우 (Late) - 1.6배 더 너그러운 판정 적용
+		var diff = diff_time
+		if diff <= perfect_limit * 1.6:
+			judgment_type = "perfect"
+			earned_score = 100
+		elif diff <= great_limit * 1.6:
+			judgment_type = "great"
+			earned_score = 80
+		elif diff <= good_limit * 1.6:
+			judgment_type = "good"
+			earned_score = 50
+		else:
+			judgment_type = "miss"
+			earned_score = 0
 
 	if judgment_type == "miss":
 		Global.reset_combo()

@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://rpf6wf8lga5v" path="res://scripts/ui/label.gd" id="8_mvubq"]
 [ext_resource type="Script" uid="uid://ctox3v2i5efjl" path="res://scripts/ui/escape_to_scene.gd" id="9_escape"]
 [ext_resource type="Script" uid="uid://br0w01bpkuqk3" path="res://scenes/menu/img_change.gd" id="10_mvubq"]
+[ext_resource type="Script" uid="uid://dputxbx3pgb4r" path="res://scripts/effects/audio_visualizer.gd" id="11_niirv"]
 
 [node name="MusicSelect" type="Control" unique_id=915521571]
 layout_mode = 3
@@ -122,3 +123,24 @@ offset_right = 1866.0
 offset_bottom = 665.0
 expand_mode = 1
 script = ExtResource("10_mvubq")
+
+[node name="LeftBgaVisualizer" type="VBoxContainer" parent="." unique_id=171282130]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.01
+anchor_top = 0.12
+anchor_right = 0.15
+anchor_bottom = 0.88
+offset_left = 1158.459
+offset_top = 933.4
+offset_right = 1190.5271
+offset_bottom = 843.24963
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -1.5707964
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+script = ExtResource("11_niirv")
+max_bar_width = 300.0
+bar_color = Color(1, 0.8784314, 0.8980392, 1)

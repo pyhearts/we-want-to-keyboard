@@ -8,15 +8,8 @@ var ratio_container: AspectRatioContainer = null
 
 # --- 배경 연출 및 비주얼라이저 관련 변수 ---
 var bg_player: VideoStreamPlayer = null
-var spectrum_analyzer: AudioEffectSpectrumAnalyzerInstance = null
-var left_bars: Array[ColorRect] = []
-var right_bars: Array[ColorRect] = []
-const BAR_COUNT = 16
-const MAX_BAR_WIDTH = 135.0
-var bar_widths: Array[float] = []
 
 # 동적 오토 게인 감도 조절용 볼륨 피크 감지 변수 (꽉 참 및 안 움직임 원천 예방)
-var dynamic_max_volume: float = 0.12
 
 # 가우시안 블러 및 디밍(어둡게) 처리를 위한 GLSL 셰이더
 const BLUR_SHADER_CODE = """
@@ -182,95 +175,6 @@ func _setup_visualizer_effects() -> void:
 		# BgaRatioContainer의 바로 밑(뒤)에 오도록 인덱스 순서 지정
 		ratio_parent.move_child(bg_player, ratio_idx)
 		
-	# B. 오디오 스펙트럼 애널라이저 장착
-	# 현재 메인 오디오 버스(Master 또는 0번 버스)에 분석 효과 장착
-	var effect_idx = -1
-	for idx in range(AudioServer.get_bus_effect_count(0)):
-		if AudioServer.get_bus_effect(0, idx) is AudioEffectSpectrumAnalyzer:
-			effect_idx = idx
-			break
-			
-	if effect_idx == -1:
-		# 존재하지 않는 경우 오디오 분석 효과를 런타임에 동적으로 삽입
-		var analyzer_effect = AudioEffectSpectrumAnalyzer.new()
-		analyzer_effect.fft_size = AudioEffectSpectrumAnalyzer.FFT_SIZE_1024
-		AudioServer.add_bus_effect(0, analyzer_effect)
-		effect_idx = AudioServer.get_bus_effect_count(0) - 1
-		
-	spectrum_analyzer = AudioServer.get_bus_effect_instance(0, effect_idx)
-	
-	# C. 좌/우 비주얼라이저 UI 생성 및 세로 정렬
-	# 배경과 전경 비디오 사이(즉, 블러 처리된 여백 위)에 배치
-	_create_visualizer_bars(ratio_parent)
-
-
-func _create_visualizer_bars(parent: Node) -> void:
-	if not parent:
-		return
-		
-	# 실시간 가로폭 버퍼 배열 초기화
-	bar_widths.resize(BAR_COUNT)
-	bar_widths.fill(0.0)
-	
-	# 좌측 비주얼라이저 세로 정렬 컨테이너 (VBoxContainer)
-	var left_container = VBoxContainer.new()
-	left_container.name = "LeftBgaVisualizer"
-	left_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	left_container.layout_mode = 1
-	left_container.anchors_preset = Control.PRESET_LEFT_WIDE # 좌측 영역 전체 세로 정렬
-	left_container.anchor_left = 0.01   # 화면 좌측 살짝 여백
-	left_container.anchor_right = 0.15  # 전체 화면의 14% 가로폭 사용
-	left_container.anchor_top = 0.12    # 상단 12% 여백
-	left_container.anchor_bottom = 0.88 # 하단 12% 여백
-	left_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	left_container.grow_vertical = Control.GROW_DIRECTION_BOTH
-	left_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	left_container.add_theme_constant_override("separation", 6) # 바들 사이의 세로 간격
-	
-	# 우측 비주얼라이저 세로 정렬 컨테이너 (VBoxContainer)
-	var right_container = VBoxContainer.new()
-	right_container.name = "RightBgaVisualizer"
-	right_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	right_container.layout_mode = 1
-	right_container.anchors_preset = Control.PRESET_RIGHT_WIDE # 우측 영역 전체 세로 정렬
-	right_container.anchor_left = 0.85  # 전체 화면의 우측 15%
-	right_container.anchor_right = 0.99
-	right_container.anchor_top = 0.12
-	right_container.anchor_bottom = 0.88
-	right_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	right_container.grow_vertical = Control.GROW_DIRECTION_BOTH
-	right_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	right_container.add_theme_constant_override("separation", 6)
-	
-	parent.add_child(left_container)
-	parent.add_child(right_container)
-	# 비주얼라이저 컨테이너들이 전경 비디오보다는 뒤, 배경 블러보다는 앞에 오도록 트리 순서 정렬
-	if bg_player:
-		var bg_idx = bg_player.get_index()
-		parent.move_child(left_container, bg_idx + 1)
-		parent.move_child(right_container, bg_idx + 2)
-		
-	# 컨테이너 내부에 반투명 네온 화이트 바(ColorRect)들을 동적 생성
-	for i in range(BAR_COUNT):
-		# 좌측 바: 좌측 가장자리에서 오른쪽(안쪽)으로 수평 성장
-		var left_bar = ColorRect.new()
-		left_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		left_bar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN # 왼쪽 정렬 고정
-		left_bar.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		left_bar.color = Color(1.0, 1.0, 1.0, 0.35) # 반투명한 은은한 화이트 컬러
-		left_bar.custom_minimum_size = Vector2(3, 4) # 가로 3px, 세로는 컨테이너에 맞춰 꽉 참
-		left_container.add_child(left_bar)
-		left_bars.append(left_bar)
-		
-		# 우측 바: 우측 가장자리에서 왼쪽(안쪽)으로 수평 성장
-		var right_bar = ColorRect.new()
-		right_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		right_bar.size_flags_horizontal = Control.SIZE_SHRINK_END # 오른쪽 정렬 고정
-		right_bar.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		right_bar.color = Color(1.0, 1.0, 1.0, 0.35)
-		right_bar.custom_minimum_size = Vector2(3, 4)
-		right_container.add_child(right_bar)
-		right_bars.append(right_bar)
 
 
 func _process(_delta: float) -> void:
@@ -303,9 +207,6 @@ func _process(_delta: float) -> void:
 		if is_playing() and abs(bg_player.get_stream_position() - get_stream_position()) > 0.15:
 			bg_player.set_stream_position(get_stream_position())
 			
-	# C. 실시간 오디오 분석 및 비주얼라이저 연동
-	if spectrum_analyzer and left_bars.size() > 0 and is_playing():
-		_animate_audio_visualizer(_delta)
 		
 	var audio = Global.audio_player
 	if audio == null:
@@ -324,66 +225,3 @@ func _process(_delta: float) -> void:
 				bga_started = true
 				print("[VideoStreamPlayer] BGA 자동 시작!")
 		return
-
-
-func _animate_audio_visualizer(_delta: float) -> void:
-	# 오디오 분석을 위해 주파수 밴드 범위(20Hz ~ 12500Hz) 설정
-	var min_freq = 20.0
-	var max_freq = 12500.0
-	
-	# 주파수 축의 대수적 분할 계산용 로그 스케일링 상수
-	var log_min = log(min_freq)
-	var log_max = log(max_freq)
-	
-	# --- 동적 오토 게인 컨트롤 (Dynamic AGC) ---
-	# 이번 프레임의 전체 주파수 최대 에너지 감지
-	var current_max_mag = 0.01
-	var magnitudes: Array[float] = []
-	magnitudes.resize(BAR_COUNT)
-	
-	for i in range(BAR_COUNT):
-		var t_low = float(i) / BAR_COUNT
-		var t_high = float(i + 1) / BAR_COUNT
-		var freq_low = exp(log_min + (log_max - log_min) * t_low)
-		var freq_high = exp(log_min + (log_max - log_min) * t_high)
-		
-		var mag = spectrum_analyzer.get_magnitude_for_frequency_range(freq_low, freq_high).length()
-		magnitudes[i] = mag
-		if mag > current_max_mag:
-			current_max_mag = mag
-			
-	# 오토 게인 보정을 위해 평균 피크 볼륨을 매우 부드럽고 느리게 갱신 (급격한 감도 튀기 방지)
-	dynamic_max_volume = lerp(dynamic_max_volume, max(0.018, current_max_mag), 0.35 * _delta)
-	
-	# 현재 전체 음량에 알맞게 실시간 최적화된 동적 감도(Sensitivity) 팩터 유도
-	var sensitivity = 0.36 / dynamic_max_volume
-	# -------------------------------------------
-	
-	for i in range(BAR_COUNT):
-		# 주파수 밴드별 특성 가중치 설정 (고음역대로 갈수록 자연스럽게 음량 팩터 보정)
-		var freq_weight = 1.0 + (float(i) / BAR_COUNT) * 2.3
-		if i < 4:
-			freq_weight *= 0.55 # 저음역(킥/베이스)의 과도한 쏠림 차단
-			
-		# Magnitude에 감도 및 주파수 가중치 적용
-		var energy = magnitudes[i] * sensitivity * freq_weight
-		
-		# 실시간 타겟 너비(가로 크기) 도출
-		var target_width = energy * MAX_BAR_WIDTH
-		
-		# --- 포화 현상(Clipping) 및 무반응 완전 예방 세팅 ---
-		# 가로 너비가 무조건 꽉 차서 굳어버리는 것을 방지하기 위해 최대 너비 제한 (92% 캡)
-		target_width = clamp(target_width, 3.0, MAX_BAR_WIDTH * 0.92)
-		
-		# 조용한 파트나 주파수가 없을 때도 완전히 꺼져 보이지 않도록 최소 너비(3px) 기본 유지
-		target_width = max(3.0, target_width)
-		
-		# 바들의 너비가 급격히 하강해 깜빡거리지 않도록 하강 부드러운 보간 처리
-		if target_width > bar_widths[i]:
-			bar_widths[i] = lerp(bar_widths[i], target_width, 24.0 * _delta)
-		else:
-			bar_widths[i] = lerp(bar_widths[i], target_width, 10.0 * _delta)
-			
-		# 계산된 수평 너비를 좌우 비주얼라이저 바들의 가로 폭에 실시간 적용
-		left_bars[i].custom_minimum_size.x = bar_widths[i]
-		right_bars[i].custom_minimum_size.x = bar_widths[i]
