@@ -2017,6 +2017,20 @@ func _load_waveform_data() -> void:
 	if not FileAccess.file_exists("res://scripts/ui/extract_waveform.py"):
 		push_error("extract_waveform.py not found.")
 		return
+	
+	# Git LFS pointer file check for ffmpeg.exe
+	var ffmpeg_file = FileAccess.open("res://ffmpeg.exe", FileAccess.READ)
+	if ffmpeg_file:
+		var ffmpeg_size = ffmpeg_file.get_length()
+		ffmpeg_file.close()
+		if ffmpeg_size < 1024:
+			push_error("FFmpeg executable is invalid (Git LFS pointer file detected!). Size: " + str(ffmpeg_size) + " bytes.")
+			_show_toast("오류: ffmpeg.exe가 정상적으로 다운로드되지 않았습니다. Git LFS를 설치하고 'git lfs pull'을 실행하세요.")
+			return
+	else:
+		push_error("ffmpeg.exe not found.")
+		_show_toast("오류: ffmpeg.exe 파일을 찾을 수 없습니다.")
+		return
 		
 	print("Starting high-res colorful waveform generation process...")
 	
