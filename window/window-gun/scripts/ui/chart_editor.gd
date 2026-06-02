@@ -320,14 +320,37 @@ func _show_toast(message: String) -> void:
 
 func _process(delta: float) -> void:
 	if is_playing:
+		# 오디오 포지션을 매 프레임 강제 동기화하지 않고 CPU 정밀 delta를 누적하여 누적 밀림(Drift) 원천 차단
+		current_time += delta * playback_speed
+		
 		if audio_player.playing:
-			current_time = audio_player.get_playback_position()
+			var audio_pos = audio_player.get_playback_position()
+			# 게임플레이와 싱크를 일치시키기 위한 역산 오디오 위치
+			var expected_audio_pos = current_time - 0.7 + offset
+			
+			# 만약 오디오 지연 대기 시간(0.7 - offset)이 아직 지나지 않았다면 오디오는 정지 상태를 유지
+			if expected_audio_pos < 0.0:
+				if audio_player.playing:
+					audio_player.stop()
+			else:
+				if not audio_player.playing:
+					audio_player.play(expected_audio_pos)
+			
+			# 장기적인 오버런/언더런 방지용 보정 코드 (150ms 이상 차이 발생 시 하드 싱크)
+			var current_audio_time = audio_pos + 0.7 - offset
+			if absf(current_time - current_audio_time) > 0.15:
+				current_time = current_audio_time
 		else:
-			# 오디오 스트림이 끝나거나 없는 경우
-			current_time += delta * playback_speed
-			if current_time >= song_duration:
-				current_time = song_duration
-				_on_play_pressed() # 정지
+			# 오디오 지연 대기 중이거나 재생이 완전히 끝난 상태
+			var expected_audio_pos = current_time - 0.7 + offset
+			if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
+				audio_player.pitch_scale = playback_speed
+				audio_player.play(expected_audio_pos)
+			
+			# 총 곡 길이인 song_duration + 0.7을 초과하면 재생 정지
+			if current_time >= song_duration + 0.7:
+				current_time = song_duration + 0.7
+				_on_play_pressed() # Pause 자동 정지
 	
 	# 시간 초과 보정
 	if current_time < 0:
@@ -771,21 +794,31 @@ func _input(event: InputEvent) -> void:
 				hover_note_index = -1
 				preview_canvas.queue_redraw()
 func _seek_time(target: float) -> void:
-	current_time = clamp(target, 0.0, song_duration)
+	current_time = clamp(target, 0.0, song_duration + 0.7)
 	autoplay_hit_notes.clear()
-	if audio_player.playing:
-		audio_player.seek(current_time)
+	
+	var expected_audio_pos = current_time - 0.7 + offset
+	if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
+		if audio_player.playing:
+			audio_player.seek(expected_audio_pos)
+	else:
+		audio_player.stop()
 
 func _on_play_pressed() -> void:
 	is_playing = not is_playing
 	if is_playing:
 		play_button.text = "Pause"
 		audio_player.pitch_scale = playback_speed
-		audio_player.play(current_time)
+		
+		var expected_audio_pos = current_time - 0.7 + offset
+		if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
+			audio_player.play(expected_audio_pos)
+		else:
+			audio_player.stop()
 	else:
 		play_button.text = "Play"
 		audio_player.stop()
-		is_playing_region = false # 수동 정지 시 구간 재생 오프
+		is_playing_region = false # 자동 정지 시 구간 재생 오프
 
 func _on_song_selected_item(index: int) -> void:
 	_on_song_selected(index)
