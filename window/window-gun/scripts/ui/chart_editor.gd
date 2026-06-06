@@ -23,6 +23,7 @@ const MAIN_MENU_SCENE = "res://scenes/menu/main_menu.tscn"
 # New variables for Moving settings and Top bar
 var top_bar: Panel
 var to_effect_editor_btn: Button
+var note_count_label: Label
 var moving_settings: VBoxContainer
 var start_x_input: LineEdit
 var start_y_input: LineEdit
@@ -156,6 +157,7 @@ func _ready() -> void:
 	_setup_top_bar()
 	_setup_moving_settings_ui()
 	_setup_region_settings_ui()
+	_setup_note_count_ui()
 	
 	# 에디터 테스트 모드에서 회귀 시 시간 복구 및 정리
 	if Global.is_editor_test_mode:
@@ -408,6 +410,40 @@ func _update_time_label() -> void:
 	var total_ms = int((song_duration - int(song_duration)) * 1000)
 	
 	time_label.text = "%02d:%02d.%03d / %02d:%02d.%03d" % [cur_min, cur_sec, cur_ms, total_min, total_sec, total_ms]
+	_update_note_count()
+
+func _setup_note_count_ui() -> void:
+	note_count_label = Label.new()
+	note_count_label.name = "NoteCountLabel"
+	note_count_label.layout_mode = 2
+	note_count_label.add_theme_color_override("font_color", Color(0.482353, 0.223529, 0.286275, 1.0))
+	note_count_label.add_theme_font_size_override("font_size", 12)
+	note_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note_count_label.text = "Total Notes: 0\n(Normal: 0 | Moving: 0 | Hold: 0)"
+	
+	var playback_section = time_label.get_parent()
+	playback_section.add_child(note_count_label)
+
+func _update_note_count() -> void:
+	if not note_count_label:
+		return
+	var total = 0
+	var normal = 0
+	var moving = 0
+	var hold = 0
+	if chart_data and chart_data.has("notes") and chart_data["notes"] is Array:
+		var notes = chart_data["notes"]
+		total = notes.size()
+		for note in notes:
+			if note is Dictionary:
+				var type = note.get("type", "normal")
+				if type == "moving":
+					moving += 1
+				elif type == "hold":
+					hold += 1
+				else:
+					normal += 1
+	note_count_label.text = "Total Notes: %d\n(Normal: %d | Moving: %d | Hold: %d)" % [total, normal, moving, hold]
 
 # ==========================================
 # 스냅 연산
