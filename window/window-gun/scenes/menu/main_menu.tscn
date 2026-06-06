@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://c6b1jhnhfsj6y" path="res://assets/image/main/i want a gun no title.png" id="4_isoef"]
 [ext_resource type="FontFile" uid="uid://c3ajivv3jlthi" path="res://assets/fonts/Pretendard-Black.otf" id="5_hj162"]
 [ext_resource type="Texture2D" uid="uid://18nnuufyapx4" path="res://assets/image/main/i want a gun only title (1).png" id="6_qgo02"]
+[ext_resource type="Texture2D" uid="uid://bpilbatqxha2p" path="res://assets/image/main/우리는 총이 원하다!-1.PNG" id="8_qgo02"]
 
 [node name="MainMenu" type="Control" unique_id=1152809603]
 layout_mode = 3
@@ -71,3 +72,12 @@ theme_override_font_sizes/font_size = 60
 text = "press any key to start"
 horizontal_alignment = 1
 vertical_alignment = 2
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=748156517]
+layout_mode = 0
+offset_left = 940.0
+offset_top = 520.0
+offset_right = 980.0
+offset_bottom = 560.0
+texture = ExtResource("8_qgo02")
+expand_mode = 1
