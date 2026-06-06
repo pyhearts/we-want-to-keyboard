@@ -53,7 +53,7 @@ func _ready() -> void:
 	var grid = check_shake.get_parent() as GridContainer
 	if grid:
 		var lbl_speed = Label.new()
-		lbl_speed.text = "Max Note Speed Limit"
+		lbl_speed.text = "최대 노트 속도 제한"
 		lbl_speed.add_theme_font_size_override("font_size", 14)
 		grid.add_child(lbl_speed)
 		
@@ -83,7 +83,7 @@ func _ready() -> void:
 		
 		# Programmatic Addition of Min Note Interval Slider to Grid
 		var lbl_interval = Label.new()
-		lbl_interval.text = "Min Note Interval"
+		lbl_interval.text = "최소 노트 간격"
 		lbl_interval.add_theme_font_size_override("font_size", 14)
 		grid.add_child(lbl_interval)
 		
@@ -113,7 +113,7 @@ func _ready() -> void:
 		
 		# Programmatic Addition of Limit Placement Distance Toggle
 		var lbl_limit = Label.new()
-		lbl_limit.text = "Limit Placement Area"
+		lbl_limit.text = "배치 영역 제한"
 		lbl_limit.add_theme_font_size_override("font_size", 14)
 		grid.add_child(lbl_limit)
 		
@@ -135,7 +135,7 @@ func _ready() -> void:
 		
 		# Programmatic Addition of Max Note Distance Slider to Grid
 		var lbl_dist = Label.new()
-		lbl_dist.text = "Max Note Distance"
+		lbl_dist.text = "최대 노트 거리"
 		lbl_dist.add_theme_font_size_override("font_size", 14)
 		grid.add_child(lbl_dist)
 		
@@ -189,8 +189,8 @@ func _load_values_to_ui() -> void:
 	label_line.text = "%d px" % int(Global.judgment_line_width)
 	
 	option_pos.clear()
-	option_pos.add_item("Note Position (Spawn at note)", 0)
-	option_pos.add_item("Screen Center (Fixed focus)", 1)
+	option_pos.add_item("노트 위치 (노트 생성 지점)", 0)
+	option_pos.add_item("화면 중앙 (고정)", 1)
 	option_pos.selected = 0 if Global.judgment_text_pos == "note" else 1
 	
 	slider_offset_x.value = Global.effect_offset.x
