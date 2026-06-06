@@ -110,6 +110,58 @@ func _ready() -> void:
 			lbl_interval_val.text = "%d ms" % int(val * 1000.0)
 			Global.save_settings()
 		)
+		
+		# Programmatic Addition of Limit Placement Distance Toggle
+		var lbl_limit = Label.new()
+		lbl_limit.text = "Limit Placement Area"
+		lbl_limit.add_theme_font_size_override("font_size", 14)
+		grid.add_child(lbl_limit)
+		
+		var check_limit = CheckButton.new()
+		check_limit.name = "CheckLimitPlacement"
+		check_limit.button_pressed = Global.limit_placement_distance
+		check_limit.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		grid.add_child(check_limit)
+		
+		var spacer1 = Control.new()
+		var spacer2 = Control.new()
+		grid.add_child(spacer1)
+		grid.add_child(spacer2)
+		
+		check_limit.toggled.connect(func(pressed):
+			Global.limit_placement_distance = pressed
+			Global.save_settings()
+		)
+		
+		# Programmatic Addition of Max Note Distance Slider to Grid
+		var lbl_dist = Label.new()
+		lbl_dist.text = "Max Note Distance"
+		lbl_dist.add_theme_font_size_override("font_size", 14)
+		grid.add_child(lbl_dist)
+		
+		var spacer_dist = Control.new()
+		grid.add_child(spacer_dist)
+		
+		var slider_dist = HSlider.new()
+		slider_dist.name = "SliderDistance"
+		slider_dist.min_value = 100.0
+		slider_dist.max_value = 2000.0
+		slider_dist.step = 50.0
+		slider_dist.value = Global.max_note_distance
+		slider_dist.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(slider_dist)
+		
+		var lbl_dist_val = Label.new()
+		lbl_dist_val.name = "LabelDistanceValue"
+		lbl_dist_val.text = "%d px" % int(Global.max_note_distance)
+		lbl_dist_val.add_theme_font_size_override("font_size", 14)
+		grid.add_child(lbl_dist_val)
+		
+		slider_dist.value_changed.connect(func(val):
+			Global.max_note_distance = val
+			lbl_dist_val.text = "%d px" % int(val)
+			Global.save_settings()
+		)
 
 
 func _input(event: InputEvent) -> void:
@@ -160,6 +212,17 @@ func _load_values_to_ui() -> void:
 		slider_interval.value = Global.min_note_interval
 	if lbl_interval_val:
 		lbl_interval_val.text = "%d ms" % int(Global.min_note_interval * 1000.0)
+		
+	var check_limit = check_shake.get_parent().get_node_or_null("CheckLimitPlacement") as CheckButton
+	if check_limit:
+		check_limit.button_pressed = Global.limit_placement_distance
+		
+	var slider_dist = check_shake.get_parent().get_node_or_null("SliderDistance") as HSlider
+	var lbl_dist_val = check_shake.get_parent().get_node_or_null("LabelDistanceValue") as Label
+	if slider_dist:
+		slider_dist.value = Global.max_note_distance
+	if lbl_dist_val:
+		lbl_dist_val.text = "%d px" % int(Global.max_note_distance)
 
 
 func _on_shake_toggled(button_pressed: bool) -> void:
@@ -226,6 +289,8 @@ func _on_reset_pressed() -> void:
 	Global.effect_offset = Vector2(-220.0, -90.0)
 	Global.max_note_speed = 4000.0
 	Global.min_note_interval = 0.07
+	Global.limit_placement_distance = false
+	Global.max_note_distance = 800.0
 	
 	Global.save_settings()
 	_load_values_to_ui()

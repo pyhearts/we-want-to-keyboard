@@ -104,6 +104,10 @@ const MAX_UNDO_DEPTH: int = 50
 var copied_note_data: Dictionary = {}
 
 # 핑크 테마 컬러 상수
+# New variables for mouse hover tracking and allowed distance guide
+var mouse_logical_pos: Vector2 = Vector2.ZERO
+var is_mouse_hovering_canvas: bool = false
+
 const COLOR_BG_CANVAS = Color(1.0, 0.960784, 0.968627, 1.0)        # #FFF5F7
 const COLOR_BORDER_CANVAS = Color(1.0, 0.560784, 0.639216, 0.8)    # #FF8FA3
 const COLOR_GRID_CANVAS = Color(1.0, 0.815686, 0.854902, 0.4)      # #FFE3E8
@@ -143,6 +147,7 @@ func _ready() -> void:
 	
 	# 프리뷰 캔버스 마우스 입력 이벤트
 	preview_canvas.gui_input.connect(_on_canvas_gui_input)
+	preview_canvas.mouse_exited.connect(_on_preview_canvas_mouse_exited)
 	timeline.gui_input.connect(_on_timeline_gui_input)
 	
 	# 토스트 투명도 초기화
@@ -944,6 +949,11 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 		local_pos.y * (1080.0 / canvas_h)
 	)
 	
+	if event is InputEventMouseMotion or event is InputEventMouseButton:
+		mouse_logical_pos = logical_pos
+		is_mouse_hovering_canvas = true
+		preview_canvas.queue_redraw()
+	
 	if event is InputEventMouseMotion:
 		# 곡선 드래그 모드: 실시간 제어점 업데이트
 		if is_curve_draw_mode and is_curve_dragging:
@@ -1111,6 +1121,22 @@ func _update_hover_note(logical_pos: Vector2) -> void:
 				return
 
 func _add_note(time_val: float, logical_pos: Vector2) -> void:
+	# Enforce note placement distance restriction
+	if Global.limit_placement_distance:
+		var prev_note = null
+		var prev_time = -1.0
+		for note in chart_data.get("notes", []):
+			var nt = float(note.get("time", 0.0))
+			if nt < time_val and nt > prev_time:
+				prev_time = nt
+				prev_note = note
+				
+		if prev_note != null:
+			var prev_pos = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
+			if logical_pos.distance_to(prev_pos) > Global.max_note_distance:
+				_show_toast("Placement blocked: Too far!")
+				return
+				
 	save_state_for_undo()
 	var note_node = {}
 	note_node["time"] = time_val
@@ -1246,6 +1272,31 @@ func _draw_preview_canvas() -> void:
 	
 	var notes: Array = chart_data["notes"]
 	var time_window = 0.4
+	
+	# Draw placement boundary guide for the chronologically previous note
+	var snapped_time = get_snapped_time(current_time)
+	var prev_note = null
+	var prev_time = -1.0
+	for note in notes:
+		var nt = float(note.get("time", 0.0))
+		if nt < snapped_time and nt > prev_time:
+			prev_time = nt
+			prev_note = note
+			
+	if prev_note != null:
+		var prev_pos = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
+		var p_draw = prev_pos * Vector2(sx, sy)
+		
+		# Draw allowed placement circle (semi-transparent green)
+		preview_canvas.draw_circle(p_draw, Global.max_note_distance * sx, Color(0.2, 0.8, 0.3, 0.06))
+		preview_canvas.draw_arc(p_draw, Global.max_note_distance * sx, 0.0, TAU, 64, Color(0.2, 0.8, 0.3, 0.3), 1.5 * sx)
+		
+		# Draw real-time cursor distance guide line
+		if is_mouse_hovering_canvas:
+			var m_draw = mouse_logical_pos * Vector2(sx, sy)
+			var is_too_far = mouse_logical_pos.distance_to(prev_pos) > Global.max_note_distance
+			var line_color = Color(0.9, 0.2, 0.2, 0.5) if is_too_far else Color(0.2, 0.8, 0.3, 0.5)
+			preview_canvas.draw_line(p_draw, m_draw, line_color, 1.5 * sx)
 	
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
@@ -1411,10 +1462,14 @@ func _draw_preview_canvas() -> void:
 					# 겹침 배치 차폐 경고 (노랑)
 					preview_canvas.draw_circle(pos, 30.0 * sx, Color(1.0, 0.8, 0.0, alpha * 0.7), false, 1.5 * sx)
 					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Hidden Note", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.85, 0.2, alpha * 0.9))
+				elif warning == "TOO_DISTANT":
+					# 절대 거리 제한 경고 (빨간색)
+					preview_canvas.draw_circle(pos, 36.0 * sx, Color(0.9, 0.2, 0.2, alpha * 0.8), false, 2.5 * sx)
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠ Too Distant", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.2, alpha * 0.9))
 				elif warning == "TOO_FAR":
 					# 칠 수 없는 노트 경고 (자주색)
 					preview_canvas.draw_circle(pos, 38.0 * sx, Color(0.7, 0.0, 0.7, alpha * 0.9), false, 3.0 * sx)
-					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠️ Too Far (Unhittable)", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.9, alpha * 0.9))
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠ Too Far (Unhittable)", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.9, alpha * 0.9))
 			
 			# 텍스트 라벨 (딥 와인 색상)
 			var lbl_font = get_theme_font("font")
@@ -2057,8 +2112,12 @@ func _get_note_warnings(idx: int) -> String:
 		else:
 			speed = 0.0 if dt >= 0.0 else 999999.0
 			
+		# 6. 절대 물리적 거리 제한 초과 경고
+		if dist > Global.max_note_distance:
+			return "TOO_DISTANT"
+			
 		if speed > Global.max_note_speed:
-			return "TOO_FAR"
+			return "TOO_FAR" 
 			
 	return ""
 
@@ -2218,3 +2277,8 @@ func _parse_waveform_json(path: String) -> void:
 			print("Colorful dynamic waveform successfully loaded and cached!")
 			if timeline:
 				timeline.queue_redraw()
+
+
+func _on_preview_canvas_mouse_exited() -> void:
+	is_mouse_hovering_canvas = false
+	preview_canvas.queue_redraw()
