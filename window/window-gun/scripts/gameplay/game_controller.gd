@@ -216,6 +216,21 @@ func load_chart() -> Variant:
 	if not chart.has("events") or not chart["events"] is Array:
 		chart["events"] = []
 
+	# 노래 길이 대비 노트 최대 개수 제한 계산
+	var song_len = 180.0
+	var res_path = Global.get_music_res_path(Global.selected_music)
+	if FileAccess.file_exists(res_path):
+		var music_res = load(res_path)
+		if music_res and music_res.get("audio_stream"):
+			song_len = music_res.get("audio_stream").get_length()
+	
+	var max_notes = int(song_len / Global.note_limit_seconds_interval)
+	if chart["notes"].size() > max_notes:
+		push_warning("Note count exceeds max limit (" + str(max_notes) + ")! Exceeding latest notes will be filtered out.")
+		# 시간 기준으로 정렬 후, 허용치를 초과한 뒷 시간대의 노트들은 인게임 로딩에서 배제
+		chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
+		chart["notes"] = chart["notes"].slice(0, max_notes)
+
 	# --- 추가된 부분: time 기준으로 자동 정렬 ---
 	chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 	

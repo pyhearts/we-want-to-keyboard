@@ -15,6 +15,7 @@ var music_offset: float = 0.0
 var editor_test_start_time: float = 0.0
 var is_editor_test_mode: bool = false
 var max_note_speed: float = 4000.0
+var note_limit_seconds_interval: float = 0.8 # 노래 길이를 나눌 초 단위 값 (노트 제한 기준 간격)
 
 # 1,000,000점 스케일링을 위한 점수 계산 변수
 var max_base_score: int = 100

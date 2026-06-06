@@ -24,6 +24,7 @@ const MAIN_MENU_SCENE = "res://scenes/menu/main_menu.tscn"
 var top_bar: Panel
 var to_effect_editor_btn: Button
 var note_count_label: Label
+var _prev_note_count_over_limit: bool = false
 var moving_settings: VBoxContainer
 var start_x_input: LineEdit
 var start_y_input: LineEdit
@@ -443,7 +444,17 @@ func _update_note_count() -> void:
 					hold += 1
 				else:
 					normal += 1
-	note_count_label.text = "Total Notes: %d\n(Normal: %d | Moving: %d | Hold: %d)" % [total, normal, moving, hold]
+	var max_notes = int(song_duration / Global.note_limit_seconds_interval)
+	if total > max_notes:
+		if not _prev_note_count_over_limit:
+			_show_toast("WARNING: Over Limit (%d notes max)! (In-game play disabled)" % max_notes)
+			_prev_note_count_over_limit = true
+		note_count_label.add_theme_color_override("font_color", Color(0.85, 0.15, 0.15, 1.0))
+		note_count_label.text = "Total Notes: %d / Max: %d (EXCEEDED!)\n(Normal: %d | Moving: %d | Hold: %d)" % [total, max_notes, normal, moving, hold]
+	else:
+		_prev_note_count_over_limit = false
+		note_count_label.add_theme_color_override("font_color", Color(0.482353, 0.223529, 0.286275, 1.0))
+		note_count_label.text = "Total Notes: %d / Max: %d\n(Normal: %d | Moving: %d | Hold: %d)" % [total, max_notes, normal, moving, hold]
 
 # ==========================================
 # 스냅 연산
@@ -1283,6 +1294,19 @@ func _draw_preview_canvas() -> void:
 			var hold_text_color = COLOR_TEXT_WINE
 			hold_text_color.a = alpha * 0.85
 			preview_canvas.draw_string(hold_font, center + Vector2(-60.0*sx, 10.0*sy), text_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, hold_text_color)
+
+			# --- 롱 노트 경고 표시 ---
+			var warning = _get_note_warnings(i)
+			if warning != "":
+				var w_font = get_theme_font("font")
+				if warning == "LIMIT_EXCEEDED":
+					# 곡 길이 기준 초과 경고 (빨강)
+					preview_canvas.draw_circle(center, radius + 20.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), false, 2.5 * sx)
+					preview_canvas.draw_string(w_font, center + Vector2(-60.0 * sx, - (radius + 25.0 * sy)), "⚠️ Over Limit", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
+				elif warning == "SIMULTANEOUS":
+					# 동시치기 불가 경고 (빨강)
+					preview_canvas.draw_circle(center, radius + 20.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), false, 2.5 * sx)
+					preview_canvas.draw_string(w_font, center + Vector2(-60.0 * sx, - (radius + 25.0 * sy)), "⚠️ Double Key", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
 		else:
 			var nx = float(note.get("x", 960.0))
 			var ny = float(note.get("y", 540.0))
@@ -1368,26 +1392,30 @@ func _draw_preview_canvas() -> void:
 					var grav_color = Color(0.4, 0.7, 1.0, alpha * 0.9)
 					preview_canvas.draw_string(grav_font, pos + Vector2(15.0 * sx, 25.0 * sy), "G", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, grav_color)
 					
-				# --- 불가능한 패턴 자동 검출 및 시각 경고 ---
-				var warning = _get_note_warnings(i)
-				if warning != "":
-					var w_font = get_theme_font("font")
-					if warning == "SIMULTANEOUS":
-						# 동시치기 불가 경고 (빨강)
-						preview_canvas.draw_circle(pos, 35.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), 2.5 * sx)
-						preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Double Key", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
-					elif warning == "TOO_CLOSE":
-						# 초고속 피지컬 경고 (오렌지)
-						preview_canvas.draw_circle(pos, 32.0 * sx, Color(1.0, 0.5, 0.0, alpha * 0.8), 2.0 * sx)
-						preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Extreme Speed", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.6, 0.2, alpha * 0.9))
-					elif warning == "OVERLAP":
-						# 겹침 배치 차폐 경고 (노랑)
-						preview_canvas.draw_circle(pos, 30.0 * sx, Color(1.0, 0.8, 0.0, alpha * 0.7), 1.5 * sx)
-						preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Hidden Note", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.85, 0.2, alpha * 0.9))
-					elif warning == "TOO_FAR":
-						# 칠 수 없는 노트 경고 (자주색)
-						preview_canvas.draw_circle(pos, 38.0 * sx, Color(0.7, 0.0, 0.7, alpha * 0.9), 3.0 * sx)
-						preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠️ Too Far (Unhittable)", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.9, alpha * 0.9))
+			# --- 불가능한 패턴 자동 검출 및 시각 경고 ---
+			var warning = _get_note_warnings(i)
+			if warning != "":
+				var w_font = get_theme_font("font")
+				if warning == "LIMIT_EXCEEDED":
+					# 곡 길이 기준 초과 경고 (빨강)
+					preview_canvas.draw_circle(pos, 35.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), false, 2.5 * sx)
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠️ Over Limit", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
+				elif warning == "SIMULTANEOUS":
+					# 동시치기 불가 경고 (빨강)
+					preview_canvas.draw_circle(pos, 35.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), false, 2.5 * sx)
+					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Double Key", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
+				elif warning == "TOO_CLOSE":
+					# 초고속 피지컬 경고 (오렌지)
+					preview_canvas.draw_circle(pos, 32.0 * sx, Color(1.0, 0.5, 0.0, alpha * 0.8), false, 2.0 * sx)
+					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Extreme Speed", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.6, 0.2, alpha * 0.9))
+				elif warning == "OVERLAP":
+					# 겹침 배치 차폐 경고 (노랑)
+					preview_canvas.draw_circle(pos, 30.0 * sx, Color(1.0, 0.8, 0.0, alpha * 0.7), false, 1.5 * sx)
+					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Hidden Note", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.85, 0.2, alpha * 0.9))
+				elif warning == "TOO_FAR":
+					# 칠 수 없는 노트 경고 (자주색)
+					preview_canvas.draw_circle(pos, 38.0 * sx, Color(0.7, 0.0, 0.7, alpha * 0.9), false, 3.0 * sx)
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠️ Too Far (Unhittable)", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.9, alpha * 0.9))
 			
 			# 텍스트 라벨 (딥 와인 색상)
 			var lbl_font = get_theme_font("font")
@@ -1402,7 +1430,7 @@ func _draw_preview_canvas() -> void:
 		var progress = 1.0 - (rip["life"] / 0.3)
 		var radius = lerp(15.0, 65.0, progress) * sx
 		var rip_color = Color(1.0, 0.0, 0.329412, lerp(0.8, 0.0, progress))
-		preview_canvas.draw_circle(r_pos, radius, rip_color, 2.0 * sx)
+		preview_canvas.draw_circle(r_pos, radius, rip_color, false, 2.0 * sx)
 
 	# --- 실시간 곡선 드래그 미리보기 렌더링 ---
 	if is_curve_draw_mode and is_curve_dragging and selected_note_index != -1:
@@ -1561,6 +1589,18 @@ func _draw_timeline() -> void:
 			Vector2(lx - 8.0, timeline_h / 2.0)
 		])
 		timeline.draw_colored_polygon(pts, color)
+
+		# 타임라인 내 오류 표시 기능 추가
+		var warning = _get_note_warnings(i)
+		if warning != "":
+			var border_pts = PackedVector2Array([
+				Vector2(lx, timeline_h / 2.0 - 10.0),
+				Vector2(lx + 8.0, timeline_h / 2.0),
+				Vector2(lx, timeline_h / 2.0 + 10.0),
+				Vector2(lx - 8.0, timeline_h / 2.0),
+				Vector2(lx, timeline_h / 2.0 - 10.0)
+			])
+			timeline.draw_polyline(border_pts, Color(0.85, 0.15, 0.15, 0.95), 2.0)
 		
 		if note_type == "hold":
 			var duration: float = float(note.get("duration", 3.0))
@@ -1958,17 +1998,57 @@ func _trigger_autoplay_hit_effect(note: Dictionary) -> void:
 func _get_note_warnings(idx: int) -> String:
 	var notes = chart_data.get("notes", [])
 	if idx >= notes.size(): return ""
+	
+	# 시간 순으로 정렬한 복사본을 만들어 현재 노트의 시간상 순서 파악
+	var indexed_notes = []
+	for i in range(notes.size()):
+		indexed_notes.append({"index": i, "note": notes[i]})
+	indexed_notes.sort_custom(func(a, b): return float(a["note"].get("time", 0.0)) < float(b["note"].get("time", 0.0)))
+	
+	var sorted_idx = -1
+	for i in range(indexed_notes.size()):
+		if indexed_notes[i]["index"] == idx:
+			sorted_idx = i
+			break
+			
+	# 1. 노래 길이 기준 초과 경고 (더 늦은 뒷 시간에 위치한 노트부터 우선적으로 오류 부여)
+	var max_notes = int(song_duration / Global.note_limit_seconds_interval)
+	if sorted_idx >= max_notes:
+		return "LIMIT_EXCEEDED"
+		
 	var note = notes[idx]
 	var t = float(note.get("time", 0.0))
+	var pos = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
 	
 	for i in range(notes.size()):
 		if i == idx: continue
 		var other = notes[i]
 		var other_t = float(other.get("time", 0.0))
+		var other_pos = Vector2(float(other.get("x", 960.0)), float(other.get("y", 540.0)))
 		
-		# 1. 동시 치기 불가 경고 (0.01초 이내 동일 시간대 타격 요구)
+		# 2. 동시 치기 불가 경고 (0.01초 이내 동일 시간대 타격 요구)
 		if abs(t - other_t) < 0.01:
 			return "SIMULTANEOUS"
+		# 3. 초고속 피지컬 경고 (0.07초 이내 타격 요구 - 80ms 미만)
+		elif abs(t - other_t) < 0.07:
+			return "TOO_CLOSE"
+		# 4. 위치 및 시간 겹침 차폐 경고 (반경 65px 이내 및 시간차 0.4초 이내)
+		elif pos.distance_to(other_pos) < 65.0 and abs(t - other_t) < 0.4:
+			return "OVERLAP"
+			
+	# 5. 시간 대비 거리가 너무 먼 노트 (칠 수 없는 노트 경고)
+	var prev_note = null
+	if sorted_idx > 0:
+		prev_note = indexed_notes[sorted_idx - 1]["note"]
+		
+	if prev_note != null:
+		var t1 = float(prev_note.get("time", 0.0))
+		var dt = t - t1
+		var p1 = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
+		var dist = pos.distance_to(p1)
+		var speed = dist / dt if dt > 0.001 else 999999.0
+		if speed > Global.max_note_speed:
+			return "TOO_FAR"
 			
 	return ""
 
