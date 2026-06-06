@@ -328,10 +328,9 @@ func _process(delta: float) -> void:
 		
 		if audio_player.playing:
 			var audio_pos = audio_player.get_playback_position()
-			# 게임플레이와 싱크를 일치시키기 위한 역산 오디오 위치
-			var expected_audio_pos = current_time - 0.7 + offset
+			# 기존 채보들과 호환되게 오디오 위치 직접 매칭 (딜레이 0.7초 차감 제거)
+			var expected_audio_pos = current_time + offset
 			
-			# 만약 오디오 지연 대기 시간(0.7 - offset)이 아직 지나지 않았다면 오디오는 정지 상태를 유지
 			if expected_audio_pos < 0.0:
 				if audio_player.playing:
 					audio_player.stop()
@@ -340,19 +339,19 @@ func _process(delta: float) -> void:
 					audio_player.play(expected_audio_pos)
 			
 			# 장기적인 오버런/언더런 방지용 보정 코드 (150ms 이상 차이 발생 시 하드 싱크)
-			var current_audio_time = audio_pos + 0.7 - offset
+			var current_audio_time = audio_pos - offset
 			if absf(current_time - current_audio_time) > 0.15:
 				current_time = current_audio_time
 		else:
-			# 오디오 지연 대기 중이거나 재생이 완전히 끝난 상태
-			var expected_audio_pos = current_time - 0.7 + offset
+			# 재생이 완전히 끝난 상태 또는 초기 대기 상태
+			var expected_audio_pos = current_time + offset
 			if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 				audio_player.pitch_scale = playback_speed
 				audio_player.play(expected_audio_pos)
 			
-			# 총 곡 길이인 song_duration + 0.7을 초과하면 재생 정지
-			if current_time >= song_duration + 0.7:
-				current_time = song_duration + 0.7
+			# 총 곡 길이를 초과하면 재생 정지
+			if current_time >= song_duration:
+				current_time = song_duration
 				_on_play_pressed() # Pause 자동 정지
 	
 	# 시간 초과 보정
@@ -841,10 +840,10 @@ func _input(event: InputEvent) -> void:
 				hover_note_index = -1
 				preview_canvas.queue_redraw()
 func _seek_time(target: float) -> void:
-	current_time = clamp(target, 0.0, song_duration + 0.7)
+	current_time = clamp(target, 0.0, song_duration)
 	autoplay_hit_notes.clear()
 	
-	var expected_audio_pos = current_time - 0.7 + offset
+	var expected_audio_pos = current_time + offset
 	if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 		if audio_player.playing:
 			audio_player.seek(expected_audio_pos)
@@ -857,7 +856,7 @@ func _on_play_pressed() -> void:
 		play_button.text = "Pause"
 		audio_player.pitch_scale = playback_speed
 		
-		var expected_audio_pos = current_time - 0.7 + offset
+		var expected_audio_pos = current_time + offset
 		if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 			audio_player.play(expected_audio_pos)
 		else:
@@ -1485,10 +1484,12 @@ func _draw_timeline() -> void:
 			var dx: float = x - center_x
 			var t: float = current_time + (dx / pixels_per_second)
 			
-			if t < 0.0 or t >= song_duration:
+			# 기존 채보에 맞게 음원 오프셋만 더해 실제 오디오 재생 시간 계산 (딜레이 0.7초 차감 제거)
+			var t_audio = t + offset
+			if t_audio < 0.0 or t_audio >= song_duration:
 				continue
 				
-			var idx: int = int(t * samples_per_second)
+			var idx: int = int(t_audio * samples_per_second)
 			if idx >= 0 and idx < low_arr.size():
 				var low_val: float = float(low_arr[idx])
 				var mid_val: float = float(mid_arr[idx])
@@ -2043,10 +2044,19 @@ func _get_note_warnings(idx: int) -> String:
 		
 	if prev_note != null:
 		var t1 = float(prev_note.get("time", 0.0))
+		if str(prev_note.get("type", "normal")) == "hold":
+			t1 += float(prev_note.get("duration", 3.0))
 		var dt = t - t1
 		var p1 = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
 		var dist = pos.distance_to(p1)
-		var speed = dist / dt if dt > 0.001 else 999999.0
+		
+		# 인접 노트 간 거리가 매우 가까우면(예: 50px 미만) 칠 수 있는 것으로 간주하여 TOO_FAR 판정 제외
+		var speed = 0.0
+		if dist >= 50.0:
+			speed = dist / dt if dt > 0.001 else 999999.0
+		else:
+			speed = 0.0 if dt >= 0.0 else 999999.0
+			
 		if speed > Global.max_note_speed:
 			return "TOO_FAR"
 			

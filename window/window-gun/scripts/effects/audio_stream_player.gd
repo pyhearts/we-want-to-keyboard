@@ -30,11 +30,20 @@ func _ready() -> void:
 
 	if Global.is_editor_test_mode and Global.editor_test_start_time > 0.01:
 		var actual_start = max(0.0, Global.editor_test_start_time - 1.0)
-		play_selected_music(Global.selected_music, actual_start)
+		var audio_start_pos = actual_start - music_offset
+		if audio_start_pos >= 0.0:
+			play_selected_music(Global.selected_music, audio_start_pos)
+		else:
+			# 오디오 시작 시점이 미래인 경우, 남은 시간만큼 대기 후 재생 시작
+			await get_tree().create_timer(-audio_start_pos).timeout
+			play_selected_music(Global.selected_music, 0.0)
 	else:
 		if music_offset > 0.0:
 			await get_tree().create_timer(music_offset).timeout
-		play_selected_music(Global.selected_music)
+			play_selected_music(Global.selected_music)
+		else:
+			# 오프셋 대기 시간이 없거나 마이너스인 경우 음원을 마이너스 오프셋만큼 건너뛰어 즉시 재생
+			play_selected_music(Global.selected_music, -music_offset)
 
 
 func play_selected_music(music_name: String, start_pos: float = 0.0) -> void:

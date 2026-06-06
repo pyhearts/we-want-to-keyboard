@@ -247,6 +247,9 @@ func load_chart() -> Variant:
 			last_hittable_note = note
 		else:
 			var t1 = float(last_hittable_note.get("time", 0.0))
+			if str(last_hittable_note.get("type", "normal")) == "hold":
+				t1 += float(last_hittable_note.get("duration", 3.0))
+				
 			var t2 = float(note.get("time", 0.0))
 			var dt = t2 - t1
 			
@@ -254,7 +257,12 @@ func load_chart() -> Variant:
 			var p2 = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
 			var dist = p1.distance_to(p2)
 			
-			var speed = dist / dt if dt > 0.001 else 999999.0
+			# 인접 노트 간 거리가 매우 가까우면(예: 50px 미만) 칠 수 있는 것으로 간주하여 필터링 대상 제외
+			var speed = 0.0
+			if dist >= 50.0:
+				speed = dist / dt if dt > 0.001 else 999999.0
+			else:
+				speed = 0.0 if dt >= 0.0 else 999999.0
 			
 			if speed <= Global.max_note_speed:
 				filtered_notes.append(note)

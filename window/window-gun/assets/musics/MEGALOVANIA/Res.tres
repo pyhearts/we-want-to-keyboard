@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://cbx5jtvpha2se"]
+[gd_resource type="Resource" script_class="MusicData" format=3]
 
-[ext_resource type="AudioStream" uid="uid://cwukswxae8st0" path="res://assets/musics/MEGALOVANIA/MEGALOVANIA.mp3" id="1_20eje"]
-[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="2_6gpbk"]
+[ext_resource type="AudioStream" path="res://assets/musics/MEGALOVANIA/MEGALOVANIA.mp3" id="1_20eje"]
+[ext_resource type="Script" path="res://scripts/data/music_data.gd" id="2_6gpbk"]
 
 [resource]
 script = ExtResource("2_6gpbk")
