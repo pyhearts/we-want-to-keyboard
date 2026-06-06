@@ -80,6 +80,36 @@ func _ready() -> void:
 			lbl_speed_val.text = "%d px/s" % int(val)
 			Global.save_settings()
 		)
+		
+		# Programmatic Addition of Min Note Interval Slider to Grid
+		var lbl_interval = Label.new()
+		lbl_interval.text = "Min Note Interval"
+		lbl_interval.add_theme_font_size_override("font_size", 14)
+		grid.add_child(lbl_interval)
+		
+		var spacer_interval = Control.new()
+		grid.add_child(spacer_interval)
+		
+		var slider_interval = HSlider.new()
+		slider_interval.name = "SliderInterval"
+		slider_interval.min_value = 0.01
+		slider_interval.max_value = 0.50
+		slider_interval.step = 0.01
+		slider_interval.value = Global.min_note_interval
+		slider_interval.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(slider_interval)
+		
+		var lbl_interval_val = Label.new()
+		lbl_interval_val.name = "LabelIntervalValue"
+		lbl_interval_val.text = "%d ms" % int(Global.min_note_interval * 1000.0)
+		lbl_interval_val.add_theme_font_size_override("font_size", 14)
+		grid.add_child(lbl_interval_val)
+		
+		slider_interval.value_changed.connect(func(val):
+			Global.min_note_interval = val
+			lbl_interval_val.text = "%d ms" % int(val * 1000.0)
+			Global.save_settings()
+		)
 
 
 func _input(event: InputEvent) -> void:
@@ -123,6 +153,13 @@ func _load_values_to_ui() -> void:
 		slider_speed.value = Global.max_note_speed
 	if lbl_speed_val:
 		lbl_speed_val.text = "%d px/s" % int(Global.max_note_speed)
+		
+	var slider_interval = check_shake.get_parent().get_node_or_null("SliderInterval") as HSlider
+	var lbl_interval_val = check_shake.get_parent().get_node_or_null("LabelIntervalValue") as Label
+	if slider_interval:
+		slider_interval.value = Global.min_note_interval
+	if lbl_interval_val:
+		lbl_interval_val.text = "%d ms" % int(Global.min_note_interval * 1000.0)
 
 
 func _on_shake_toggled(button_pressed: bool) -> void:
@@ -188,6 +225,7 @@ func _on_reset_pressed() -> void:
 	Global.judgment_text_pos = "note"
 	Global.effect_offset = Vector2(-220.0, -90.0)
 	Global.max_note_speed = 4000.0
+	Global.min_note_interval = 0.07
 	
 	Global.save_settings()
 	_load_values_to_ui()

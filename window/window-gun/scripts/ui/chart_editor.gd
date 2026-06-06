@@ -2031,7 +2031,7 @@ func _get_note_warnings(idx: int) -> String:
 		if abs(t - other_t) < 0.01:
 			return "SIMULTANEOUS"
 		# 3. 초고속 피지컬 경고 (0.07초 이내 타격 요구 - 80ms 미만)
-		elif abs(t - other_t) < 0.07:
+		elif abs(t - other_t) < Global.min_note_interval:
 			return "TOO_CLOSE"
 		# 4. 위치 및 시간 겹침 차폐 경고 (반경 65px 이내 및 시간차 0.4초 이내)
 		elif pos.distance_to(other_pos) < 65.0 and abs(t - other_t) < 0.4:

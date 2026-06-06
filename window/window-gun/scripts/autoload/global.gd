@@ -16,6 +16,7 @@ var editor_test_start_time: float = 0.0
 var is_editor_test_mode: bool = false
 var max_note_speed: float = 4000.0
 var note_limit_seconds_interval: float = 0.8 # 노래 길이를 나눌 초 단위 값 (노트 제한 기준 간격)
+var min_note_interval: float = 0.07 # 최소 노트 시간 간격 (TOO_CLOSE 판정 기준)
 
 # 1,000,000점 스케일링을 위한 점수 계산 변수
 var max_base_score: int = 100
@@ -126,6 +127,7 @@ func save_settings() -> void:
 	config.set_value("settings", "particle_intensity", particle_intensity)
 	config.set_value("settings", "effect_offset", effect_offset)
 	config.set_value("settings", "max_note_speed", max_note_speed)
+	config.set_value("settings", "min_note_interval", min_note_interval)
 	config.save(SAVE_PATH)
 	print("Settings saved to: ", SAVE_PATH)
 
@@ -144,6 +146,7 @@ func load_settings() -> void:
 		particle_intensity = config.get_value("settings", "particle_intensity", 1.0)
 		effect_offset = config.get_value("settings", "effect_offset", Vector2(-220.0, -90.0))
 		max_note_speed = config.get_value("settings", "max_note_speed", 4000.0)
+		min_note_interval = config.get_value("settings", "min_note_interval", 0.07)
 		print("Settings loaded successfully.")
 	else:
 		print("No settings file found, using defaults.")
