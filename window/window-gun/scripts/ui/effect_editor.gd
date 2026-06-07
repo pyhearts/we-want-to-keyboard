@@ -55,15 +55,29 @@ var is_playing: bool = false
 var playback_speed: float = 1.0
 var snap_division: int = 16
 
-# 오디오
+# 에디터
 var audio_player: AudioStreamPlayer
 var song_duration: float = 0.0
+var pixels_per_second: float = 150.0  # 기본값 150.0
 
-# 선택/호버
+# 선택/오버 및 드래그 제어
 var selected_event_index: int = -1
 var hover_event_index: int = -1
 var drag_offset = Vector2.ZERO
 var is_dragging: bool = false
+
+enum DragMode { DRAG_NONE, DRAG_PLAYHEAD, DRAG_EVENT_MOVE, DRAG_EVENT_RESIZE_START, DRAG_EVENT_RESIZE_END }
+var drag_mode: DragMode = DragMode.DRAG_NONE
+var drag_start_mouse_x: float = 0.0
+var drag_start_event_time: float = 0.0
+var drag_start_event_duration: float = 0.0
+var mouse_hover_mode: DragMode = DragMode.DRAG_NONE
+
+# Undo / Redo
+var undo_stack: Array = []
+var redo_stack: Array = []
+const MAX_UNDO_STEPS = 50
+var bookmarks: Dictionary = {}
 
 # 테마 색상 (chart_editor와 동일)
 const COLOR_BG_CANVAS = Color(1.0, 0.960784, 0.968627, 1.0)        # #FFF5F7
@@ -466,8 +480,8 @@ func _load_chart() -> void:
 	else:
 		chart_data = {"notes": [], "events": []}
 		
+	_initialize_missing_event_tracks()
 	_sort_events()
-
 func _sort_events() -> void:
 	if chart_data.has("events") and chart_data["events"] is Array:
 		chart_data["events"].sort_custom(func(a, b):
@@ -504,8 +518,21 @@ func _process(delta: float) -> void:
 		preview_canvas.queue_redraw()
 		timeline.queue_redraw()
 		
+	# 마우스 커서 호버 상태 및 모양 업데이트 (재생 중이 아닐 때)
+	if not is_playing and Rect2(Vector2.ZERO, timeline.size).has_point(timeline.get_local_mouse_position()):
+		var hit = _get_timeline_hit_test(timeline.get_local_mouse_position())
+		hover_event_index = hit["index"]
+		if hit["mode"] == DragMode.DRAG_EVENT_RESIZE_START or hit["mode"] == DragMode.DRAG_EVENT_RESIZE_END:
+			timeline.mouse_default_cursor_shape = Control.CURSOR_HSIZE
+		elif hit["mode"] == DragMode.DRAG_EVENT_MOVE:
+			timeline.mouse_default_cursor_shape = Control.CURSOR_MOVE
+		else:
+			timeline.mouse_default_cursor_shape = Control.CURSOR_ARROW
+	else:
+		hover_event_index = -1
+		timeline.mouse_default_cursor_shape = Control.CURSOR_ARROW
+		
 	_update_time_label()
-
 func _update_time_label() -> void:
 	var cur_min = int(current_time) / 60
 	var cur_sec = int(current_time) % 60
@@ -526,34 +553,175 @@ func get_snapped_time(raw_time: float) -> float:
 	return clamp(snapped, 0.0, song_duration)
 
 func _input(event: InputEvent) -> void:
+	var vp = get_viewport()
+	if not vp:
+		return
+		
 	if event is InputEventKey and event.pressed and not event.echo:
-		var focus_owner = get_viewport().gui_get_focus_owner()
+		var focus_owner = vp.gui_get_focus_owner()
 		if focus_owner is LineEdit:
+			return
+			
+		var is_ctrl = Input.is_key_pressed(KEY_CTRL)
+		var is_alt = Input.is_key_pressed(KEY_ALT)
+		var code_val = event.keycode
+		
+		# A. 북마크 기능 (Alt+1~5 등록, 그냥 1~5 이동)
+		if code_val >= KEY_1 and code_val <= KEY_5:
+			var idx = code_val - KEY_0
+			if is_alt:
+				vp.set_input_as_handled()
+				bookmarks[idx] = current_time
+				_show_toast("Bookmark %d set at %.2fs" % [idx, current_time])
+				return
+			else:
+				if bookmarks.has(idx):
+					vp.set_input_as_handled()
+					_seek_time(bookmarks[idx])
+					_show_toast("Jumped to Bookmark %d" % idx)
+					return
+					
+		# B. 이펙트 미러링 (H: 좌우 반전, V: 상하 반전)
+		elif selected_event_index != -1 and code_val == KEY_H:
+			vp.set_input_as_handled()
+			_push_undo()
+			var ev = chart_data["events"][selected_event_index]
+			ev["x"] = 1920 - int(ev.get("x", 860))
+			if "moving" in ev.get("type", ""):
+				var tx = ev.get("target_x", ev.get("to_x", ev.get("x", 860)))
+				ev["target_x"] = 1920 - int(tx)
+				ev["to_x"] = ev["target_x"]
+			_save_chart_file()
+			_update_ui_from_event()
+			_show_toast("Mirrored Horizontally")
+			preview_canvas.queue_redraw()
+			return
+			
+		elif selected_event_index != -1 and code_val == KEY_V:
+			vp.set_input_as_handled()
+			_push_undo()
+			var ev = chart_data["events"][selected_event_index]
+			ev["y"] = 1080 - int(ev.get("y", 440))
+			if "moving" in ev.get("type", ""):
+				var ty = ev.get("target_y", ev.get("to_y", ev.get("y", 440)))
+				ev["target_y"] = 1080 - int(ty)
+				ev["to_y"] = ev["target_y"]
+			_save_chart_file()
+			_update_ui_from_event()
+			_show_toast("Mirrored Vertically")
+			preview_canvas.queue_redraw()
+			return
+			
+		# C. 이펙트 시간 미세 이동 (PageUp: 1스냅 뒤로, PageDown: 1스냅 앞으로)
+		elif selected_event_index != -1 and code_val == KEY_PAGEUP:
+			vp.set_input_as_handled()
+			_push_undo()
+			var ev = chart_data["events"][selected_event_index]
+			var beat_length = 60.0 / bpm
+			var step = beat_length * (4.0 / snap_division)
+			ev["time"] = max(0.0, float(ev.get("time", 0.0)) - step)
+			_sort_events()
+			selected_event_index = chart_data["events"].find(ev)
+			_save_chart_file()
+			_update_ui_from_event()
+			_show_toast("Shifted Event Backward")
+			preview_canvas.queue_redraw()
+			timeline.queue_redraw()
+			return
+			
+		elif selected_event_index != -1 and code_val == KEY_PAGEDOWN:
+			vp.set_input_as_handled()
+			_push_undo()
+			var ev = chart_data["events"][selected_event_index]
+			var beat_length = 60.0 / bpm
+			var step = beat_length * (4.0 / snap_division)
+			ev["time"] = min(song_duration, float(ev.get("time", 0.0)) + step)
+			_sort_events()
+			selected_event_index = chart_data["events"].find(ev)
+			_save_chart_file()
+			_update_ui_from_event()
+			_show_toast("Shifted Event Forward")
+			preview_canvas.queue_redraw()
+			timeline.queue_redraw()
+			return
+			
+		# D. 재생 배속 단축키 ([ : 감속, ] : 가속)
+		elif code_val == KEY_BRACKETLEFT:
+			vp.set_input_as_handled()
+			var new_sel = max(0, speed_select.selected - 1)
+			if new_sel != speed_select.selected:
+				speed_select.selected = new_sel
+				_on_speed_selected(new_sel)
+				_show_toast("Speed: %s" % speed_select.get_item_text(new_sel))
+			return
+		elif code_val == KEY_BRACKETRIGHT:
+			vp.set_input_as_handled()
+			var new_sel = min(speed_select.item_count - 1, speed_select.selected + 1)
+			if new_sel != speed_select.selected:
+				speed_select.selected = new_sel
+				_on_speed_selected(new_sel)
+				_show_toast("Speed: %s" % speed_select.get_item_text(new_sel))
+			return
+			
+		# E. 즉시 테스트 단축키 (F5)
+		elif code_val == KEY_F5:
+			vp.set_input_as_handled()
+			_on_instant_test_pressed()
+			return
+		
+		# 단축키: 복제 (Ctrl + D)
+		if is_ctrl and event.keycode == KEY_D:
+			if selected_event_index != -1:
+				_push_undo()
+				var orig = chart_data["events"][selected_event_index]
+				var copy = orig.duplicate(true)
+				copy["time"] = current_time
+				chart_data["events"].append(copy)
+				_sort_events()
+				selected_event_index = chart_data["events"].find(copy)
+				_save_chart_file()
+				_update_ui_from_event()
+				preview_canvas.queue_redraw()
+				timeline.queue_redraw()
+				_show_toast("Event Duplicated")
+				vp.set_input_as_handled()
+				return
+				
+		# 단축키: Undo (Ctrl + Z), Redo (Ctrl + Shift + Z / Ctrl + Y)
+		if is_ctrl and event.keycode == KEY_Z:
+			if Input.is_key_pressed(KEY_SHIFT):
+				_redo()
+			else:
+				_undo()
+			vp.set_input_as_handled()
+			return
+		elif is_ctrl and event.keycode == KEY_Y:
+			_redo()
+			vp.set_input_as_handled()
 			return
 			
 		if event.keycode == KEY_SPACE:
 			_on_play_pressed()
-			get_viewport().set_input_as_handled()
+			vp.set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE:
 			if is_playing:
 				audio_player.stop()
 			get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")
-			get_viewport().set_input_as_handled()
+			vp.set_input_as_handled()
 		elif event.keycode == KEY_DELETE:
 			if selected_event_index != -1:
+				_push_undo()
 				_delete_event(selected_event_index)
-				get_viewport().set_input_as_handled()
+				vp.set_input_as_handled()
 		elif event.keycode == KEY_LEFT or event.keycode == KEY_RIGHT:
 			var step = 0.1
-			var is_ctrl = Input.is_key_pressed(KEY_CTRL)
 			if is_ctrl:
 				step = 60.0 / bpm
 			if event.keycode == KEY_LEFT:
 				_seek_time(current_time - step)
 			else:
 				_seek_time(current_time + step)
-			get_viewport().set_input_as_handled()
-
+			vp.set_input_as_handled()
 func _seek_time(target: float) -> void:
 	current_time = clamp(target, 0.0, song_duration)
 	if is_playing and audio_player.stream:
@@ -617,7 +785,7 @@ func _save_resources() -> void:
 	if FileAccess.file_exists(res_path):
 		var music_res = load(res_path)
 		if music_res:
-			music_res.set("bpm", bpm)
+			music_res.set("bpm", int(bpm))
 			music_res.set("offset", offset)
 			ResourceSaver.save(music_res, res_path)
 
@@ -693,14 +861,29 @@ func _on_field_submitted(new_text: String, field_name: String) -> void:
 
 func _add_event(time_val: float) -> void:
 	var snap_time = get_snapped_time(time_val)
+	var duration_val = 3.0
+	
+	# 신규 추가 시 해당 시간대에서 겹치지 않는 가장 낮은 빈 트랙 찾기
+	var used_tracks = {}
+	for ev in chart_data.get("events", []):
+		var ev_start = float(ev.get("time", 0.0))
+		var ev_end = ev_start + float(ev.get("duration", 3.0))
+		if snap_time < ev_end and (snap_time + duration_val) > ev_start:
+			used_tracks[ev.get("track", 0)] = true
+			
+	var new_track = 0
+	while used_tracks.has(new_track):
+		new_track += 1
+		
 	var new_event = {
 		"time": snap_time,
+		"track": new_track,
 		"type": "window",
 		"x": 860,
 		"y": 440,
 		"width": 200,
 		"height": 200,
-		"duration": 3.0,
+		"duration": duration_val,
 		"opacity": 1.0,
 		"title": "Event Window",
 		"texture_path": ""
@@ -710,10 +893,9 @@ func _add_event(time_val: float) -> void:
 	selected_event_index = chart_data["events"].find(new_event)
 	_update_ui_from_event()
 	_save_chart_file()
-	_show_toast("Event added at " + "%0.2f" % snap_time + "s")
+	_show_toast("Event added at " + "%0.2f" % snap_time + "s (Track %d)" % (new_track + 1))
 	preview_canvas.queue_redraw()
 	timeline.queue_redraw()
-
 func _delete_event(index: int) -> void:
 	if index >= 0 and index < chart_data["events"].size():
 		chart_data["events"].remove_at(index)
@@ -920,11 +1102,27 @@ func _draw_timeline() -> void:
 	timeline.draw_rect(Rect2(Vector2.ZERO, timeline.size), COLOR_BG_TIMELINE)
 	
 	var center_x: float = timeline_w / 2.0
-	var pixels_per_second: float = 150.0
 	var beat_length: float = 60.0 / bpm
 	
 	var view_start_time: float = current_time - (center_x / pixels_per_second)
 	var view_end_time: float = current_time + (center_x / pixels_per_second)
+	
+	# 등록된 최대 트랙 계산
+	var max_track_idx = 0
+	for ev in chart_data.get("events", []):
+		var t = ev.get("track", 0)
+		if t > max_track_idx:
+			max_track_idx = t
+	var total_tracks = max(3, max_track_idx + 1)
+	
+	# 트랙 구분 배경 및 가로 구분선 그리기 (동적 렌더링)
+	for i in range(total_tracks):
+		var ty = 42.0 + i * 22.0
+		var bg_color = Color(1.0, 0.92, 0.94, 0.5) if i % 2 == 0 else Color(1.0, 0.88, 0.91, 0.5)
+		timeline.draw_rect(Rect2(0, ty, timeline_w, 22.0), bg_color)
+		timeline.draw_line(Vector2(0, ty), Vector2(timeline_w, ty), COLOR_GRID_TIMELINE_SUB, 1.0)
+		
+	timeline.draw_line(Vector2(0, 42.0 + total_tracks * 22.0), Vector2(timeline_w, 42.0 + total_tracks * 22.0), COLOR_GRID_TIMELINE_SUB, 1.0)
 	
 	var snap_step_time: float = beat_length * (4.0 / snap_division)
 	var first_snap_idx: int = ceili(view_start_time / snap_step_time)
@@ -984,62 +1182,293 @@ func _draw_timeline() -> void:
 		if is_sel:
 			bar_color = COLOR_EVENT_SELECTED
 			
-		var bar_y: float = timeline_h / 2.0 - 15.0
-		var bar_h: float = 30.0
+		# 개별 고정/수동 지정 track 좌표 렌더링
+		var track_idx = ev.get("track", 0)
+		var bar_y: float = 45.0 + track_idx * 22.0
+		var bar_h: float = 16.0
 		var rect = Rect2(lx, bar_y, dw, bar_h)
 		
 		timeline.draw_rect(rect, bar_color)
-		timeline.draw_rect(rect, COLOR_TEXT_WINE, false, 1.5)
+		
+		var border_color = COLOR_TEXT_WINE
+		var border_w = 1.5
+		if is_sel:
+			border_color = Color(1.0, 0.3, 0.3, 1.0)
+			border_w = 2.5
+		elif i == hover_event_index:
+			border_color = Color(0.9, 0.6, 0.1, 1.0)
+			border_w = 2.0
+			
+		timeline.draw_rect(rect, border_color, false, border_w)
 		
 		var info_text = etype.replace("window_moving_", "mv_").replace("image_moving_", "mv_img_")
 		if ev.has("title") and ev["title"] != "":
 			info_text += " (" + ev["title"] + ")"
-		timeline.draw_string(font, Vector2(lx + 5, timeline_h / 2.0 + 4.0), info_text, HORIZONTAL_ALIGNMENT_LEFT, dw - 10, 11, COLOR_TEXT_WINE)
+		timeline.draw_string(font, Vector2(lx + 5, bar_y + 12.0), info_text, HORIZONTAL_ALIGNMENT_LEFT, dw - 10, 9, COLOR_TEXT_WINE)
+		
+	# 좌측 고정 트랙 헤더 라벨 표시 (동적 트랙 수에 따라)
+	timeline.draw_rect(Rect2(0, 0, 60, timeline_h), Color(1.0, 0.898039, 0.92549, 0.9))
+	timeline.draw_line(Vector2(60, 0), Vector2(60, timeline_h), COLOR_GRID_TIMELINE_MAIN, 1.5)
+	
+	for i in range(total_tracks):
+		var ty = 45.0 + i * 22.0
+		timeline.draw_string(font, Vector2(5, ty + 12.0), "Track %d" % (i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, COLOR_TEXT_WINE)
+	
+	# 플레이헤드 그리기
+	var ph_color = Color(0.85, 0.09, 0.29, 0.95)
+	timeline.draw_line(Vector2(center_x, 0), Vector2(center_x, timeline_h), ph_color, 2.0)
+	var ph_points = PackedVector2Array([
+		Vector2(center_x - 7, 0),
+		Vector2(center_x + 7, 0),
+		Vector2(center_x + 7, 10),
+		Vector2(center_x, 17),
+		Vector2(center_x - 7, 10)
+	])
+	timeline.draw_polygon(ph_points, PackedColorArray([ph_color]))
 func _on_timeline_gui_input(event: InputEvent) -> void:
 	var timeline_w: float = timeline.size.x
 	if timeline_w == 0: return
 	var center_x: float = timeline_w / 2.0
-	var pixels_per_second: float = 150.0
 	
 	if event is InputEventMouseButton:
 		var local_x: float = event.position.x
 		var dx: float = local_x - center_x
 		var dt: float = dx / pixels_per_second
 		var target_time: float = current_time + dt
+		var is_ctrl = Input.is_key_pressed(KEY_CTRL)
 		
-		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			var clicked_idx: int = -1
-			var events: Array = chart_data.get("events", [])
-			for i in range(events.size()):
-				var ev = events[i]
-				var ev_time: float = float(ev.get("time", 0.0))
-				var ev_dur: float = float(ev.get("duration", 3.0))
-				
-				var edx: float = (ev_time - current_time) * pixels_per_second
-				var elx: float = center_x + edx
-				var edw: float = ev_dur * pixels_per_second
-				var ey: float = timeline.size.y / 2.0 - 15.0
-				var eh: float = 30.0
-				
-				var rect = Rect2(elx, ey, edw, eh)
-				if rect.has_point(event.position):
-					clicked_idx = i
-					break
-					
-			if clicked_idx != -1:
-				selected_event_index = clicked_idx
-				_update_ui_from_event()
-				preview_canvas.queue_redraw()
-				timeline.queue_redraw()
+		# 마우스 휠 확대/축소 및 시간 스크롤
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			if is_ctrl:
+				pixels_per_second = clamp(pixels_per_second * 1.15, 30.0, 1000.0)
 			else:
-				var is_ctrl = Input.is_key_pressed(KEY_CTRL)
+				_seek_time(current_time - (30.0 / pixels_per_second))
+			timeline.queue_redraw()
+			accept_event()
+			return
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			if is_ctrl:
+				pixels_per_second = clamp(pixels_per_second / 1.15, 30.0, 1000.0)
+			else:
+				_seek_time(current_time + (30.0 / pixels_per_second))
+			timeline.queue_redraw()
+			accept_event()
+			return
+			
+		# 마우스 좌클릭 이벤트 처리
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				var hit = _get_timeline_hit_test(event.position)
+				if hit["index"] != -1 and event.position.x > 60:
+					selected_event_index = hit["index"]
+					drag_mode = hit["mode"]
+					drag_start_mouse_x = event.position.x
+					var ev = chart_data["events"][selected_event_index]
+					drag_start_event_time = float(ev.get("time", 0.0))
+					drag_start_event_duration = float(ev.get("duration", 3.0))
+					
+					_push_undo()
+					
+					_update_ui_from_event()
+					preview_canvas.queue_redraw()
+					timeline.queue_redraw()
+				else:
+					drag_mode = DragMode.DRAG_PLAYHEAD
+					if is_ctrl:
+						target_time = get_snapped_time(target_time)
+					_seek_time(target_time)
+			else:
+				if drag_mode != DragMode.DRAG_NONE:
+					drag_mode = DragMode.DRAG_NONE
+					_save_chart_file()
+					preview_canvas.queue_redraw()
+					timeline.queue_redraw()
+					
+		elif event.button_index == MOUSE_BUTTON_RIGHT or event.button_index == MOUSE_BUTTON_MIDDLE:
+			if event.pressed:
+				drag_mode = DragMode.DRAG_PLAYHEAD
+				drag_start_mouse_x = event.position.x
+			else:
+				drag_mode = DragMode.DRAG_NONE
+				
+	elif event is InputEventMouseMotion:
+		var is_ctrl = Input.is_key_pressed(KEY_CTRL)
+		
+		match drag_mode:
+			DragMode.DRAG_PLAYHEAD:
+				var local_x: float = event.position.x
+				var dx: float = local_x - center_x
+				var dt: float = dx / pixels_per_second
+				var target_time: float = current_time + dt
 				if is_ctrl:
 					target_time = get_snapped_time(target_time)
 				_seek_time(target_time)
 				
-	elif event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		var local_x: float = event.position.x
-		var dx: float = local_x - center_x
-		var dt: float = dx / pixels_per_second
-		var target_time: float = current_time + dt
-		_seek_time(target_time)
+			DragMode.DRAG_EVENT_MOVE:
+				if selected_event_index != -1:
+					var ev = chart_data["events"][selected_event_index]
+					
+					# X축 이동 (배치 시간 조절)
+					var delta_px = event.position.x - drag_start_mouse_x
+					var delta_time = delta_px / pixels_per_second
+					var new_time = drag_start_event_time + delta_time
+					if is_ctrl or snap_division > 1:
+						new_time = get_snapped_time(new_time)
+					new_time = clamp(new_time, 0.0, song_duration - drag_start_event_duration)
+					ev["time"] = new_time
+					
+					# Y축 이동 (트랙 위치 변경)
+					# 트랙 Y = 45.0, 각 간격 22.0 픽셀
+					var my = event.position.y
+					var calculated_track = int(floori((my - 45.0) / 22.0))
+					calculated_track = clamp(calculated_track, 0, 15) # 최대 16개 트랙
+					ev["track"] = calculated_track
+					
+					_update_ui_from_event()
+					preview_canvas.queue_redraw()
+					timeline.queue_redraw()
+					
+			DragMode.DRAG_EVENT_RESIZE_START:
+				if selected_event_index != -1:
+					var ev = chart_data["events"][selected_event_index]
+					var delta_px = event.position.x - drag_start_mouse_x
+					var delta_time = delta_px / pixels_per_second
+					var new_start_time = drag_start_event_time + delta_time
+					
+					if is_ctrl or snap_division > 1:
+						new_start_time = get_snapped_time(new_start_time)
+						
+					var orig_end_time = drag_start_event_time + drag_start_event_duration
+					new_start_time = clamp(new_start_time, 0.0, orig_end_time - 0.05)
+					
+					ev["time"] = new_start_time
+					ev["duration"] = orig_end_time - new_start_time
+					
+					_update_ui_from_event()
+					preview_canvas.queue_redraw()
+					timeline.queue_redraw()
+					
+			DragMode.DRAG_EVENT_RESIZE_END:
+				if selected_event_index != -1:
+					var ev = chart_data["events"][selected_event_index]
+					var delta_px = event.position.x - drag_start_mouse_x
+					var delta_time = delta_px / pixels_per_second
+					var new_duration = drag_start_event_duration + delta_time
+					
+					if is_ctrl or snap_division > 1:
+						var new_end_time = get_snapped_time(drag_start_event_time + new_duration)
+						new_duration = new_end_time - drag_start_event_time
+						
+					new_duration = max(0.05, new_duration)
+					if drag_start_event_time + new_duration > song_duration:
+						new_duration = song_duration - drag_start_event_time
+						
+					ev["duration"] = new_duration
+					
+					_update_ui_from_event()
+					preview_canvas.queue_redraw()
+					timeline.queue_redraw()
+func _get_timeline_hit_test(mouse_pos: Vector2) -> Dictionary:
+	var res = {"index": -1, "mode": DragMode.DRAG_NONE}
+	var timeline_w = timeline.size.x
+	var center_x = timeline_w / 2.0
+	
+	var events: Array = chart_data.get("events", [])
+	for i in range(events.size() - 1, -1, -1):
+		var ev = events[i]
+		var ev_time: float = float(ev.get("time", 0.0))
+		var ev_dur: float = float(ev.get("duration", 3.0))
+		
+		var dx: float = (ev_time - current_time) * pixels_per_second
+		var lx: float = center_x + dx
+		var dw: float = ev_dur * pixels_per_second
+		
+		# 개별 트랙 Y축 적용
+		var track_idx = ev.get("track", 0)
+		var bar_y: float = 45.0 + track_idx * 22.0
+		var bar_h: float = 16.0
+		
+		var rect = Rect2(lx, bar_y, dw, bar_h)
+		if rect.has_point(mouse_pos):
+			res["index"] = i
+			var edge_w = min(8.0, dw / 3.0)
+			if mouse_pos.x <= lx + edge_w:
+				res["mode"] = DragMode.DRAG_EVENT_RESIZE_START
+			elif mouse_pos.x >= lx + dw - edge_w:
+				res["mode"] = DragMode.DRAG_EVENT_RESIZE_END
+			else:
+				res["mode"] = DragMode.DRAG_EVENT_MOVE
+			break
+	return res
+
+func _initialize_missing_event_tracks() -> void:
+	var events: Array = chart_data.get("events", [])
+	var tracks = []
+	tracks.resize(events.size())
+	
+	for i in range(events.size()):
+		var ev = events[i]
+		if ev.has("track"):
+			tracks[i] = ev["track"]
+			continue
+			
+		var ev_start: float = float(ev.get("time", 0.0))
+		var ev_end: float = ev_start + float(ev.get("duration", 3.0))
+		
+		var used_tracks = {}
+		for j in range(i):
+			var prev_ev = events[j]
+			var prev_start: float = float(prev_ev.get("time", 0.0))
+			var prev_end: float = prev_start + float(prev_ev.get("duration", 3.0))
+			
+			if ev_start < prev_end and ev_end > prev_start:
+				used_tracks[tracks[j]] = true
+				
+		var assigned_track = 0
+		while used_tracks.has(assigned_track):
+			assigned_track += 1
+		ev["track"] = assigned_track
+		tracks[i] = assigned_track
+		
+	# 트랙이 생성되었으므로 자동 저장
+	_save_chart_file()
+func _push_undo() -> void:
+	var snapshot = chart_data.duplicate(true)
+	undo_stack.append(snapshot)
+	if undo_stack.size() > MAX_UNDO_STEPS:
+		undo_stack.remove_at(0)
+	redo_stack.clear()
+
+func _undo() -> void:
+	if undo_stack.size() > 0:
+		var snapshot = undo_stack.pop_back()
+		redo_stack.append(chart_data.duplicate(true))
+		chart_data = snapshot
+		_sort_events()
+		_save_chart_file()
+		_update_ui_from_event()
+		preview_canvas.queue_redraw()
+		timeline.queue_redraw()
+		_show_toast("Undo (실행 취소)")
+
+func _redo() -> void:
+	if redo_stack.size() > 0:
+		var snapshot = redo_stack.pop_back()
+		undo_stack.append(chart_data.duplicate(true))
+		chart_data = snapshot
+		_sort_events()
+		_save_chart_file()
+		_update_ui_from_event()
+		preview_canvas.queue_redraw()
+		timeline.queue_redraw()
+		_show_toast("Redo (다시 실행)")
+
+
+func _on_instant_test_pressed() -> void:
+	if is_playing:
+		audio_player.stop()
+	Global.is_editor_test_mode = true
+	Global.editor_test_start_time = current_time
+	_save_chart_file()
+	_show_toast("Launching Instant Test...")
+	SceneTransition.transition_to_scene("res://scenes/game/game.tscn")

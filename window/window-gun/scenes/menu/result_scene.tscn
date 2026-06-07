@@ -28,9 +28,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -600.0
-offset_top = -350.0
+offset_top = -372.5
 offset_right = 600.0
-offset_bottom = 350.0
+offset_bottom = 426.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 40
@@ -64,7 +64,6 @@ horizontal_alignment = 1
 
 [node name="CenterLayout" type="HBoxContainer" parent="MainContainer" unique_id=2046420577]
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 80
 alignment = 1
 
@@ -203,12 +202,14 @@ text = "0"
 
 [node name="BottomButtons" type="HBoxContainer" parent="MainContainer" unique_id=1562222010]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 60
 alignment = 1
 
 [node name="RetryButton" type="Button" parent="MainContainer/BottomButtons" unique_id=1445515186]
 custom_minimum_size = Vector2(240, 60)
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 0.525, 0.647, 1)
 theme_override_font_sizes/font_size = 26
@@ -217,6 +218,7 @@ text = "다시하기"
 [node name="SelectButton" type="Button" parent="MainContainer/BottomButtons" unique_id=1253425835]
 custom_minimum_size = Vector2(240, 60)
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 0.525, 0.647, 1)
 theme_override_font_sizes/font_size = 26

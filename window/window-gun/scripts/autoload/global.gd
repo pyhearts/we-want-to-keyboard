@@ -43,7 +43,7 @@ var judgment_line_width: float = 4.0 # 0.0 ~ 12.0
 var particle_intensity: float = 1.0 # 0.0 ~ 2.0
 var effect_offset: Vector2 = Vector2(-220.0, -90.0)
 
-const SAVE_PATH = "user://settings.cfg"
+var SAVE_PATH: String = "user://settings.cfg"
 
 var hit_sfx_stream: AudioStreamWAV = null
 
@@ -52,6 +52,11 @@ const MAX_SFX_PLAYERS = 8
 
 
 func _ready() -> void:
+	if OS.has_feature("editor") or OS.is_debug_build():
+		SAVE_PATH = "res://settings.cfg"
+	else:
+		SAVE_PATH = "user://settings.cfg"
+
 	load_settings()
 	_init_sfx()
 	reset_run()
