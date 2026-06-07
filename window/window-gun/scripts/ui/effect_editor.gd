@@ -78,6 +78,7 @@ var undo_stack: Array = []
 var redo_stack: Array = []
 const MAX_UNDO_STEPS = 50
 var bookmarks: Dictionary = {}
+var copied_event_data: Dictionary = {}
 
 # 테마 색상 (chart_editor와 동일)
 const COLOR_BG_CANVAS = Color(1.0, 0.960784, 0.968627, 1.0)        # #FFF5F7
@@ -134,6 +135,8 @@ func _ready() -> void:
 		
 	_setup_top_bar()
 	_setup_effect_settings_ui()
+	
+
 
 func _setup_dropdowns() -> void:
 	snap_select.clear()
@@ -400,6 +403,12 @@ func _setup_effect_settings_ui() -> void:
 	edit_texture.placeholder_text = "res://assets/images/..."
 	edit_texture.text_submitted.connect(func(t): _on_field_submitted(t, "texture_path"))
 	hbox_tex.add_child(edit_texture)
+	
+	var btn_browse = Button.new()
+	btn_browse.text = "Browse"
+	btn_browse.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	btn_browse.pressed.connect(_on_browse_texture_pressed)
+	hbox_tex.add_child(btn_browse)
 	effect_settings_container.add_child(hbox_tex)
 	
 	var controls_parent = hold_settings.get_parent()
@@ -564,6 +573,50 @@ func _input(event: InputEvent) -> void:
 			
 		var is_ctrl = Input.is_key_pressed(KEY_CTRL)
 		var is_alt = Input.is_key_pressed(KEY_ALT)
+		
+		# 클립보드 복사 (Ctrl + C)
+		if is_ctrl and event.keycode == KEY_C:
+			if selected_event_index != -1:
+				copied_event_data = chart_data["events"][selected_event_index].duplicate(true)
+				_show_toast("Event copied to clipboard (복사 완료)")
+				vp.set_input_as_handled()
+				return
+				
+		# 클립보드 붙여넣기 (Ctrl + V)
+		if is_ctrl and event.keycode == KEY_V:
+			if not copied_event_data.is_empty():
+				_push_undo()
+				var copy = copied_event_data.duplicate(true)
+				copy["time"] = current_time
+				
+				# 해당 시간에 겹치지 않는 빈 트랙 찾아 자동 할당
+				var used_tracks = {}
+				var snap_time = current_time
+				var duration_val = float(copy.get("duration", 3.0))
+				
+				for ev in chart_data.get("events", []):
+					var ev_start = float(ev.get("time", 0.0))
+					var ev_end = ev_start + float(ev.get("duration", 3.0))
+					if snap_time < ev_end and (snap_time + duration_val) > ev_start:
+						used_tracks[ev.get("track", 0)] = true
+						
+				var new_track = 0
+				while used_tracks.has(new_track):
+					new_track += 1
+				copy["track"] = new_track
+				
+				chart_data["events"].append(copy)
+				_sort_events()
+				selected_event_index = chart_data["events"].find(copy)
+				
+				_save_chart_file()
+				_update_ui_from_event()
+				preview_canvas.queue_redraw()
+				timeline.queue_redraw()
+				_show_toast("Event pasted (Track %d)" % (new_track + 1))
+				vp.set_input_as_handled()
+				return
+				
 		var code_val = event.keycode
 		
 		# A. 북마크 기능 (Alt+1~5 등록, 그냥 1~5 이동)
@@ -750,6 +803,7 @@ func _on_snap_selected(index: int) -> void:
 	timeline.queue_redraw()
 
 func _on_type_selected(index: int) -> void:
+	_push_undo()
 	if selected_event_index != -1:
 		var event = chart_data["events"][selected_event_index]
 		event["type"] = EFFECT_TYPES[index]["code"]
@@ -836,6 +890,7 @@ func _update_ui_from_event() -> void:
 			break
 
 func _on_field_submitted(new_text: String, field_name: String) -> void:
+	_push_undo()
 	if selected_event_index == -1:
 		return
 	var event = chart_data["events"][selected_event_index]
@@ -920,6 +975,7 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 		
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			if is_setting_start:
+				_push_undo()
 				if selected_event_index != -1:
 					var ev: Dictionary = chart_data["events"][selected_event_index]
 					ev["x"] = int(logical_pos.x)
@@ -933,6 +989,7 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 				return
 				
 			if is_setting_target:
+				_push_undo()
 				if selected_event_index != -1:
 					var ev: Dictionary = chart_data["events"][selected_event_index]
 					ev["target_x"] = int(logical_pos.x)
@@ -967,6 +1024,7 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 				selected_event_index = clicked_idx
 				var ev = events[selected_event_index]
 				var cur_pos: Vector2 = _get_event_current_pos(ev, current_time)
+				_push_undo()
 				drag_offset = logical_pos - cur_pos
 				is_dragging = true
 				_update_ui_from_event()
@@ -1060,11 +1118,19 @@ func _draw_preview_canvas() -> void:
 			var opac: float = float(ev.get("opacity", 1.0))
 			
 			var fill_color = COLOR_EVENT_WINDOW
+			var has_rendered_texture: bool = false
 			if "image" in etype:
 				fill_color = COLOR_EVENT_IMAGE
-				
-			fill_color.a = opac * 0.5
-			preview_canvas.draw_rect(rect_scaled, fill_color)
+				var tex_path = ev.get("texture_path", "")
+				if tex_path != "" and FileAccess.file_exists(tex_path):
+					var tex = load(tex_path)
+					if tex is Texture2D:
+						preview_canvas.draw_texture_rect(tex, rect_scaled, false, Color(1.0, 1.0, 1.0, opac))
+						has_rendered_texture = true
+						
+			if not has_rendered_texture:
+				fill_color.a = opac * 0.5
+				preview_canvas.draw_rect(rect_scaled, fill_color)
 			
 			var border_color = fill_color
 			border_color.a = opac
@@ -1472,3 +1538,57 @@ func _on_instant_test_pressed() -> void:
 	_save_chart_file()
 	_show_toast("Launching Instant Test...")
 	SceneTransition.transition_to_scene("res://scenes/game/game.tscn")
+
+
+func _on_browse_texture_pressed() -> void:
+	if selected_event_index == -1:
+		_show_toast("Select an event first!")
+		return
+		
+	var filters = PackedStringArray(["*.png ; PNG Images", "*.jpg,*.jpeg ; JPEG Images", "*.webp ; WebP Images"])
+	var user_dir = OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS)
+	
+	DisplayServer.file_dialog_show(
+		"Select Image File",
+		user_dir,
+		"",
+		false,
+		DisplayServer.FILE_DIALOG_MODE_OPEN_FILE,
+		filters,
+		_on_native_file_selected
+	)
+
+func _on_native_file_selected(status: bool, selected_paths: PackedStringArray, selected_filter_index: int) -> void:
+	if not status or selected_paths.is_empty():
+		return
+	_on_texture_file_selected(selected_paths[0])
+
+func _on_texture_file_selected(path: String) -> void:
+	if selected_event_index == -1: return
+	
+	var file_name = path.get_file()
+	var dest_dir = MUSIC_BASE_PATH + selected_song + "/img/"
+	var dest_path = dest_dir + file_name
+	
+	# img 폴더 자동 생성
+	if not DirAccess.dir_exists_absolute(dest_dir):
+		var err = DirAccess.make_dir_recursive_absolute(dest_dir)
+		if err != OK:
+			_show_toast("Failed to create img folder!")
+			return
+			
+	# 파일 복제
+	var err = DirAccess.copy_absolute(path, dest_path)
+	if err != OK and err != ERR_ALREADY_EXISTS:
+		_show_toast("Failed to copy image!")
+		return
+		
+	# Undo 히스토리 보관 및 차트 경로 업데이트
+	_push_undo()
+	var ev = chart_data["events"][selected_event_index]
+	ev["texture_path"] = dest_path
+	
+	_save_chart_file()
+	_update_ui_from_event()
+	preview_canvas.queue_redraw()
+	_show_toast("Image imported to: " + file_name)
