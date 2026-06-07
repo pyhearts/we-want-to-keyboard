@@ -246,7 +246,7 @@
 		{ "time": 91.70, "x": 1900, "y": 800, "type": "normal" },
 		{ "time": 92.00, "x": 1600, "y": 800,"type": "normal" },
 		{ "time": 92.30, "x": 1300, "y": 800, "type": "normal" },
-		{ "time": 92.60, "x": 1000, "y": 800, "type": "normal" },
+		{ "time": 92.60, "x": 1000, "y": 800, "type": "normal" }
 		
 	],
 	"events": [

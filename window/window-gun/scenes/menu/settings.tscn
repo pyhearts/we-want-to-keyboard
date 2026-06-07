@@ -91,7 +91,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.901961, 1, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 72
-text = "GAME OPTIONS"
+text = "게임 옵션"
 horizontal_alignment = 1
 
 [node name="Grid" type="GridContainer" parent="Margin/VBox"]
@@ -105,7 +105,7 @@ columns = 4
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 28
-text = "Camera Shake"
+text = "카메라 흔들림"
 
 [node name="CheckShake" type="CheckButton" parent="Margin/VBox/Grid"]
 unique_name_in_owner = true
@@ -134,7 +134,7 @@ horizontal_alignment = 2
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 28
-text = "Hit Sound (SFX)"
+text = "타격 효과음 (SFX)"
 
 [node name="CheckSFX" type="CheckButton" parent="Margin/VBox/Grid"]
 unique_name_in_owner = true
@@ -163,7 +163,7 @@ horizontal_alignment = 2
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 28
-text = "Particle Density"
+text = "파티클 밀도"
 
 [node name="Spacer1" type="Control" parent="Margin/VBox/Grid"]
 layout_mode = 2
@@ -190,7 +190,7 @@ horizontal_alignment = 2
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 28
-text = "Note Connection Line"
+text = "노트 연결선 두께"
 
 [node name="Spacer2" type="Control" parent="Margin/VBox/Grid"]
 layout_mode = 2
@@ -216,7 +216,7 @@ horizontal_alignment = 2
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 28
-text = "Judgment Location"
+text = "판정 표시 위치"
 
 [node name="Spacer3" type="Control" parent="Margin/VBox/Grid"]
 layout_mode = 2
@@ -236,7 +236,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 28
-text = "Effect Offset X"
+text = "이펙트 오프셋 X"
 
 [node name="Spacer5" type="Control" parent="Margin/VBox/Grid"]
 layout_mode = 2
@@ -264,7 +264,7 @@ horizontal_alignment = 2
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 28
-text = "Effect Offset Y"
+text = "이펙트 오프셋 Y"
 
 [node name="Spacer6" type="Control" parent="Margin/VBox/Grid"]
 layout_mode = 2
@@ -303,7 +303,7 @@ theme_override_font_sizes/font_size = 26
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_hover")
-text = "RESET DEFAULTS"
+text = "기본값 초기화"
 
 [node name="BtnBack" type="Button" parent="Margin/VBox/HBoxButtons"]
 unique_name_in_owner = true
@@ -315,4 +315,4 @@ theme_override_font_sizes/font_size = 26
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_hover")
-text = "SAVE & BACK"
+text = "저장 및 돌아가기"
