@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://b4gk5sea5jy11"]
+
+[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_nc7h1"]
+[ext_resource type="AudioStream" uid="uid://b2feodnutxwc8" path="res://assets/musics/It's Going Down Now/It's Going Down Now.mp3" id="1_xmioj"]
+
+[resource]
+script = ExtResource("1_nc7h1")
+audio_stream = ExtResource("1_xmioj")
+metadata/_custom_type_script = "uid://ciljglxaby7qn"

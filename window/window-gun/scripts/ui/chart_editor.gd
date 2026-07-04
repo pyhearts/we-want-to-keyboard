@@ -1089,20 +1089,46 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 				_save_chart_file()
 				preview_canvas.queue_redraw()
 
+func _get_note_alpha(note: Dictionary, current_time: float) -> float:
+	var note_time = float(note.get("time", 0.0))
+	var note_type = str(note.get("type", "normal"))
+	var dt = current_time - note_time
+	
+	var judgment_time = 0.7
+	var perfect_margin = 0.3
+	var miss_margin = perfect_margin * 1.8 # 0.54
+	
+	if dt < -judgment_time:
+		return 0.0
+	elif dt < 0.0:
+		return 1.0 - (absf(dt) / judgment_time)
+	
+	if note_type == "hold":
+		var duration = float(note.get("duration", 3.0))
+		if dt <= duration:
+			return 1.0
+		elif dt <= duration + miss_margin:
+			return 1.0 - ((dt - duration) / miss_margin)
+		else: 
+			return 0.0
+	else:
+		if dt <= miss_margin:
+			return 1.0 - (dt / miss_margin)
+		else:
+			return 0.0
+
 func _update_hover_note(logical_pos: Vector2) -> void:
 	hover_note_index = -1
 	if not chart_data.has("notes"): return
 	
 	var threshold = 40.0
 	var notes: Array = chart_data["notes"]
-	var time_window = 0.4
 	
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
-		var note_time = float(note.get("time", 0.0))
 		var note_type = str(note.get("type", "normal"))
 		
-		if absf(note_time - current_time) > time_window:
+		if _get_note_alpha(note, current_time) <= 0.0:
 			continue
 			
 		if note_type == "hold":
@@ -1271,7 +1297,6 @@ func _draw_preview_canvas() -> void:
 	if not chart_data.has("notes"): return
 	
 	var notes: Array = chart_data["notes"]
-	var time_window = 0.4
 	
 	# Draw placement boundary guide for the chronologically previous note
 	var snapped_time = get_snapped_time(current_time)
@@ -1303,11 +1328,9 @@ func _draw_preview_canvas() -> void:
 		var note_time = float(note.get("time", 0.0))
 		var note_type = str(note.get("type", "normal"))
 		
-		var diff = note_time - current_time
-		if absf(diff) > time_window:
+		var alpha = _get_note_alpha(note, current_time)
+		if alpha <= 0.0:
 			continue
-			
-		var alpha: float = 1.0 - (absf(diff) / time_window)
 		var color = COLOR_NOTE_NORMAL
 		
 		match note_type:
