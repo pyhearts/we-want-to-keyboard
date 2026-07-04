@@ -123,6 +123,11 @@ const COLOR_BG_TIMELINE = Color(1.0, 0.898039, 0.92549, 1.0)       # #FFE5EC
 const COLOR_HEADER_TIMELINE = Color(1.0, 0.0, 0.329412, 0.95)     # #FF0054 (재생헤드)
 const COLOR_GRID_TIMELINE_MAIN = Color(0.788235, 0.0941176, 0.290196, 0.6) # #C9184A (1비트선)
 const COLOR_GRID_TIMELINE_SUB = Color(1.0, 0.760784, 0.819608, 0.5)  # #FFC2D1 (스냅선)
+const MIN_PLACEMENT_RADIUS = 120.0
+const PLACEMENT_GUIDE_FADE_DURATION = 0.3
+const NOTE_BLOCK_RADIUS = 108.0
+const TIMELINE_NOTE_PREVIEW_STEPS = 3.0
+const PLACEMENT_GUIDE_GROW_DELAY_STEPS = 2.0
 
 func _ready() -> void:
 	# AudioStreamPlayer 생성 및 씬 추가
@@ -470,6 +475,33 @@ func get_snapped_time(raw_time: float) -> float:
 	var step = beat_length * (4.0 / snap_division)
 	var snapped: float = round(raw_time / step) * step
 	return max(0.0, snapped)
+
+
+func _get_timeline_note_preview_duration() -> float:
+	if snap_division <= 1:
+		return 0.25 * TIMELINE_NOTE_PREVIEW_STEPS
+	var beat_length = 60.0 / bpm
+	return beat_length * (4.0 / float(snap_division)) * TIMELINE_NOTE_PREVIEW_STEPS
+
+
+func _get_timeline_step_duration() -> float:
+	if snap_division <= 1:
+		return 0.25
+	var beat_length = 60.0 / bpm
+	return beat_length * (4.0 / float(snap_division))
+
+
+func _get_timeline_note_alpha(note_time: float) -> float:
+	var preview_duration = _get_timeline_note_preview_duration()
+	if current_time >= note_time:
+		return 1.0
+	if preview_duration <= 0.001:
+		return 0.0
+	return clamp(1.0 - ((note_time - current_time) / preview_duration), 0.0, 1.0)
+
+
+func _get_note_pre_appear_alpha(note_time: float) -> float:
+	return _get_timeline_note_alpha(note_time)
 
 # ==========================================
 # 입력 콜백 및 이벤트
@@ -1095,25 +1127,27 @@ func _get_note_alpha(note: Dictionary, current_time: float) -> float:
 	var dt = current_time - note_time
 	
 	var judgment_time = 0.7
-	var perfect_margin = 0.3
-	var miss_margin = perfect_margin * 1.8 # 0.54
+	var perfect_margin = 0.45
+	var note_timeout = judgment_time + perfect_margin * 1.8
+	var normal_fade_duration = 0.15
+	var hold_fade_duration = 0.3
 	
-	if dt < -judgment_time:
-		return 0.0
-	elif dt < 0.0:
-		return 1.0 - (absf(dt) / judgment_time)
+	if dt < 0.0:
+		return _get_note_pre_appear_alpha(note_time)
 	
 	if note_type == "hold":
 		var duration = float(note.get("duration", 3.0))
 		if dt <= duration:
 			return 1.0
-		elif dt <= duration + miss_margin:
-			return 1.0 - ((dt - duration) / miss_margin)
+		elif dt <= duration + hold_fade_duration:
+			return 1.0 - ((dt - duration) / hold_fade_duration)
 		else: 
 			return 0.0
 	else:
-		if dt <= miss_margin:
-			return 1.0 - (dt / miss_margin)
+		if dt <= note_timeout:
+			return 1.0
+		elif dt <= note_timeout + normal_fade_duration:
+			return 1.0 - ((dt - note_timeout) / normal_fade_duration)
 		else:
 			return 0.0
 
@@ -1147,20 +1181,18 @@ func _update_hover_note(logical_pos: Vector2) -> void:
 				return
 
 func _add_note(time_val: float, logical_pos: Vector2) -> void:
+	if selected_type != "hold" and _is_inside_existing_note_block(logical_pos, time_val):
+		_show_toast("Placement blocked: Inside note size!")
+		return
+
 	# Enforce note placement distance restriction
 	if Global.limit_placement_distance:
-		var prev_note = null
-		var prev_time = -1.0
-		for note in chart_data.get("notes", []):
-			var nt = float(note.get("time", 0.0))
-			if nt < time_val and nt > prev_time:
-				prev_time = nt
-				prev_note = note
-				
+		var prev_note = _get_previous_note_for_time(time_val)
 		if prev_note != null:
 			var prev_pos = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
-			if logical_pos.distance_to(prev_pos) > Global.max_note_distance:
-				_show_toast("Placement blocked: Too far!")
+			var allowed_radius = _get_allowed_placement_radius(prev_note, time_val)
+			if logical_pos.distance_to(prev_pos) > allowed_radius:
+				_show_toast("Placement blocked: Too far for this timing!")
 				return
 				
 	save_state_for_undo()
@@ -1195,6 +1227,91 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 		
 	_update_hover_note(logical_pos)
 	preview_canvas.queue_redraw()
+
+
+func _is_point_note(note: Dictionary) -> bool:
+	return str(note.get("type", "normal")) != "hold"
+
+
+func _is_inside_existing_note_block(logical_pos: Vector2, time_val: float) -> bool:
+	for note in chart_data.get("notes", []):
+		if not note is Dictionary or not _is_point_note(note):
+			continue
+		if not _note_times_overlap(time_val, note):
+			continue
+		var note_pos = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
+		if logical_pos.distance_to(note_pos) < NOTE_BLOCK_RADIUS:
+			return true
+	return false
+
+
+func _note_times_overlap(time_val: float, other_note: Dictionary) -> bool:
+	var judgment_time = 0.7
+	var perfect_margin = 0.45
+	var note_timeout = judgment_time + perfect_margin * 1.8
+	var other_start = float(other_note.get("time", 0.0))
+	var other_end = other_start + note_timeout
+	var new_start = time_val
+	var new_end = new_start + note_timeout
+	return new_start < other_end and other_start < new_end
+
+
+func _get_previous_note_for_time(time_val: float) -> Variant:
+	var prev_note = null
+	var prev_time = -1.0
+	for note in chart_data.get("notes", []):
+		if not note is Dictionary:
+			continue
+		var nt = _get_note_end_time(note)
+		if nt < time_val and nt > prev_time:
+			prev_time = nt
+			prev_note = note
+	return prev_note
+
+
+func _get_placement_guide_note_for_time(time_val: float) -> Variant:
+	var guide_note = null
+	var guide_time = -1.0
+	for note in chart_data.get("notes", []):
+		if not note is Dictionary:
+			continue
+		var nt = _get_note_end_time(note)
+		if nt <= time_val and nt > guide_time:
+			guide_time = nt
+			guide_note = note
+	return guide_note
+
+
+func _get_next_note_after_time(time_val: float) -> Variant:
+	var next_note = null
+	var next_time = INF
+	for note in chart_data.get("notes", []):
+		if not note is Dictionary:
+			continue
+		var nt = _get_note_end_time(note)
+		if nt > time_val and nt < next_time:
+			next_time = nt
+			next_note = note
+	return next_note
+
+
+func _get_note_end_time(note: Dictionary) -> float:
+	var note_time = float(note.get("time", 0.0))
+	if str(note.get("type", "normal")) == "hold":
+		note_time += float(note.get("duration", 3.0))
+	return note_time
+
+
+func _get_allowed_placement_radius(prev_note: Dictionary, time_val: float) -> float:
+	var dt = max(0.0, time_val - _get_note_end_time(prev_note))
+	return clamp(Global.max_note_speed * dt, MIN_PLACEMENT_RADIUS, Global.max_note_distance)
+
+
+func _get_visual_placement_radius(prev_note: Dictionary, time_val: float) -> float:
+	var grow_delay = _get_timeline_step_duration() * PLACEMENT_GUIDE_GROW_DELAY_STEPS
+	var visual_time = max(_get_note_end_time(prev_note), time_val - grow_delay)
+	return _get_allowed_placement_radius(prev_note, visual_time)
+
 
 func _delete_note(index: int) -> void:
 	if index >= 0 and index < chart_data["notes"].size():
@@ -1298,29 +1415,38 @@ func _draw_preview_canvas() -> void:
 	
 	var notes: Array = chart_data["notes"]
 	
-	# Draw placement boundary guide for the chronologically previous note
-	var snapped_time = get_snapped_time(current_time)
-	var prev_note = null
-	var prev_time = -1.0
-	for note in notes:
-		var nt = float(note.get("time", 0.0))
-		if nt < snapped_time and nt > prev_time:
-			prev_time = nt
-			prev_note = note
-			
-	if prev_note != null:
-		var prev_pos = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
+	# Draw placement boundary guides. The previous guide fades out after the next note appears.
+	var active_guide_note = _get_placement_guide_note_for_time(current_time)
+	for guide_note in notes:
+		if not guide_note is Dictionary:
+			continue
+		var guide_start = _get_note_end_time(guide_note)
+		if current_time < guide_start:
+			continue
+		var next_note = _get_next_note_after_time(guide_start)
+		var next_start = _get_note_end_time(next_note) if next_note != null else INF
+		var guide_alpha = 1.0
+		if current_time >= next_start:
+			guide_alpha = 1.0 - ((current_time - next_start) / PLACEMENT_GUIDE_FADE_DURATION)
+		if guide_alpha <= 0.0:
+			continue
+		guide_alpha = clamp(guide_alpha, 0.0, 1.0)
+
+		var prev_pos = Vector2(float(guide_note.get("x", 960.0)), float(guide_note.get("y", 540.0)))
 		var p_draw = prev_pos * Vector2(sx, sy)
+		var allowed_radius = _get_visual_placement_radius(guide_note, min(current_time, next_start))
 		
-		# Draw allowed placement circle (semi-transparent green)
-		preview_canvas.draw_circle(p_draw, Global.max_note_distance * sx, Color(0.2, 0.8, 0.3, 0.06))
-		preview_canvas.draw_arc(p_draw, Global.max_note_distance * sx, 0.0, TAU, 64, Color(0.2, 0.8, 0.3, 0.3), 1.5 * sx)
-		
-		# Draw real-time cursor distance guide line
-		if is_mouse_hovering_canvas:
+		preview_canvas.draw_circle(p_draw, allowed_radius * sx, Color(0.2, 0.8, 0.3, 0.06 * guide_alpha))
+		preview_canvas.draw_arc(p_draw, allowed_radius * sx, 0.0, TAU, 64, Color(0.2, 0.8, 0.3, 0.3 * guide_alpha), 1.5 * sx)
+
+		if guide_note == active_guide_note and is_mouse_hovering_canvas:
 			var m_draw = mouse_logical_pos * Vector2(sx, sy)
-			var is_too_far = mouse_logical_pos.distance_to(prev_pos) > Global.max_note_distance
-			var line_color = Color(0.9, 0.2, 0.2, 0.5) if is_too_far else Color(0.2, 0.8, 0.3, 0.5)
+			var distance_ratio = mouse_logical_pos.distance_to(prev_pos) / max(allowed_radius, 1.0)
+			var line_color = Color(0.2, 0.8, 0.3, 0.5)
+			if distance_ratio > 1.0:
+				line_color = Color(0.9, 0.2, 0.2, 0.5)
+			elif distance_ratio > 0.75:
+				line_color = Color(0.9, 0.75, 0.15, 0.5)
 			preview_canvas.draw_line(p_draw, m_draw, line_color, 1.5 * sx)
 	
 	for i in range(notes.size()):
@@ -1369,7 +1495,7 @@ func _draw_preview_canvas() -> void:
 			preview_canvas.draw_string(hold_font, center + Vector2(-60.0*sx, 10.0*sy), text_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, hold_text_color)
 
 			# --- 롱 노트 경고 표시 ---
-			var warning = _get_note_warnings(i)
+			var warning = _get_note_warnings(i) if current_time >= note_time else ""
 			if warning != "":
 				var w_font = get_theme_font("font")
 				if warning == "LIMIT_EXCEEDED":
@@ -1389,6 +1515,9 @@ func _draw_preview_canvas() -> void:
 			var ry = clamp(ny, 0.0, 1080.0) * sy
 			var pos = Vector2(rx, ry)
 			var radius = 25.0 * sx
+			var block_radius = NOTE_BLOCK_RADIUS * sx
+			preview_canvas.draw_circle(pos, block_radius, Color(1.0, 0.0, 0.0, alpha * 0.035))
+			preview_canvas.draw_arc(pos, block_radius, 0.0, TAU, 64, Color(1.0, 0.0, 0.0, alpha * 0.22), 1.5 * sx)
 			
 			if is_offscreen:
 				var guide_color = color
@@ -1466,7 +1595,7 @@ func _draw_preview_canvas() -> void:
 					preview_canvas.draw_string(grav_font, pos + Vector2(15.0 * sx, 25.0 * sy), "G", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, grav_color)
 					
 			# --- 불가능한 패턴 자동 검출 및 시각 경고 ---
-			var warning = _get_note_warnings(i)
+			var warning = _get_note_warnings(i) if current_time >= note_time else ""
 			if warning != "":
 				var w_font = get_theme_font("font")
 				if warning == "LIMIT_EXCEEDED":
@@ -1485,6 +1614,9 @@ func _draw_preview_canvas() -> void:
 					# 겹침 배치 차폐 경고 (노랑)
 					preview_canvas.draw_circle(pos, 30.0 * sx, Color(1.0, 0.8, 0.0, alpha * 0.7), false, 1.5 * sx)
 					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Hidden Note", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.85, 0.2, alpha * 0.9))
+				elif warning == "NOTE_SIZE_BLOCKED":
+					preview_canvas.draw_circle(pos, NOTE_BLOCK_RADIUS * sx, Color(1.0, 0.0, 0.0, alpha * 0.85), false, 2.5 * sx)
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠ Note Area", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.25, 0.25, alpha * 0.9))
 				elif warning == "TOO_DISTANT":
 					# 절대 거리 제한 경고 (빨간색)
 					preview_canvas.draw_circle(pos, 36.0 * sx, Color(0.9, 0.2, 0.2, alpha * 0.8), false, 2.5 * sx)
@@ -1670,7 +1802,7 @@ func _draw_timeline() -> void:
 		timeline.draw_colored_polygon(pts, color)
 
 		# 타임라인 내 오류 표시 기능 추가
-		var warning = _get_note_warnings(i)
+		var warning = _get_note_warnings(i) if current_time >= note_time else ""
 		if warning != "":
 			var border_pts = PackedVector2Array([
 				Vector2(lx, timeline_h / 2.0 - 10.0),
@@ -2114,6 +2246,8 @@ func _get_note_warnings(idx: int) -> String:
 		# 4. 위치 및 시간 겹침 차폐 경고 (반경 65px 이내 및 시간차 0.4초 이내)
 		elif pos.distance_to(other_pos) < 65.0 and abs(t - other_t) < 0.4:
 			return "OVERLAP"
+		elif _is_point_note(note) and other is Dictionary and _is_point_note(other) and _note_times_overlap(t, other) and pos.distance_to(other_pos) < NOTE_BLOCK_RADIUS:
+			return "NOTE_SIZE_BLOCKED"
 			
 	# 5. 시간 대비 거리가 너무 먼 노트 (칠 수 없는 노트 경고)
 	var prev_note = null

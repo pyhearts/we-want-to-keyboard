@@ -6,10 +6,13 @@ const MODE_MOVING = "moving"
 
 @export_group("Timing")
 @export var judgment_time = 0.7
-@export var perfect_margin = 0.3
+@export var perfect_margin = 0.45
+
+@export_group("Hit Area")
+@export var hit_radius = 90.0
 
 @export_group("Score")
-@export var penalty_score = -70
+@export var penalty_score = 0
 
 @export_group("Spawn Area")
 @export var prevent_overlap_count = 3
@@ -282,7 +285,7 @@ func _on_time_out() -> void:
 
 
 func _on_point_pressed() -> void:
-	if not is_clone or (point and point.disabled):
+	if not is_clone or is_hit or (point and point.disabled):
 		return
 
 	is_hit = true  # 타임아웃 Miss 방지 플래그 세팅
@@ -387,6 +390,11 @@ func _calculate_hit_score() -> int:
 
 	var score_step = int(time_alive / (judgment_time / 5.0)) * 10
 	return 50 + score_step
+
+
+func _is_inside_hit_radius(global_pos: Vector2) -> bool:
+	var note_center = global_position + ((size * scale) / 2.0) + center_offset
+	return global_pos.distance_to(note_center) <= hit_radius
 
 
 func _spawn_judgment_effects(judgment_type: String, score_value: int) -> void:
@@ -534,4 +542,9 @@ func _input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_SPACE:
+			_on_point_pressed()
+
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if _is_inside_hit_radius(get_global_mouse_position()):
+			get_viewport().set_input_as_handled()
 			_on_point_pressed()

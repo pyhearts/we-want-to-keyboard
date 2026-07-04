@@ -227,7 +227,7 @@ func _update_vignette_visual(delta: float, holding: bool) -> void:
 func _trigger_miss_penalty() -> void:
 	is_currently_missed = true
 	Global.reset_combo()
-	Global.add_score(-50) # 기존 틱당 -30에 비해 높은 1회성 MISS 중패널티 부과
+	Global.add_score(0)
 	
 	# 비네트에 강한 붉은 플래시 타격 임팩트
 	if is_instance_valid(vignette_rect):
