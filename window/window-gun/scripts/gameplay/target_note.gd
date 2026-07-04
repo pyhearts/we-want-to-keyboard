@@ -9,7 +9,7 @@ const MODE_MOVING = "moving"
 @export var perfect_margin = 0.45
 
 @export_group("Hit Area")
-@export var hit_radius = 90.0
+@export var hit_radius_scale = 1.0
 
 @export_group("Score")
 @export var penalty_score = 0
@@ -60,6 +60,8 @@ static var active_notes: Array[Control] = []
 
 
 func _ready() -> void:
+	perfect_margin = Global.judgment_perfect_margin
+	hit_radius_scale = Global.note_hit_radius
 	mouse_filter = MOUSE_FILTER_IGNORE
 	clip_contents = false
 
@@ -394,7 +396,8 @@ func _calculate_hit_score() -> int:
 
 func _is_inside_hit_radius(global_pos: Vector2) -> bool:
 	var note_center = global_position + ((size * scale) / 2.0) + center_offset
-	return global_pos.distance_to(note_center) <= hit_radius
+	var note_radius = min(size.x * scale.x, size.y * scale.y) * 0.5
+	return global_pos.distance_to(note_center) <= note_radius * hit_radius_scale
 
 
 func _spawn_judgment_effects(judgment_type: String, score_value: int) -> void:

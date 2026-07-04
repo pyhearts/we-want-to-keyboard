@@ -21,6 +21,14 @@ var max_note_distance: float = 800.0 # 이전 노트와의 최대 허용 거리 
 var limit_placement_distance: bool = false # 이전 노트 기준 배치 영역 강제 제한 여부
 
 # 1,000,000점 스케일링을 위한 점수 계산 변수
+var judgment_perfect_margin: float = 0.45
+var note_hit_radius: float = 1.0
+var editor_min_placement_radius: float = 120.0
+var editor_note_block_radius: float = 108.0
+var editor_timeline_note_preview_steps: float = 3.0
+var editor_placement_guide_grow_delay_steps: float = 2.0
+var editor_placement_guide_fade_duration: float = 0.3
+
 var max_base_score: int = 100
 var current_base_score: int = 0
 
@@ -137,6 +145,13 @@ func save_settings() -> void:
 	config.set_value("settings", "min_note_interval", min_note_interval)
 	config.set_value("settings", "max_note_distance", max_note_distance)
 	config.set_value("settings", "limit_placement_distance", limit_placement_distance)
+	config.set_value("settings", "judgment_perfect_margin", judgment_perfect_margin)
+	config.set_value("settings", "note_hit_radius", note_hit_radius)
+	config.set_value("settings", "editor_min_placement_radius", editor_min_placement_radius)
+	config.set_value("settings", "editor_note_block_radius", editor_note_block_radius)
+	config.set_value("settings", "editor_timeline_note_preview_steps", editor_timeline_note_preview_steps)
+	config.set_value("settings", "editor_placement_guide_grow_delay_steps", editor_placement_guide_grow_delay_steps)
+	config.set_value("settings", "editor_placement_guide_fade_duration", editor_placement_guide_fade_duration)
 	config.save(SAVE_PATH)
 	print("Settings saved to: ", SAVE_PATH)
 
@@ -158,6 +173,13 @@ func load_settings() -> void:
 		min_note_interval = config.get_value("settings", "min_note_interval", 0.07)
 		max_note_distance = config.get_value("settings", "max_note_distance", 800.0)
 		limit_placement_distance = config.get_value("settings", "limit_placement_distance", false)
+		judgment_perfect_margin = config.get_value("settings", "judgment_perfect_margin", 0.45)
+		note_hit_radius = clamp(float(config.get_value("settings", "note_hit_radius", 1.0)), 0.0, 1.0)
+		editor_min_placement_radius = config.get_value("settings", "editor_min_placement_radius", 120.0)
+		editor_note_block_radius = config.get_value("settings", "editor_note_block_radius", 108.0)
+		editor_timeline_note_preview_steps = config.get_value("settings", "editor_timeline_note_preview_steps", 3.0)
+		editor_placement_guide_grow_delay_steps = config.get_value("settings", "editor_placement_guide_grow_delay_steps", 2.0)
+		editor_placement_guide_fade_duration = config.get_value("settings", "editor_placement_guide_fade_duration", 0.3)
 		print("Settings loaded successfully.")
 	else:
 		print("No settings file found, using defaults.")
