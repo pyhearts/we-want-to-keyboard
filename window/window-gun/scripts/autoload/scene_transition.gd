@@ -3,10 +3,16 @@ extends CanvasLayer
 @export var cover_duration := 0.35
 @export var reveal_duration := 0.35
 
-const TRANSITION_SOUND := preload("res://assets/sounds/scene_transition.mp3")
+const TRANSITION_SOUND_PATHS := [
+	"res://assets/sounds/scene_transition.mp3",
+	"res://assets/sounds/scene_transition_dave.mp3",
+	"res://assets/sounds/scene_transition_love_circulation_2.mp3",
+	"res://assets/sounds/scene_transition_love_circulation.mp3",
+]
 
 var _cover: ColorRect
 var _sound_player: AudioStreamPlayer
+var _transition_sounds: Array[AudioStream] = []
 var _is_transitioning := false
 
 
@@ -23,9 +29,9 @@ func _ready() -> void:
 	_set_hidden_right()
 
 	_sound_player = AudioStreamPlayer.new()
-	_sound_player.stream = TRANSITION_SOUND
 	_sound_player.bus = "Master"
 	add_child(_sound_player)
+	_load_transition_sounds()
 
 
 func transition_to_scene(path: String) -> void:
@@ -86,9 +92,18 @@ func _set_hidden_right() -> void:
 	_set_cover_progress(0.0)
 
 
+func _load_transition_sounds() -> void:
+	_transition_sounds.clear()
+	for sound_path in TRANSITION_SOUND_PATHS:
+		var stream := load(sound_path) as AudioStream
+		if stream:
+			_transition_sounds.append(stream)
+
+
 func _play_transition_sound() -> void:
-	if _sound_player == null:
+	if _sound_player == null or not Global.enable_scene_transition_sfx or _transition_sounds.is_empty():
 		return
 
 	_sound_player.stop()
+	_sound_player.stream = _transition_sounds.pick_random()
 	_sound_player.play()

@@ -44,6 +44,7 @@ var audio_player: AudioStreamPlayer = null
 var enable_camera_shake: bool = true
 var camera_shake_intensity: float = 1.0 # 0.0 ~ 2.0
 var enable_sfx: bool = true
+var enable_scene_transition_sfx: bool = true
 var sfx_volume: float = 0.5 # 0.0 ~ 1.0
 var note_effect_level: int = 1 # 0: Normal, 1: Rich, 2: Extreme
 var judgment_text_pos: String = "note" # "note" or "center"
@@ -135,6 +136,7 @@ func save_settings() -> void:
 	config.set_value("settings", "enable_camera_shake", enable_camera_shake)
 	config.set_value("settings", "camera_shake_intensity", camera_shake_intensity)
 	config.set_value("settings", "enable_sfx", enable_sfx)
+	config.set_value("settings", "enable_scene_transition_sfx", enable_scene_transition_sfx)
 	config.set_value("settings", "sfx_volume", sfx_volume)
 	config.set_value("settings", "note_effect_level", note_effect_level)
 	config.set_value("settings", "judgment_text_pos", judgment_text_pos)
@@ -163,6 +165,7 @@ func load_settings() -> void:
 		enable_camera_shake = config.get_value("settings", "enable_camera_shake", true)
 		camera_shake_intensity = config.get_value("settings", "camera_shake_intensity", 1.0)
 		enable_sfx = config.get_value("settings", "enable_sfx", true)
+		enable_scene_transition_sfx = config.get_value("settings", "enable_scene_transition_sfx", true)
 		sfx_volume = config.get_value("settings", "sfx_volume", 0.5)
 		note_effect_level = config.get_value("settings", "note_effect_level", 1)
 		judgment_text_pos = config.get_value("settings", "judgment_text_pos", "note")

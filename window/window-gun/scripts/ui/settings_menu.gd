@@ -54,6 +54,27 @@ func _ready() -> void:
 	# Programmatic Addition of Max Note Speed Slider to Grid
 	var grid = check_shake.get_parent() as GridContainer
 	if grid:
+		var lbl_transition_sfx = Label.new()
+		lbl_transition_sfx.text = "Scene transition SFX"
+		_style_setting_label(lbl_transition_sfx)
+		grid.add_child(lbl_transition_sfx)
+
+		var check_transition_sfx = CheckButton.new()
+		check_transition_sfx.name = "CheckSceneTransitionSFX"
+		check_transition_sfx.button_pressed = Global.enable_scene_transition_sfx
+		check_transition_sfx.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		grid.add_child(check_transition_sfx)
+
+		var spacer_transition_sfx_1 = Control.new()
+		var spacer_transition_sfx_2 = Control.new()
+		grid.add_child(spacer_transition_sfx_1)
+		grid.add_child(spacer_transition_sfx_2)
+
+		check_transition_sfx.toggled.connect(func(pressed):
+			Global.enable_scene_transition_sfx = pressed
+			Global.save_settings()
+		)
+
 		var lbl_speed = Label.new()
 		lbl_speed.text = "최대 노트 속도"
 		_style_setting_label(lbl_speed)
@@ -270,6 +291,10 @@ func _load_values_to_ui() -> void:
 	if lbl_interval_val:
 		lbl_interval_val.text = "%d ms" % int(Global.min_note_interval * 1000.0)
 
+	var check_transition_sfx = check_shake.get_parent().get_node_or_null("CheckSceneTransitionSFX") as CheckButton
+	if check_transition_sfx:
+		check_transition_sfx.button_pressed = Global.enable_scene_transition_sfx
+
 	var check_limit = check_shake.get_parent().get_node_or_null("CheckLimitPlacement") as CheckButton
 	if check_limit:
 		check_limit.button_pressed = Global.limit_placement_distance
@@ -357,6 +382,7 @@ func _on_reset_pressed() -> void:
 	Global.enable_camera_shake = true
 	Global.camera_shake_intensity = 1.0
 	Global.enable_sfx = true
+	Global.enable_scene_transition_sfx = true
 	Global.sfx_volume = 0.5
 	Global.particle_intensity = 1.0
 	Global.judgment_line_width = 4.0
