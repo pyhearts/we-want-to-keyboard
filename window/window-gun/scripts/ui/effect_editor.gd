@@ -221,7 +221,7 @@ func _setup_top_bar() -> void:
 func _on_go_to_chart_editor() -> void:
 	if is_playing:
 		audio_player.stop()
-	get_tree().change_scene_to_file(CHART_EDITOR_SCENE)
+	SceneTransition.transition_to_scene(CHART_EDITOR_SCENE)
 
 func _setup_effect_settings_ui() -> void:
 	hold_settings.visible = false
@@ -759,7 +759,7 @@ func _input(event: InputEvent) -> void:
 		elif event.keycode == KEY_ESCAPE:
 			if is_playing:
 				audio_player.stop()
-			get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")
+			SceneTransition.transition_to_scene("res://scenes/menu/main_menu.tscn")
 			vp.set_input_as_handled()
 		elif event.keycode == KEY_DELETE:
 			if selected_event_index != -1:

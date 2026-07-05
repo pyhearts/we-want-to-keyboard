@@ -3,7 +3,10 @@ extends CanvasLayer
 @export var cover_duration := 0.35
 @export var reveal_duration := 0.35
 
+const TRANSITION_SOUND := preload("res://assets/sounds/scene_transition.mp3")
+
 var _cover: ColorRect
+var _sound_player: AudioStreamPlayer
 var _is_transitioning := false
 
 
@@ -19,12 +22,18 @@ func _ready() -> void:
 	add_child(_cover)
 	_set_hidden_right()
 
+	_sound_player = AudioStreamPlayer.new()
+	_sound_player.stream = TRANSITION_SOUND
+	_sound_player.bus = "Master"
+	add_child(_sound_player)
+
 
 func transition_to_scene(path: String) -> void:
 	if _is_transitioning or path == "":
 		return
 
 	_is_transitioning = true
+	_play_transition_sound()
 	_cover.visible = true
 	_set_hidden_right()
 
@@ -75,3 +84,11 @@ func _set_reveal_progress(progress: float) -> void:
 
 func _set_hidden_right() -> void:
 	_set_cover_progress(0.0)
+
+
+func _play_transition_sound() -> void:
+	if _sound_player == null:
+		return
+
+	_sound_player.stop()
+	_sound_player.play()

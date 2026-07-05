@@ -507,7 +507,7 @@ func _input(event: InputEvent) -> void:
 		if is_playing:
 			audio_player.stop()
 		get_viewport().set_input_as_handled()
-		get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+		SceneTransition.transition_to_scene(MAIN_MENU_SCENE)
 		return
 		
 	# Space 누르면 재생 / 정지
@@ -1928,7 +1928,7 @@ func _setup_top_bar() -> void:
 func _on_go_to_effect_editor() -> void:
 	if is_playing:
 		audio_player.stop()
-	get_tree().change_scene_to_file("res://scenes/menu/effect_editor.tscn")
+	SceneTransition.transition_to_scene("res://scenes/menu/effect_editor.tscn")
 
 func _setup_moving_settings_ui() -> void:
 	moving_settings = VBoxContainer.new()
