@@ -1,7 +1,16 @@
 extends Control
 
 const MUSIC_BASE_PATH = "res://assets/musics/"
+const GLOBAL_TIMING_OFFSET = 0.7
 const MAIN_MENU_SCENE = "res://scenes/menu/main_menu.tscn"
+
+
+func _chart_time_to_audio_pos(chart_time: float) -> float:
+	return chart_time - GLOBAL_TIMING_OFFSET + offset
+
+
+func _audio_pos_to_chart_time(audio_pos: float) -> float:
+	return audio_pos + GLOBAL_TIMING_OFFSET - offset
 
 # UI 노드 바인딩
 @onready var song_select: OptionButton = %SongSelect
@@ -333,8 +342,8 @@ func _process(delta: float) -> void:
 		
 		if audio_player.playing:
 			var audio_pos = audio_player.get_playback_position()
-			# 기존 채보들과 호환되게 오디오 위치 직접 매칭 (딜레이 0.7초 차감 제거)
-			var expected_audio_pos = current_time + offset
+			# Match the same chart-time/audio-time mapping used by gameplay.
+			var expected_audio_pos = _chart_time_to_audio_pos(current_time)
 			
 			if expected_audio_pos < 0.0:
 				if audio_player.playing:
@@ -344,12 +353,12 @@ func _process(delta: float) -> void:
 					audio_player.play(expected_audio_pos)
 			
 			# 장기적인 오버런/언더런 방지용 보정 코드 (150ms 이상 차이 발생 시 하드 싱크)
-			var current_audio_time = audio_pos - offset
+			var current_audio_time = _audio_pos_to_chart_time(audio_pos)
 			if absf(current_time - current_audio_time) > 0.15:
 				current_time = current_audio_time
 		else:
 			# 재생이 완전히 끝난 상태 또는 초기 대기 상태
-			var expected_audio_pos = current_time + offset
+			var expected_audio_pos = _chart_time_to_audio_pos(current_time)
 			if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 				audio_player.pitch_scale = playback_speed
 				audio_player.play(expected_audio_pos)
@@ -875,7 +884,7 @@ func _seek_time(target: float) -> void:
 	current_time = clamp(target, 0.0, song_duration)
 	autoplay_hit_notes.clear()
 	
-	var expected_audio_pos = current_time + offset
+	var expected_audio_pos = _chart_time_to_audio_pos(current_time)
 	if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 		if audio_player.playing:
 			audio_player.seek(expected_audio_pos)
@@ -888,7 +897,7 @@ func _on_play_pressed() -> void:
 		play_button.text = "Pause"
 		audio_player.pitch_scale = playback_speed
 		
-		var expected_audio_pos = current_time + offset
+		var expected_audio_pos = _chart_time_to_audio_pos(current_time)
 		if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 			audio_player.play(expected_audio_pos)
 		else:
@@ -1689,8 +1698,8 @@ func _draw_timeline() -> void:
 			var dx: float = x - center_x
 			var t: float = current_time + (dx / pixels_per_second)
 			
-			# 기존 채보에 맞게 음원 오프셋만 더해 실제 오디오 재생 시간 계산 (딜레이 0.7초 차감 제거)
-			var t_audio = t + offset
+			# Draw waveform samples at the audio position that matches chart time.
+			var t_audio = _chart_time_to_audio_pos(t)
 			if t_audio < 0.0 or t_audio >= song_duration:
 				continue
 				

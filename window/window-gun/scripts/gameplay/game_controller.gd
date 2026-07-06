@@ -149,7 +149,18 @@ func start_chart() -> void:
 		push_error("Cannot start chart.")
 		return
 
-	# 이론상 최대 기본 점수(max_base_score) 계산 로직
+	# BPM must be loaded before max score calculation so hold-note ticks match gameplay.
+	var res_path = Global.get_music_res_path(Global.selected_music)
+	if FileAccess.file_exists(res_path):
+		var music_res = load(res_path)
+		if music_res and "bpm" in music_res:
+			bpm = float(music_res.bpm)
+			print("BPM loaded: ", bpm)
+		else:
+			print("BPM property not found in Res.tres, using default 120.0")
+	else:
+		print("Res.tres not found, using default 120.0")
+
 	var total_max_score = 0
 	for note in chart_data.get("notes", []):
 		if not note is Dictionary:
@@ -167,18 +178,6 @@ func start_chart() -> void:
 	Global.max_base_score = max(total_max_score, 100)
 	print("Max theoretical base score calculated: ", Global.max_base_score)
 	
-	# BPM 로드
-	var res_path = Global.get_music_res_path(Global.selected_music)
-	if FileAccess.file_exists(res_path):
-		var music_res = load(res_path)
-		if music_res and "bpm" in music_res:
-			bpm = float(music_res.bpm)
-			print("BPM loaded: ", bpm)
-		else:
-			print("BPM property not found in Res.tres, using default 120.0")
-	else:
-		print("Res.tres not found, using default 120.0")
-		
 	if Global.is_editor_test_mode and Global.editor_test_start_time > 0.01:
 		current_time = max(0.0, Global.editor_test_start_time - 1.0)
 	else:
