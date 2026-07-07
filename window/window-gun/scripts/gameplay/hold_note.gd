@@ -27,6 +27,11 @@ var custom_font: FontFile
 
 
 func _ready() -> void:
+	duration = max(duration, 0.01)
+	bpm = max(bpm, 1.0)
+	beat_division = max(beat_division, 1)
+	max_tolerance_gauge = max(max_tolerance_gauge, 0.01)
+
 	# 화면 전체를 덮도록 명시적인 앵커 및 오프셋 지정 (CanvasLayer 동적 생성 시 절대 좌표 꼬임 방지)
 	anchor_left = 0.0
 	anchor_top = 0.0

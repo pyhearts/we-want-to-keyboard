@@ -21,7 +21,6 @@ Godot 4 기반 리듬/타겟 게임과 Arduino 키보드 컨트롤러 스케치�
 - 장르: 리듬 게임 / 타겟 클릭 게임
 - 엔진: Godot 4
 - 기본 입력: `Space`, 마우스 왼쪽 클릭
-- Arduino 입력: 버튼 4개를 `D`, `F`, `J`, `K` 키로 매핑
 - 곡 데이터 위치: `window/window-gun/assets/musics/<곡 이름>/`
 - 메인 메뉴 씬: `res://scenes/menu/main_menu.tscn`
 - 게임 씬: `res://scenes/game/game.tscn`

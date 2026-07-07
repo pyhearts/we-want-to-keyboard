@@ -17,6 +17,8 @@ const MUSIC_BASE_PATH = "res://assets/musics/"
 const MUSIC_SELECT_SCENE = "res://scenes/menu/music_select.tscn"
 const DEFAULT_WINDOW_TEXTURE = "res://assets/image/ingame/과녁.png"
 const TargetNoteScript = preload("res://scripts/gameplay/target_note.gd")
+const DEFAULT_BPM = 120.0
+const MIN_POSITIVE_DURATION = 0.01
 
 enum MoveType {
 	SMOOTH,
@@ -36,7 +38,7 @@ var current_time: float = 0.0
 var is_playing: bool = false
 var note_index: int = 0
 var event_index: int = 0
-var bpm: float = 120.0
+var bpm: float = DEFAULT_BPM
 
 # 카메라 셰이크 제어 변수 (옵션 C 완벽 대응)
 var shake_timer: float = 0.0
@@ -154,7 +156,7 @@ func start_chart() -> void:
 	if FileAccess.file_exists(res_path):
 		var music_res = load(res_path)
 		if music_res and "bpm" in music_res:
-			bpm = float(music_res.bpm)
+			bpm = _sanitize_positive_float(music_res.bpm, DEFAULT_BPM, "BPM")
 			print("BPM loaded: ", bpm)
 		else:
 			print("BPM property not found in Res.tres, using default 120.0")
@@ -167,9 +169,9 @@ func start_chart() -> void:
 			continue
 		var note_type = str(note.get("type", "normal"))
 		if note_type == "hold":
-			var dur = float(note.get("duration", 3.0))
-			var beat_div = int(note.get("beat_division", 4))
-			var interval = (60.0 / bpm) * (4.0 / float(beat_div))
+			var dur = _sanitize_positive_float(note.get("duration", 3.0), 3.0, "hold duration")
+			var beat_div = _sanitize_positive_int(note.get("beat_division", 4), 4, "hold beat_division")
+			var interval = max((60.0 / bpm) * (4.0 / float(beat_div)), MIN_POSITIVE_DURATION)
 			var ticks = int(dur / interval)
 			total_max_score += ticks * 10
 		else:
@@ -214,6 +216,8 @@ func load_chart() -> Variant:
 		chart["notes"] = []
 	if not chart.has("events") or not chart["events"] is Array:
 		chart["events"] = []
+
+	chart = _sanitize_chart(chart)
 
 	# 노래 길이 대비 노트 최대 개수 제한 계산
 	var song_len = 180.0
@@ -290,6 +294,113 @@ func load_chart() -> Variant:
 	return chart
 
 
+func _sanitize_chart(chart: Dictionary) -> Dictionary:
+	var sanitized_notes: Array = []
+	for i in range(chart.get("notes", []).size()):
+		var note = chart["notes"][i]
+		if not note is Dictionary:
+			push_warning("Skipping non-dictionary note at index " + str(i))
+			continue
+		var clean_note = _sanitize_note(note, i)
+		if clean_note != null:
+			sanitized_notes.append(clean_note)
+	chart["notes"] = sanitized_notes
+
+	var sanitized_events: Array = []
+	for i in range(chart.get("events", []).size()):
+		var event = chart["events"][i]
+		if not event is Dictionary:
+			push_warning("Skipping non-dictionary event at index " + str(i))
+			continue
+		var clean_event = _sanitize_event(event, i)
+		if clean_event != null:
+			sanitized_events.append(clean_event)
+	chart["events"] = sanitized_events
+	return chart
+
+
+func _sanitize_note(note: Dictionary, index: int) -> Variant:
+	var note_type = str(note.get("type", NORMAL_NOTE_MODE))
+	if note_type not in [NORMAL_NOTE_MODE, MOVING_NOTE_MODE, "hold"]:
+		push_warning("Skipping note with unknown type at index " + str(index) + ": " + note_type)
+		return null
+
+	note["time"] = _sanitize_non_negative_float(note.get("time", 0.0), 0.0, "note time")
+
+	if note_type == "hold":
+		note["duration"] = _sanitize_positive_float(note.get("duration", 3.0), 3.0, "hold duration")
+		note["beat_division"] = _sanitize_positive_int(note.get("beat_division", 4), 4, "hold beat_division")
+		return note
+
+	if not note.has("x") or not note.has("y"):
+		push_warning("Skipping note without x/y at index " + str(index))
+		return null
+	note["x"] = float(note["x"])
+	note["y"] = float(note["y"])
+
+	if note_type == MOVING_NOTE_MODE:
+		if note.has("start_x"):
+			note["start_x"] = float(note["start_x"])
+		if note.has("start_y"):
+			note["start_y"] = float(note["start_y"])
+		if note.has("curve_control_x"):
+			note["curve_control_x"] = float(note["curve_control_x"])
+		if note.has("curve_control_y"):
+			note["curve_control_y"] = float(note["curve_control_y"])
+		note["move_duration"] = _sanitize_non_negative_float(note.get("move_duration", 0.0), 0.0, "move_duration")
+	return note
+
+
+func _sanitize_event(event: Dictionary, index: int) -> Variant:
+	var event_type = str(event.get("type", ""))
+	if event_type not in [
+		EVENT_STATIC_WINDOW,
+		EVENT_MOVING_LINEAR_WINDOW,
+		EVENT_MOVING_SMOOTH_WINDOW,
+		EVENT_STATIC_IMAGE,
+		EVENT_MOVING_LINEAR_IMAGE,
+		EVENT_MOVING_SMOOTH_IMAGE
+	]:
+		push_warning("Skipping event with unknown type at index " + str(index) + ": " + event_type)
+		return null
+
+	if not event.has("x") or not event.has("y"):
+		push_warning("Skipping event without x/y at index " + str(index))
+		return null
+	event["time"] = _sanitize_non_negative_float(event.get("time", 0.0), 0.0, "event time")
+	event["x"] = float(event["x"])
+	event["y"] = float(event["y"])
+	event["width"] = _sanitize_positive_int(event.get("width", 200), 200, "event width")
+	event["height"] = _sanitize_positive_int(event.get("height", 200), 200, "event height")
+	event["duration"] = _sanitize_positive_float(event.get("duration", 3.0), 3.0, "event duration")
+	event["opacity"] = clamp(float(event.get("opacity", 1.0)), 0.0, 1.0)
+	return event
+
+
+func _sanitize_positive_float(value: Variant, fallback: float, label: String) -> float:
+	var result = float(value)
+	if result <= 0.0:
+		push_warning(label + " must be positive; using " + str(fallback))
+		return fallback
+	return result
+
+
+func _sanitize_non_negative_float(value: Variant, fallback: float, label: String) -> float:
+	var result = float(value)
+	if result < 0.0:
+		push_warning(label + " must be non-negative; using " + str(fallback))
+		return fallback
+	return result
+
+
+func _sanitize_positive_int(value: Variant, fallback: int, label: String) -> int:
+	var result = int(value)
+	if result <= 0:
+		push_warning(label + " must be positive; using " + str(fallback))
+		return fallback
+	return result
+
+
 func _ensure_selected_music() -> void:
 	if Global.selected_music != "":
 		return
@@ -354,6 +465,8 @@ func _process_note(note_info: Dictionary) -> void:
 func _spawn_hold_note(note_info: Dictionary) -> void:
 	var duration = float(note_info.get("duration", 3.0))
 	var beat_division = int(note_info.get("beat_division", 4)) # 기본 4박자(4분음표)
+	duration = _sanitize_positive_float(duration, 3.0, "hold duration")
+	beat_division = _sanitize_positive_int(beat_division, 4, "hold beat_division")
 	var hold_script = load("res://scripts/gameplay/hold_note.gd")
 	if hold_script:
 		var hold_instance = hold_script.new()
@@ -379,12 +492,15 @@ func _process_event(event_info: Dictionary) -> void:
 	var pos = Vector2i(int(event_info["x"]), int(event_info["y"]))
 	var target_pos = _get_event_target_position(event_info, pos)
 	var duration = float(event_info.get("duration", 3.0))
+	duration = _sanitize_positive_float(duration, 3.0, "event duration")
 	var title = str(event_info.get("title", "Event Window"))
 	var texture_path = str(event_info.get("texture_path", ""))
 	if texture_path == "":
 		texture_path = DEFAULT_WINDOW_TEXTURE
 
 	var opacity = float(event_info.get("opacity", 1.0))
+
+	opacity = clamp(opacity, 0.0, 1.0)
 
 	var node: Node = null
 	match event_type:
@@ -434,6 +550,7 @@ func _spawn_note(mode: String, target_pos: Variant = null, start_pos: Variant = 
 func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_pos: Vector2i, move_duration: float, move_type: MoveType, title: String, img_path: String) -> Window:
 	if _is_headless_display():
 		return null
+	move_duration = max(move_duration, MIN_POSITIVE_DURATION)
 
 	var window = _get_or_create_window(size, title, img_path)
 	if window == null:
@@ -540,6 +657,7 @@ func _animate_window_movement_linear(window: Window, target_rel_pos: Vector2i, d
 # ==========================================
 
 func create_moving_image(size: Vector2i, start_pos: Vector2i, target_pos: Vector2i, move_duration: float, move_type: MoveType, img_path: String) -> TextureRect:
+	move_duration = max(move_duration, MIN_POSITIVE_DURATION)
 	var img_node = _get_or_create_image(size, img_path)
 	if img_node == null:
 		return null
