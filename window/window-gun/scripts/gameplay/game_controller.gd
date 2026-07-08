@@ -1,21 +1,21 @@
-extends Control
+﻿extends Control
 
 const NORMAL_NOTE_MODE = "normal"
 const MOVING_NOTE_MODE = "moving"
 
-# 윈도우 이벤트 상수 (기존)
+# ?덈룄???대깽???곸닔 (湲곗〈)
 const EVENT_STATIC_WINDOW = "window"
 const EVENT_MOVING_LINEAR_WINDOW = "window_moving_linear"
 const EVENT_MOVING_SMOOTH_WINDOW = "window_moving_smooth"
 
-# 이미지 노드 이벤트 상수 (신규 추가)
+# ?대?吏 ?몃뱶 ?대깽???곸닔 (?좉퇋 異붽?)
 const EVENT_STATIC_IMAGE = "image"
 const EVENT_MOVING_LINEAR_IMAGE = "image_moving_linear"
 const EVENT_MOVING_SMOOTH_IMAGE = "image_moving_smooth"
 
 const MUSIC_BASE_PATH = "res://assets/musics/"
 const MUSIC_SELECT_SCENE = "res://scenes/menu/music_select.tscn"
-const DEFAULT_WINDOW_TEXTURE = "res://assets/image/ingame/과녁.png"
+const DEFAULT_WINDOW_TEXTURE = "res://assets/image/ingame/怨쇰뀅.png"
 const TargetNoteScript = preload("res://scripts/gameplay/target_note.gd")
 const DEFAULT_BPM = 120.0
 const MIN_POSITIVE_DURATION = 0.01
@@ -29,9 +29,9 @@ enum MoveType {
 
 var texture_cache: Dictionary = {}
 
-# 오브젝트 풀 (윈도우용, 이미지용 분리)
+# ?ㅻ툕?앺듃 ? (?덈룄?곗슜, ?대?吏??遺꾨━)
 var window_pool: Array[Window] = []
-var image_pool: Array[TextureRect] = [] # 신규 추가
+var image_pool: Array[TextureRect] = [] # ?좉퇋 異붽?
 
 var chart_data: Dictionary = {}
 var current_time: float = 0.0
@@ -40,7 +40,7 @@ var note_index: int = 0
 var event_index: int = 0
 var bpm: float = DEFAULT_BPM
 
-# 카메라 셰이크 제어 변수 (옵션 C 완벽 대응)
+# 移대찓???곗씠???쒖뼱 蹂??(?듭뀡 C ?꾨꼍 ???
 var shake_timer: float = 0.0
 var shake_intensity: float = 0.0
 var original_position: Vector2 = Vector2.ZERO
@@ -50,13 +50,13 @@ func _ready() -> void:
 	original_position = position
 	Global.camera_shake_requested.connect(_on_camera_shake_requested)
 	
-	# 노트를 이펙트보다 위에 표시하기 위한 전용 레이어 생성
+	# ?명듃瑜??댄럺?몃낫???꾩뿉 ?쒖떆?섍린 ?꾪븳 ?꾩슜 ?덉씠???앹꽦
 	var note_layer = CanvasLayer.new()
 	note_layer.name = "NoteLayer"
-	note_layer.layer = 10 # 기본 레이어(0)보다 높은 값 설정
+	note_layer.layer = 10 # 湲곕낯 ?덉씠??0)蹂대떎 ?믪? 媛??ㅼ젙
 	add_child(note_layer)
 	
-	# 기존 스포너를 새로운 레이어로 이동
+	# 湲곗〈 ?ㅽ룷?덈? ?덈줈???덉씠?대줈 ?대룞
 	if target_spawner:
 		target_spawner.reparent(note_layer)
 	
@@ -73,7 +73,7 @@ func _input(event: InputEvent) -> void:
 		else:
 			SceneTransition.transition_to_scene(MUSIC_SELECT_SCENE)
 	
-	# 디버그용 기능 (디버그 빌드에서만 동작)
+	# ?붾쾭洹몄슜 湲곕뒫 (?붾쾭洹?鍮뚮뱶?먯꽌留??숈옉)
 	if OS.is_debug_build():
 		if event.is_action_pressed("1"):
 			_spawn_note(NORMAL_NOTE_MODE)
@@ -96,26 +96,26 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	# 매 프레임 플레이 정지 상태여도 셰이킹은 독립 작동하도록 정지 확인 전에 수행
+	# 留??꾨젅???뚮젅???뺤? ?곹깭?щ룄 ?곗씠?뱀? ?낅┰ ?묐룞?섎룄濡??뺤? ?뺤씤 ?꾩뿉 ?섑뻾
 	_process_camera_shake(delta)
 
 	if not is_playing:
 		return
 
-	# 오디오 플레이어와 싱크 맞추기 (Global.audio_player 참조 활용)
+	# ?ㅻ뵒???뚮젅?댁뼱? ?깊겕 留욎텛湲?(Global.audio_player 李몄“ ?쒖슜)
 	if Global.audio_player and Global.audio_player.playing:
-		# 오디오 재생 위치 + 지연 보정 + 글로벌 오프셋
+		# ?ㅻ뵒???ъ깮 ?꾩튂 + 吏??蹂댁젙 + 湲濡쒕쾶 ?ㅽ봽??
 		var audio_pos = Global.audio_player.get_playback_position() + AudioServer.get_time_since_last_mix() - AudioServer.get_output_latency()
-		# Global.music_offset은 Res.tres의 개별 곡 오프셋 (곡이 시작되기 전까지의 시간)
-		# AudioStreamPlayer가 재생 중이므로, 현재 차트 시간은 audio_pos + 곡 시작 대기 시간(music_offset) 이어야 함
-		# 하지만 audio_stream_player.gd에서 timer로 music_offset만큼 기다렸다가 play()를 하므로,
-		# audio_pos가 0인 시점의 current_time은 이미 music_offset 이어야 함.
-		# 오디오 스크립트의 GLOBAL_TIMING_OFFSET(0.6)도 고려해야 함.
+		# Global.music_offset? Res.tres??媛쒕퀎 怨??ㅽ봽??(怨≪씠 ?쒖옉?섍린 ?꾧퉴吏???쒓컙)
+		# AudioStreamPlayer媛 ?ъ깮 以묒씠誘濡? ?꾩옱 李⑦듃 ?쒓컙? audio_pos + 怨??쒖옉 ?湲??쒓컙(music_offset) ?댁뼱????
+		# ?섏?留?audio_stream_player.gd?먯꽌 timer濡?music_offset留뚰겮 湲곕떎?몃떎媛 play()瑜??섎?濡?
+		# audio_pos媛 0???쒖젏??current_time? ?대? music_offset ?댁뼱????
+		# ?ㅻ뵒???ㅽ겕由쏀듃??GLOBAL_TIMING_OFFSET(0.6)??怨좊젮?댁빞 ??
 		
-		# 보다 단순하고 정확한 방식:
-		# 오디오 재생 전까지는 delta로 누적하다가, 재생이 시작되면 오디오 위치를 기준으로 보정
-		var target_time = audio_pos + 0.7 - Global.music_offset # GLOBAL_TIMING_OFFSET 보정 및 개별 음원 오프셋 차감
-		current_time = lerp(current_time, target_time, 0.1) # 급격한 튐 방지
+		# 蹂대떎 ?⑥닚?섍퀬 ?뺥솗??諛⑹떇:
+		# ?ㅻ뵒???ъ깮 ?꾧퉴吏??delta濡??꾩쟻?섎떎媛, ?ъ깮???쒖옉?섎㈃ ?ㅻ뵒???꾩튂瑜?湲곗??쇰줈 蹂댁젙
+		var target_time = audio_pos + 0.7 - Global.music_offset # GLOBAL_TIMING_OFFSET 蹂댁젙 諛?媛쒕퀎 ?뚯썝 ?ㅽ봽??李④컧
+		current_time = lerp(current_time, target_time, 0.1) # 湲됯꺽????諛⑹?
 	else:
 		current_time += delta
 		
@@ -137,7 +137,7 @@ func _process_camera_shake(delta: float) -> void:
 		if shake_timer <= 0.0:
 			position = original_position
 		else:
-			# 무작위 오프셋 진동 계산 (Perfect/Great 극적 손맛 연출)
+			# 臾댁옉???ㅽ봽??吏꾨룞 怨꾩궛 (Perfect/Great 洹뱀쟻 ?먮쭧 ?곗텧)
 			var offset_x = randf_range(-shake_intensity, shake_intensity)
 			var offset_y = randf_range(-shake_intensity, shake_intensity)
 			position = original_position + Vector2(offset_x, offset_y)
@@ -145,7 +145,7 @@ func _process_camera_shake(delta: float) -> void:
 
 
 func start_chart() -> void:
-	TargetNoteScript.reset_state() # 이전 판의 노트 잔재 제거
+	TargetNoteScript.reset_state() # ?댁쟾 ?먯쓽 ?명듃 ?붿옱 ?쒓굅
 	chart_data = load_chart()
 	if chart_data == null:
 		push_error("Cannot start chart.")
@@ -172,7 +172,8 @@ func start_chart() -> void:
 			var dur = _sanitize_positive_float(note.get("duration", 3.0), 3.0, "hold duration")
 			var beat_div = _sanitize_positive_int(note.get("beat_division", 4), 4, "hold beat_division")
 			var interval = max((60.0 / bpm) * (4.0 / float(beat_div)), MIN_POSITIVE_DURATION)
-			var ticks = int(dur / interval)
+			var scoring_duration = max(dur - Global.judgment_perfect_margin, 0.0)
+			var ticks = int(scoring_duration / interval)
 			total_max_score += ticks * 10
 		else:
 			total_max_score += 100
@@ -185,7 +186,7 @@ func start_chart() -> void:
 	else:
 		current_time = 0.0
 	is_playing = true
-	print("차트 로드 성공: ", chart_data.get("notes", []).size(), "개의 노트")
+	print("李⑦듃 濡쒕뱶 ?깃났: ", chart_data.get("notes", []).size(), "媛쒖쓽 ?명듃")
 
 
 func load_chart() -> Variant:
@@ -219,7 +220,7 @@ func load_chart() -> Variant:
 
 	chart = _sanitize_chart(chart)
 
-	# 노래 길이 대비 노트 최대 개수 제한 계산
+	# ?몃옒 湲몄씠 ?鍮??명듃 理쒕? 媛쒖닔 ?쒗븳 怨꾩궛
 	var song_len = 180.0
 	var res_path = Global.get_music_res_path(Global.selected_music)
 	if FileAccess.file_exists(res_path):
@@ -230,14 +231,14 @@ func load_chart() -> Variant:
 	var max_notes = int(song_len / Global.note_limit_seconds_interval)
 	if chart["notes"].size() > max_notes:
 		push_warning("Note count exceeds max limit (" + str(max_notes) + ")! Exceeding latest notes will be filtered out.")
-		# 시간 기준으로 정렬 후, 허용치를 초과한 뒷 시간대의 노트들은 인게임 로딩에서 배제
+		# ?쒓컙 湲곗??쇰줈 ?뺣젹 ?? ?덉슜移섎? 珥덇낵?????쒓컙????명듃?ㅼ? ?멸쾶??濡쒕뵫?먯꽌 諛곗젣
 		chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 		chart["notes"] = chart["notes"].slice(0, max_notes)
 
-	# --- 추가된 부분: time 기준으로 자동 정렬 ---
+	# --- 異붽???遺遺? time 湲곗??쇰줈 ?먮룞 ?뺣젹 ---
 	chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 	
-	# 칠 수 없는 노트 필터링 (시간 대비 거리가 속도 한도 초과)
+	# 移????녿뒗 ?명듃 ?꾪꽣留?(?쒓컙 ?鍮?嫄곕━媛 ?띾룄 ?쒕룄 珥덇낵)
 	var filtered_notes = []
 	var last_hittable_note = null
 	
@@ -260,7 +261,7 @@ func load_chart() -> Variant:
 			var p2 = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
 			var dist = p1.distance_to(p2)
 			
-			# 인접 노트 간 거리가 매우 가까우면(예: 50px 미만) 칠 수 있는 것으로 간주하여 필터링 대상 제외
+			# ?몄젒 ?명듃 媛?嫄곕━媛 留ㅼ슦 媛源뚯슦硫??? 50px 誘몃쭔) 移????덈뒗 寃껋쑝濡?媛꾩＜?섏뿬 ?꾪꽣留?????쒖쇅
 			var speed = 0.0
 			if dist >= 50.0:
 				speed = dist / dt if dt > 0.001 else 999999.0
@@ -277,7 +278,7 @@ func load_chart() -> Variant:
 	chart["events"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 	# ----------------------------------------
 
-	# 구버전 차트 좌표 보정 (offset_corrected 플래그가 없는 경우)
+	# 援щ쾭??李⑦듃 醫뚰몴 蹂댁젙 (offset_corrected ?뚮옒洹멸? ?녿뒗 寃쎌슦)
 	if not chart.get("offset_corrected", false):
 		for note in chart["notes"]:
 			if note is Dictionary:
@@ -452,7 +453,7 @@ func _process_note(note_info: Dictionary) -> void:
 		if note_info.has("start_x") and note_info.has("start_y"):
 			start_pos = Vector2(float(note_info["start_x"]), float(note_info["start_y"]))
 
-	# 커브 및 중력 데이터 추출 (하위 호환: 없으면 null/false)
+	# 而ㅻ툕 諛?以묐젰 ?곗씠??異붿텧 (?섏쐞 ?명솚: ?놁쑝硫?null/false)
 	var curve_control = null
 	if note_info.has("curve_control_x") and note_info.has("curve_control_y"):
 		curve_control = Vector2(float(note_info["curve_control_x"]), float(note_info["curve_control_y"]))
@@ -464,7 +465,7 @@ func _process_note(note_info: Dictionary) -> void:
 
 func _spawn_hold_note(note_info: Dictionary) -> void:
 	var duration = float(note_info.get("duration", 3.0))
-	var beat_division = int(note_info.get("beat_division", 4)) # 기본 4박자(4분음표)
+	var beat_division = int(note_info.get("beat_division", 4)) # 湲곕낯 4諛뺤옄(4遺꾩쓬??
 	duration = _sanitize_positive_float(duration, 3.0, "hold duration")
 	beat_division = _sanitize_positive_int(beat_division, 4, "hold beat_division")
 	var hold_script = load("res://scripts/gameplay/hold_note.gd")
@@ -504,7 +505,7 @@ func _process_event(event_info: Dictionary) -> void:
 
 	var node: Node = null
 	match event_type:
-		# --- 기존 윈도우 이벤트 ---
+		# --- 湲곗〈 ?덈룄???대깽??---
 		EVENT_STATIC_WINDOW:
 			node = create_static_window(size, pos, duration, title, texture_path)
 		EVENT_MOVING_LINEAR_WINDOW:
@@ -512,7 +513,7 @@ func _process_event(event_info: Dictionary) -> void:
 		EVENT_MOVING_SMOOTH_WINDOW:
 			node = create_moving_window(size, pos, target_pos, duration, MoveType.SMOOTH, title, texture_path)
 			
-		# --- 신규 추가된 게임 내 이미지 이벤트 ---
+		# --- ?좉퇋 異붽???寃뚯엫 ???대?吏 ?대깽??---
 		EVENT_STATIC_IMAGE:
 			node = create_static_image(size, pos, duration, texture_path)
 		EVENT_MOVING_LINEAR_IMAGE:
@@ -544,7 +545,7 @@ func _spawn_note(mode: String, target_pos: Variant = null, start_pos: Variant = 
 
 
 # ==========================================
-# 기존 Window 기반 생성 함수들 (유지됨)
+# 湲곗〈 Window 湲곕컲 ?앹꽦 ?⑥닔??(?좎???
 # ==========================================
 
 func create_moving_window(size: Vector2i, start_rel_pos: Vector2i, target_rel_pos: Vector2i, move_duration: float, move_type: MoveType, title: String, img_path: String) -> Window:
@@ -653,7 +654,7 @@ func _animate_window_movement_linear(window: Window, target_rel_pos: Vector2i, d
 
 
 # ==========================================
-# 신규 TextureRect (게임 내 노드) 스폰 함수들
+# ?좉퇋 TextureRect (寃뚯엫 ???몃뱶) ?ㅽ룿 ?⑥닔??
 # ==========================================
 
 func create_moving_image(size: Vector2i, start_pos: Vector2i, target_pos: Vector2i, move_duration: float, move_type: MoveType, img_path: String) -> TextureRect:
@@ -695,29 +696,29 @@ func _get_or_create_image(size: Vector2i, img_path: String) -> TextureRect:
 		push_error("Image texture not found: " + img_path)
 		return null
 
-	# 풀(Pool)에서 안 쓰고 있는 TextureRect 찾기
+	# ?(Pool)?먯꽌 ???곌퀬 ?덈뒗 TextureRect 李얘린
 	for i in range(image_pool.size() - 1, -1, -1):
 		var img_node = image_pool[i]
 		if not is_instance_valid(img_node):
 			image_pool.remove_at(i)
 			continue
 		if not img_node.visible:
-			# [수정핵심 1] 텍스처를 넣고 이전 크기 기억을 강제로 지운 뒤 새 크기 덮어쓰기
+			# [?섏젙?듭떖 1] ?띿뒪泥섎? ?ｊ퀬 ?댁쟾 ?ш린 湲곗뼲??媛뺤젣濡?吏???????ш린 ??뼱?곌린
 			img_node.texture = texture
 			img_node.reset_size() 
 			img_node.size = size
 			return img_node
 
-	# 풀에 없으면 새로 생성하여 게임 화면(씬 트리)에 추가
+	# ????놁쑝硫??덈줈 ?앹꽦?섏뿬 寃뚯엫 ?붾㈃(???몃━)??異붽?
 	var new_image = TextureRect.new()
 	
-	# [수정핵심 2] expand_mode를 가장 먼저 설정해야 원본 크기로 튀는 것을 방지함
+	# [?섏젙?듭떖 2] expand_mode瑜?媛??癒쇱? ?ㅼ젙?댁빞 ?먮낯 ?ш린濡????寃껋쓣 諛⑹???
 	new_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	new_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	new_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	new_image.texture = texture
-	new_image.size = size # 오류를 일으키던 custom_minimum_size 속성 삭제
+	new_image.size = size # ?ㅻ쪟瑜??쇱쑝?ㅻ뜕 custom_minimum_size ?띿꽦 ??젣
 
 	add_child(new_image)
 	image_pool.append(new_image)
@@ -739,21 +740,21 @@ func _animate_image_movement_linear(img_node: TextureRect, target_pos: Vector2i,
 	tween.tween_callback(img_node.hide)
 
 
-# 유틸리티 함수
+# ?좏떥由ы떚 ?⑥닔
 func _is_headless_display() -> bool:
 	return OS.has_feature("headless") or "--headless" in OS.get_cmdline_args() or "--headless-test" in OS.get_cmdline_user_args() or OS.get_environment("GODOT_HEADLESS_TEST") == "1"
 
 
-# 곡 완료 여부 체크 함수
+# 怨??꾨즺 ?щ? 泥댄겕 ?⑥닔
 func _check_song_finished() -> void:
 	if not is_playing:
 		return
 
-	# 차트의 모든 노트가 방출되었는지 확인
+	# 李⑦듃??紐⑤뱺 ?명듃媛 諛⑹텧?섏뿀?붿? ?뺤씤
 	if note_index < chart_data.get("notes", []).size():
 		return
 
-	# 현재 화면에 살아 있는 TargetNote 개수 확인
+	# ?꾩옱 ?붾㈃???댁븘 ?덈뒗 TargetNote 媛쒖닔 ?뺤씤
 	var has_active_notes = false
 	if target_spawner:
 		for child in target_spawner.get_children():
@@ -761,7 +762,7 @@ func _check_song_finished() -> void:
 				has_active_notes = true
 				break
 
-	# 현재 화면에 살아 있는 HoldNote 개수 확인
+	# ?꾩옱 ?붾㈃???댁븘 ?덈뒗 HoldNote 媛쒖닔 ?뺤씤
 	var hold_notes_active = false
 	var note_layer = get_node_or_null("NoteLayer")
 	if note_layer:
@@ -771,23 +772,23 @@ func _check_song_finished() -> void:
 				break
 
 	if not has_active_notes and not hold_notes_active:
-		# 마지막 노트의 릴리즈 이후 지연 시간 확보
+		# 留덉?留??명듃??由대━利??댄썑 吏???쒓컙 ?뺣낫
 		var last_note_time = 0.0
 		var notes = chart_data.get("notes", [])
 		if notes.size() > 0:
 			var last_note = notes[-1]
 			last_note_time = float(last_note.get("time", 0.0)) + float(last_note.get("duration", 2.0))
 
-		# 오디오 스트림이 멈췄거나 마지막 노트 플레이 시간이 충분히 흘렀을 때 종료
+		# ?ㅻ뵒???ㅽ듃由쇱씠 硫덉톬嫄곕굹 留덉?留??명듃 ?뚮젅???쒓컙??異⑸텇???섎?????醫낅즺
 		var audio_stopped = Global.audio_player != null and not Global.audio_player.playing
 		if (audio_stopped and current_time > last_note_time) or (current_time > last_note_time + 3.0):
 			is_playing = false
 			_transition_to_result_scene()
 
 
-# 결과 화면 씬 전환
+# 寃곌낵 ?붾㈃ ???꾪솚
 func _transition_to_result_scene() -> void:
 	print("Song complete! Transitioning to result scene...")
-	# SceneTransition 전역 자동로드를 이용해 자연스러운 페이드 전환
+	# SceneTransition ?꾩뿭 ?먮룞濡쒕뱶瑜??댁슜???먯뿰?ㅻ윭???섏씠???꾪솚
 	var result_path = "res://scenes/menu/result_scene.tscn"
 	SceneTransition.transition_to_scene(result_path)
