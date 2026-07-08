@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("2_dy68s")
+composer = "Jacques Offenbach"
 bpm = 194
 audio_stream = ExtResource("1_kqt13")
 metadata/_custom_type_script = "uid://ciljglxaby7qn"

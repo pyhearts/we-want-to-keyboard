@@ -1,4 +1,4 @@
-﻿extends Control
+extends Control
 
 const NORMAL_NOTE_MODE = "normal"
 const MOVING_NOTE_MODE = "moving"
@@ -50,19 +50,17 @@ func _ready() -> void:
 	original_position = position
 	Global.camera_shake_requested.connect(_on_camera_shake_requested)
 	
-	# ?명듃瑜??댄럺?몃낫???꾩뿉 ?쒖떆?섍린 ?꾪븳 ?꾩슜 ?덉씠???앹꽦
+	# Notes should render above the playfield and windows.
 	var note_layer = CanvasLayer.new()
 	note_layer.name = "NoteLayer"
-	note_layer.layer = 10 # 湲곕낯 ?덉씠??0)蹂대떎 ?믪? 媛??ㅼ젙
+	note_layer.layer = 10
 	add_child(note_layer)
 	
-	# 湲곗〈 ?ㅽ룷?덈? ?덈줈???덉씠?대줈 ?대룞
 	if target_spawner:
 		target_spawner.reparent(note_layer)
 	
 	Global.reset_run()
 	start_chart()
-
 
 
 func _input(event: InputEvent) -> void:
@@ -73,7 +71,6 @@ func _input(event: InputEvent) -> void:
 		else:
 			SceneTransition.transition_to_scene(MUSIC_SELECT_SCENE)
 	
-	# ?붾쾭洹몄슜 湲곕뒫 (?붾쾭洹?鍮뚮뱶?먯꽌留??숈옉)
 	if OS.is_debug_build():
 		if event.is_action_pressed("1"):
 			_spawn_note(NORMAL_NOTE_MODE)
@@ -96,33 +93,23 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	# 留??꾨젅???뚮젅???뺤? ?곹깭?щ룄 ?곗씠?뱀? ?낅┰ ?묐룞?섎룄濡??뺤? ?뺤씤 ?꾩뿉 ?섑뻾
 	_process_camera_shake(delta)
 
 	if not is_playing:
 		return
 
-	# ?ㅻ뵒???뚮젅?댁뼱? ?깊겕 留욎텛湲?(Global.audio_player 李몄“ ?쒖슜)
+	# Match the chart editor's chart-time/audio-time mapping exactly.
+	# Existing charts store note times in this space, so avoid smoothing or
+	# extra output-latency compensation that would shift spawn timing.
 	if Global.audio_player and Global.audio_player.playing:
-		# ?ㅻ뵒???ъ깮 ?꾩튂 + 吏??蹂댁젙 + 湲濡쒕쾶 ?ㅽ봽??
-		var audio_pos = Global.audio_player.get_playback_position() + AudioServer.get_time_since_last_mix() - AudioServer.get_output_latency()
-		# Global.music_offset? Res.tres??媛쒕퀎 怨??ㅽ봽??(怨≪씠 ?쒖옉?섍린 ?꾧퉴吏???쒓컙)
-		# AudioStreamPlayer媛 ?ъ깮 以묒씠誘濡? ?꾩옱 李⑦듃 ?쒓컙? audio_pos + 怨??쒖옉 ?湲??쒓컙(music_offset) ?댁뼱????
-		# ?섏?留?audio_stream_player.gd?먯꽌 timer濡?music_offset留뚰겮 湲곕떎?몃떎媛 play()瑜??섎?濡?
-		# audio_pos媛 0???쒖젏??current_time? ?대? music_offset ?댁뼱????
-		# ?ㅻ뵒???ㅽ겕由쏀듃??GLOBAL_TIMING_OFFSET(0.6)??怨좊젮?댁빞 ??
-		
-		# 蹂대떎 ?⑥닚?섍퀬 ?뺥솗??諛⑹떇:
-		# ?ㅻ뵒???ъ깮 ?꾧퉴吏??delta濡??꾩쟻?섎떎媛, ?ъ깮???쒖옉?섎㈃ ?ㅻ뵒???꾩튂瑜?湲곗??쇰줈 蹂댁젙
-		var target_time = audio_pos + 0.7 - Global.music_offset # GLOBAL_TIMING_OFFSET 蹂댁젙 諛?媛쒕퀎 ?뚯썝 ?ㅽ봽??李④컧
-		current_time = lerp(current_time, target_time, 0.1) # 湲됯꺽????諛⑹?
+		var audio_pos = Global.audio_player.get_playback_position()
+		current_time = audio_pos + 0.7 - Global.music_offset
 	else:
 		current_time += delta
 		
 	_process_due_notes()
 	_process_due_events()
 	_check_song_finished()
-
 
 func _on_camera_shake_requested(intensity: float, duration: float) -> void:
 	if not Global.enable_camera_shake:
@@ -220,61 +207,62 @@ func load_chart() -> Variant:
 
 	chart = _sanitize_chart(chart)
 
-	# ?몃옒 湲몄씠 ?鍮??명듃 理쒕? 媛쒖닔 ?쒗븳 怨꾩궛
-	var song_len = 180.0
-	var res_path = Global.get_music_res_path(Global.selected_music)
-	if FileAccess.file_exists(res_path):
-		var music_res = load(res_path)
-		if music_res and music_res.get("audio_stream"):
-			song_len = music_res.get("audio_stream").get_length()
-	
-	var max_notes = int(song_len / Global.note_limit_seconds_interval)
-	if chart["notes"].size() > max_notes:
-		push_warning("Note count exceeds max limit (" + str(max_notes) + ")! Exceeding latest notes will be filtered out.")
-		# ?쒓컙 湲곗??쇰줈 ?뺣젹 ?? ?덉슜移섎? 珥덇낵?????쒓컙????명듃?ㅼ? ?멸쾶??濡쒕뵫?먯꽌 諛곗젣
-		chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
-		chart["notes"] = chart["notes"].slice(0, max_notes)
+	var bypass_difficulty_filter = _is_hard_chart_title(Global.selected_music)
+	if bypass_difficulty_filter:
+		print("Hard chart detected; difficulty note filtering disabled: ", Global.selected_music)
 
-	# --- 異붽???遺遺? time 湲곗??쇰줈 ?먮룞 ?뺣젹 ---
+	if not bypass_difficulty_filter:
+		var song_len = 180.0
+		var res_path = Global.get_music_res_path(Global.selected_music)
+		if FileAccess.file_exists(res_path):
+			var music_res = load(res_path)
+			if music_res and music_res.get("audio_stream"):
+				song_len = music_res.get("audio_stream").get_length()
+		
+		var max_notes = int(song_len / Global.note_limit_seconds_interval)
+		if chart["notes"].size() > max_notes:
+			push_warning("Note count exceeds max limit (" + str(max_notes) + ")! Exceeding latest notes will be filtered out.")
+			chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
+			chart["notes"] = chart["notes"].slice(0, max_notes)
+
 	chart["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 	
-	# 移????녿뒗 ?명듃 ?꾪꽣留?(?쒓컙 ?鍮?嫄곕━媛 ?띾룄 ?쒕룄 珥덇낵)
-	var filtered_notes = []
-	var last_hittable_note = null
-	
-	for note in chart["notes"]:
-		if not note is Dictionary:
-			continue
+	if not bypass_difficulty_filter:
+		var filtered_notes = []
+		var last_hittable_note = null
 		
-		if last_hittable_note == null:
-			filtered_notes.append(note)
-			last_hittable_note = note
-		else:
-			var t1 = float(last_hittable_note.get("time", 0.0))
-			if str(last_hittable_note.get("type", "normal")) == "hold":
-				t1 += float(last_hittable_note.get("duration", 3.0))
-				
-			var t2 = float(note.get("time", 0.0))
-			var dt = t2 - t1
+		for note in chart["notes"]:
+			if not note is Dictionary:
+				continue
 			
-			var p1 = Vector2(float(last_hittable_note.get("x", 960.0)), float(last_hittable_note.get("y", 540.0)))
-			var p2 = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
-			var dist = p1.distance_to(p2)
-			
-			# ?몄젒 ?명듃 媛?嫄곕━媛 留ㅼ슦 媛源뚯슦硫??? 50px 誘몃쭔) 移????덈뒗 寃껋쑝濡?媛꾩＜?섏뿬 ?꾪꽣留?????쒖쇅
-			var speed = 0.0
-			if dist >= 50.0:
-				speed = dist / dt if dt > 0.001 else 999999.0
-			else:
-				speed = 0.0 if dt >= 0.0 else 999999.0
-			
-			if speed <= Global.max_note_speed:
+			if last_hittable_note == null:
 				filtered_notes.append(note)
 				last_hittable_note = note
 			else:
-				print("Unhittable note blocked! Speed: ", speed, " px/s, Limit: ", Global.max_note_speed)
+				var t1 = float(last_hittable_note.get("time", 0.0))
+				if str(last_hittable_note.get("type", "normal")) == "hold":
+					t1 += float(last_hittable_note.get("duration", 3.0))
+					
+				var t2 = float(note.get("time", 0.0))
+				var dt = t2 - t1
 				
-	chart["notes"] = filtered_notes
+				var p1 = Vector2(float(last_hittable_note.get("x", 960.0)), float(last_hittable_note.get("y", 540.0)))
+				var p2 = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
+				var dist = p1.distance_to(p2)
+				
+				var speed = 0.0
+				if dist >= 50.0:
+					speed = dist / dt if dt > 0.001 else 999999.0
+				else:
+					speed = 0.0 if dt >= 0.0 else 999999.0
+				
+				if speed <= Global.max_note_speed:
+					filtered_notes.append(note)
+					last_hittable_note = note
+				else:
+					print("Unhittable note blocked! Speed: ", speed, " px/s, Limit: ", Global.max_note_speed)
+					
+		chart["notes"] = filtered_notes
 	chart["events"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
 	# ----------------------------------------
 
@@ -401,6 +389,8 @@ func _sanitize_positive_int(value: Variant, fallback: int, label: String) -> int
 		return fallback
 	return result
 
+func _is_hard_chart_title(title: String) -> bool:
+	return title.strip_edges().ends_with("Hard")
 
 func _ensure_selected_music() -> void:
 	if Global.selected_music != "":

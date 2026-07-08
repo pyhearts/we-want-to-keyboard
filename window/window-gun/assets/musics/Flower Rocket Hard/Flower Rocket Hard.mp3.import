@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b564aif35rlqq"
+path="res://.godot/imported/Flower Rocket Hard.mp3-a68675d386a68b0dbbe6590a0ee6045e.mp3str"
+
+[deps]
+
+source_file="res://assets/musics/Flower Rocket Hard/Flower Rocket Hard.mp3"
+dest_files=["res://.godot/imported/Flower Rocket Hard.mp3-a68675d386a68b0dbbe6590a0ee6045e.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

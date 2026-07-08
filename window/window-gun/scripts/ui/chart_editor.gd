@@ -12,6 +12,14 @@ func _chart_time_to_audio_pos(chart_time: float) -> float:
 func _audio_pos_to_chart_time(audio_pos: float) -> float:
 	return audio_pos + GLOBAL_TIMING_OFFSET - offset
 
+
+func _get_timeline_display_time(note: Dictionary) -> float:
+	var note_time = float(note.get("time", 0.0))
+	var note_type = str(note.get("type", "normal"))
+	if note_type == "normal" or note_type == "moving":
+		return note_time + GLOBAL_TIMING_OFFSET
+	return note_time
+
 # UI 노드 바인딩
 @onready var song_select: OptionButton = %SongSelect
 @onready var bpm_input: LineEdit = %BpmInput
@@ -1457,6 +1465,7 @@ func _draw_preview_canvas() -> void:
 		var note: Dictionary = notes[i]
 		var note_time = float(note.get("time", 0.0))
 		var note_type = str(note.get("type", "normal"))
+		var display_time: float = _get_timeline_display_time(note)
 		
 		var alpha = _get_note_alpha(note, current_time)
 		if alpha <= 0.0:
@@ -1499,7 +1508,7 @@ func _draw_preview_canvas() -> void:
 			preview_canvas.draw_string(hold_font, center + Vector2(-60.0*sx, 10.0*sy), text_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, hold_text_color)
 
 			# --- 롱 노트 경고 표시 ---
-			var warning = _get_note_warnings(i) if current_time >= note_time else ""
+			var warning = _get_note_warnings(i) if current_time >= display_time else ""
 			if warning != "":
 				var w_font = get_theme_font("font")
 				if warning == "LIMIT_EXCEEDED":
@@ -1599,7 +1608,7 @@ func _draw_preview_canvas() -> void:
 					preview_canvas.draw_string(grav_font, pos + Vector2(15.0 * sx, 25.0 * sy), "G", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, grav_color)
 					
 			# --- 불가능한 패턴 자동 검출 및 시각 경고 ---
-			var warning = _get_note_warnings(i) if current_time >= note_time else ""
+			var warning = _get_note_warnings(i) if current_time >= display_time else ""
 			if warning != "":
 				var w_font = get_theme_font("font")
 				if warning == "LIMIT_EXCEEDED":
@@ -1781,8 +1790,9 @@ func _draw_timeline() -> void:
 		var note: Dictionary = notes[i]
 		var note_time: float = float(note.get("time", 0.0))
 		var note_type: String = str(note.get("type", "normal"))
+		var display_time: float = _get_timeline_display_time(note)
 		
-		var dx: float = (note_time - current_time) * pixels_per_second
+		var dx: float = (display_time - current_time) * pixels_per_second
 		var lx: float = center_x + dx
 		
 		if lx < 0 or lx > timeline_w:
@@ -1806,7 +1816,7 @@ func _draw_timeline() -> void:
 		timeline.draw_colored_polygon(pts, color)
 
 		# 타임라인 내 오류 표시 기능 추가
-		var warning = _get_note_warnings(i) if current_time >= note_time else ""
+		var warning = _get_note_warnings(i) if current_time >= display_time else ""
 		if warning != "":
 			var border_pts = PackedVector2Array([
 				Vector2(lx, timeline_h / 2.0 - 10.0),
@@ -1819,7 +1829,7 @@ func _draw_timeline() -> void:
 		
 		if note_type == "hold":
 			var duration: float = float(note.get("duration", 3.0))
-			var end_dx: float = ((note_time + duration) - current_time) * pixels_per_second
+			var end_dx: float = ((display_time + duration) - current_time) * pixels_per_second
 			var end_lx: float = center_x + end_dx
 			
 			timeline.draw_line(Vector2(lx, timeline_h/2.0), Vector2(clamp(end_lx, 0.0, timeline_w), timeline_h/2.0), Color(0.788235, 0.0941176, 0.290196, 0.5), 4.0)

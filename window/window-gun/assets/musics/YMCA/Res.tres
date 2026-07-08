@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_sbr8m")
+composer = "Village People"
 bpm = 126
 audio_stream = ExtResource("1_ju7l4")
 metadata/_custom_type_script = "uid://ciljglxaby7qn"

@@ -1,16 +1,14 @@
-[gd_resource type="Resource" script_class="MusicData" format=3]
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://bpskuqmsknhcy"]
 
 [ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_music_data"]
-[ext_resource type="AudioStream" path="res://assets/musics/First Song/First Song.mp3" id="2_audio"]
-[ext_resource type="Texture2D" path="res://assets/musics/First Song/img.png" id="3_jacket"]
+[ext_resource type="AudioStream" uid="uid://d037uvdfja6st" path="res://assets/musics/First Song/First Song.mp3" id="2_audio"]
+[ext_resource type="Texture2D" uid="uid://t2u5rk7voytx" path="res://assets/musics/First Song/img.png" id="3_jacket"]
 
 [resource]
 script = ExtResource("1_music_data")
 id = "First Song"
 title = "First Song"
-composer = "Unknown Composer"
-bpm = 120
-offset = 0.0
+composer = "Roga."
 audio_stream = ExtResource("2_audio")
 jacket_image = ExtResource("3_jacket")
 metadata/_custom_type_script = "uid://ciljglxaby7qn"
