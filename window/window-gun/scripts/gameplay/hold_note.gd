@@ -118,12 +118,12 @@ func _ready() -> void:
 	
 	# 3. HOLD 대형 글자 생성
 	hold_label = Label.new()
-	hold_label.text = "HOLD"
+	hold_label.text = "꾹 누르기"
 	hold_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hold_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	if custom_font:
 		hold_label.add_theme_font_override("font", custom_font)
-	hold_label.add_theme_font_size_override("font_size", 120)
+	hold_label.add_theme_font_size_override("font_size", 96)
 	hold_label.add_theme_color_override("font_color", Color.WHITE)
 	container.add_child(hold_label)
 	
@@ -167,7 +167,7 @@ func _process(delta: float) -> void:
 		
 		# 글자가 MISS 상태였다면 다시 원래의 HOLD 상태로 복귀
 		if is_instance_valid(hold_label) and hold_label.text == "MISS":
-			hold_label.text = "HOLD"
+			hold_label.text = "꾹 누르기"
 			hold_label.add_theme_color_override("font_color", Color.WHITE)
 	else:
 		# 손을 떼고 있으면 유예 게이지 감소

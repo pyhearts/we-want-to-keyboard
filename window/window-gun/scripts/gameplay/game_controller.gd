@@ -21,9 +21,16 @@ const DEFAULT_BPM = 120.0
 const MIN_POSITIVE_DURATION = 0.01
 const MAX_HEALTH = 100.0
 const HEALTH_DAMAGE_GOOD = 8.0
+const HEALTH_DAMAGE_NEAR = 18.0
 const HEALTH_DAMAGE_BAD = 18.0
 const HEALTH_DAMAGE_MISS = 30.0
 const HEALTH_DAMAGE_MULTIPLIER_HARD = 2.0 / 3.0
+const NOTE_PREVIEW_LEAD_TIME = 0.6
+const NOTE_PREVIEW_MAX_COUNT = 3
+const NOTE_PREVIEW_ALPHA = 0.18
+const DAMAGE_VIGNETTE_FLASH_IN = 0.04
+const DAMAGE_VIGNETTE_FADE_OUT = 0.45
+const DAMAGE_VIGNETTE_IDLE_MAX = 0.28
 
 enum MoveType {
 	SMOOTH,
@@ -48,6 +55,10 @@ var current_region_index: int = 0
 var health: float = MAX_HEALTH
 var is_dead: bool = false
 var damage_vignette: ColorRect = null
+var damage_vignette_tween: Tween = null
+var damage_vignette_flash_amount: float = 0.0
+var note_preview_layer: Control = null
+var preview_notes: Array = []
 
 # 移대찓???곗씠???쒖뼱 蹂??(?듭뀡 C ?꾨꼍 ???
 var shake_timer: float = 0.0
@@ -61,6 +72,7 @@ func _ready() -> void:
 	if not Global.judgment_added.is_connected(_on_judgment_added):
 		Global.judgment_added.connect(_on_judgment_added)
 	_create_damage_vignette()
+	_create_note_preview_layer()
 	
 	# Notes should render above the playfield and windows.
 	var note_layer = CanvasLayer.new()
@@ -119,6 +131,7 @@ func _process(delta: float) -> void:
 	else:
 		current_time += delta
 		
+	_update_note_preview_hints()
 	_process_due_notes()
 	_process_due_events()
 	if Global.is_region_play_mode:
@@ -142,6 +155,83 @@ func _process_camera_shake(delta: float) -> void:
 			var offset_x = randf_range(-shake_intensity, shake_intensity)
 			var offset_y = randf_range(-shake_intensity, shake_intensity)
 			position = original_position + Vector2(offset_x, offset_y)
+
+
+func _create_note_preview_layer() -> void:
+	var layer = CanvasLayer.new()
+	layer.name = "NotePreviewLayer"
+	layer.layer = 9
+	add_child(layer)
+
+	note_preview_layer = Control.new()
+	note_preview_layer.name = "NotePreview"
+	note_preview_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	note_preview_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	note_preview_layer.draw.connect(_draw_note_preview_hints)
+	layer.add_child(note_preview_layer)
+
+
+func _update_note_preview_hints() -> void:
+	if note_preview_layer == null:
+		return
+	preview_notes.clear()
+	if not chart_data.has("notes"):
+		note_preview_layer.queue_redraw()
+		return
+
+	var notes = chart_data.get("notes", [])
+	for i in range(note_index, min(note_index + 10, notes.size())):
+		var note = notes[i]
+		if not note is Dictionary:
+			continue
+		var note_time = float(note.get("time", 0.0))
+		var time_until = note_time - current_time
+		if time_until > NOTE_PREVIEW_LEAD_TIME:
+			break
+		if time_until <= 0.0:
+			continue
+		preview_notes.append({
+			"note": note,
+			"time_until": time_until
+		})
+		if preview_notes.size() >= NOTE_PREVIEW_MAX_COUNT:
+			break
+	note_preview_layer.queue_redraw()
+
+
+func _draw_note_preview_hints() -> void:
+	if note_preview_layer == null or preview_notes.is_empty():
+		return
+	var font = get_theme_font("font")
+	for preview in preview_notes:
+		var note = preview.get("note", {})
+		if not note is Dictionary:
+			continue
+		var time_until = float(preview.get("time_until", NOTE_PREVIEW_LEAD_TIME))
+		var progress = clamp(1.0 - (time_until / NOTE_PREVIEW_LEAD_TIME), 0.0, 1.0)
+		var alpha = lerp(NOTE_PREVIEW_ALPHA * 0.35, NOTE_PREVIEW_ALPHA, progress)
+		var note_type = str(note.get("type", NORMAL_NOTE_MODE))
+		var target_pos = _get_note_preview_position(note)
+		var color = Color(0.0, 0.9, 1.0, alpha)
+		if note_type == "hold":
+			color = Color(1.0, 0.85, 0.2, alpha)
+
+		var radius = lerp(44.0, 24.0, progress)
+		var ring_width = lerp(2.0, 4.0, progress)
+		var fill_alpha = alpha * 0.14
+		note_preview_layer.draw_circle(target_pos, radius, Color(color.r, color.g, color.b, fill_alpha))
+		note_preview_layer.draw_arc(target_pos, radius, 0.0, TAU, 96, color, ring_width, true)
+		note_preview_layer.draw_arc(target_pos, radius * 0.68, 0.0, TAU, 96, Color(color.r, color.g, color.b, alpha * 0.55), max(1.0, ring_width * 0.55), true)
+		if note_type == "hold" and font:
+			note_preview_layer.draw_string(font, target_pos + Vector2(16.0, -12.0), "꾹", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, color)
+
+
+func _get_note_preview_position(note: Dictionary) -> Vector2:
+	if str(note.get("type", NORMAL_NOTE_MODE)) == "hold":
+		return Vector2(960.0, 540.0)
+	if note.has("start_x") and note.has("start_y"):
+		return Vector2(float(note.get("start_x", 960.0)), float(note.get("start_y", 540.0)))
+	return Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
 
 
 
@@ -181,7 +271,7 @@ void fragment() {
 	damage_vignette.color = Color.WHITE
 	damage_vignette.material = shader_material
 	layer.add_child(damage_vignette)
-	_update_damage_vignette()
+	_update_damage_vignette_amount()
 
 
 func _on_judgment_added(judgment_type: String) -> void:
@@ -190,6 +280,8 @@ func _on_judgment_added(judgment_type: String) -> void:
 	match judgment_type.to_lower():
 		"good":
 			_damage_health(HEALTH_DAMAGE_GOOD)
+		"near":
+			_damage_health(HEALTH_DAMAGE_NEAR)
 		"bad":
 			_damage_health(HEALTH_DAMAGE_BAD)
 		"miss":
@@ -198,7 +290,7 @@ func _on_judgment_added(judgment_type: String) -> void:
 
 func _damage_health(amount: float) -> void:
 	health = max(health - (amount * _get_health_damage_multiplier()), 0.0)
-	_update_damage_vignette()
+	_flash_damage_vignette(amount)
 	if health <= 0.0:
 		_die()
 
@@ -209,11 +301,39 @@ func _get_health_damage_multiplier() -> float:
 	return 1.0
 
 
-func _update_damage_vignette() -> void:
+func _set_damage_vignette_amount(amount: float) -> void:
 	if damage_vignette and damage_vignette.material is ShaderMaterial:
-		var danger = clamp(1.0 - (health / MAX_HEALTH), 0.0, 1.0)
 		var shader_material = damage_vignette.material as ShaderMaterial
-		shader_material.set_shader_parameter("danger", danger)
+		shader_material.set_shader_parameter("danger", clamp(amount, 0.0, 1.0))
+
+
+func _get_idle_damage_vignette_amount() -> float:
+	var missing_health = clamp(1.0 - (health / MAX_HEALTH), 0.0, 1.0)
+	return missing_health * DAMAGE_VIGNETTE_IDLE_MAX
+
+
+func _update_damage_vignette_amount() -> void:
+	_set_damage_vignette_amount(max(_get_idle_damage_vignette_amount(), damage_vignette_flash_amount))
+
+
+func _flash_damage_vignette(raw_damage: float) -> void:
+	if is_instance_valid(damage_vignette_tween) and damage_vignette_tween.is_running():
+		damage_vignette_tween.kill()
+	var damage_ratio = clamp(raw_damage / HEALTH_DAMAGE_MISS, 0.0, 1.0)
+	var low_health_bonus = clamp(1.0 - (health / MAX_HEALTH), 0.0, 1.0) * 0.25
+	var peak = clamp(0.35 + (damage_ratio * 0.45) + low_health_bonus, 0.0, 1.0)
+	damage_vignette_flash_amount = peak
+	_update_damage_vignette_amount()
+	damage_vignette_tween = create_tween()
+	damage_vignette_tween.tween_interval(DAMAGE_VIGNETTE_FLASH_IN)
+	damage_vignette_tween.tween_method(_set_damage_vignette_flash_amount, peak, 0.0, DAMAGE_VIGNETTE_FADE_OUT) \
+		.set_trans(Tween.TRANS_QUAD) \
+		.set_ease(Tween.EASE_OUT)
+
+
+func _set_damage_vignette_flash_amount(amount: float) -> void:
+	damage_vignette_flash_amount = clamp(amount, 0.0, 1.0)
+	_update_damage_vignette_amount()
 
 
 func _die() -> void:
@@ -222,7 +342,9 @@ func _die() -> void:
 	is_dead = true
 	is_playing = false
 	health = 0.0
-	_update_damage_vignette()
+	preview_notes.clear()
+	if note_preview_layer:
+		note_preview_layer.queue_redraw()
 	if Global.audio_player:
 		Global.audio_player.stop()
 	get_tree().create_timer(0.35).timeout.connect(_transition_to_result_scene)
@@ -231,7 +353,10 @@ func _die() -> void:
 func start_chart() -> void:
 	health = MAX_HEALTH
 	is_dead = false
-	_update_damage_vignette()
+	if is_instance_valid(damage_vignette_tween) and damage_vignette_tween.is_running():
+		damage_vignette_tween.kill()
+	damage_vignette_flash_amount = 0.0
+	_update_damage_vignette_amount()
 	TargetNoteScript.reset_state() # ?댁쟾 ?먯쓽 ?명듃 ?붿옱 ?쒓굅
 	chart_data = load_chart()
 	if chart_data == null:

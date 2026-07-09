@@ -42,6 +42,13 @@ func start(judgment_type: String) -> void:
 			final_color = Color(0.8, 0.3, 1.0, 1.0) # 네온 퍼플
 			add_theme_constant_override("outline_size", 8)
 			add_theme_color_override("font_outline_color", Color(0.3, 0.0, 0.4, 0.8))
+		"near":
+			text = "NEAR"
+			final_color = Color(1.0, 0.55, 0.15, 1.0)
+			direction_multiplier = 0.7
+			peak_scale = Vector2(1.15, 1.15)
+			add_theme_constant_override("outline_size", 8)
+			add_theme_color_override("font_outline_color", Color(0.45, 0.18, 0.0, 0.8))
 		"miss":
 			text = "MISS"
 			final_color = Color(1.0, 0.15, 0.15, 1.0) # 강렬한 네온 레드

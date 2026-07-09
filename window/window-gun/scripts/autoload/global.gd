@@ -41,6 +41,7 @@ var current_base_score: int = 0
 var perfect_count: int = 0
 var great_count: int = 0
 var good_count: int = 0
+var near_count: int = 0
 var miss_count: int = 0
 
 var audio_player: AudioStreamPlayer = null
@@ -218,6 +219,7 @@ func reset_run() -> void:
 	perfect_count = 0
 	great_count = 0
 	good_count = 0
+	near_count = 0
 	miss_count = 0
 	score_changed.emit(score)
 	combo_changed.emit(combo)
@@ -253,6 +255,8 @@ func add_judgment(judgment_type: String) -> void:
 			great_count += 1
 		"good":
 			good_count += 1
+		"near":
+			near_count += 1
 		"miss":
 			miss_count += 1
 	judgment_added.emit(judgment_type)

@@ -1,198 +1,260 @@
 extends Control
 
-@onready var check_shake: CheckButton = %CheckShake
-@onready var slider_shake: HSlider = %SliderShake
-@onready var label_shake: Label = %LabelShakeValue
-
-@onready var check_sfx: CheckButton = %CheckSFX
-@onready var slider_sfx: HSlider = %SliderSFX
-@onready var label_sfx: Label = %LabelSFXValue
-
-@onready var slider_particles: HSlider = %SliderParticles
-@onready var label_particles: Label = %LabelParticlesValue
-
-@onready var slider_line: HSlider = %SliderLine
-@onready var label_line: Label = %LabelLineValue
-
-@onready var option_pos: OptionButton = %OptionPos
-
-@onready var slider_offset_x: HSlider = %SliderOffsetX
-@onready var label_offset_x: Label = %LabelOffsetXValue
-
-@onready var slider_offset_y: HSlider = %SliderOffsetY
-@onready var label_offset_y: Label = %LabelOffsetYValue
+const MAIN_MENU_SCENE = "res://scenes/menu/main_menu.tscn"
+const SETTING_FONT_SIZE = 22
+const SETTING_VALUE_FONT_SIZE = 22
+const SECTION_BUTTON_FONT_SIZE = 22
 
 @onready var btn_reset: Button = %BtnReset
 @onready var btn_back: Button = %BtnBack
 
-const MAIN_MENU_SCENE = "res://scenes/menu/main_menu.tscn"
-const SETTING_FONT_SIZE = 22
-const SETTING_VALUE_FONT_SIZE = 22
+var section_buttons: Dictionary = {}
+var section_content: VBoxContainer = null
+var current_section: String = "gameplay"
 
 
 func _ready() -> void:
-	# Load global values and initialize UI.
-	_load_values_to_ui()
-
-	# Connect signals.
-	check_shake.toggled.connect(_on_shake_toggled)
-	slider_shake.value_changed.connect(_on_shake_val_changed)
-
-	check_sfx.toggled.connect(_on_sfx_toggled)
-	slider_sfx.value_changed.connect(_on_sfx_val_changed)
-
-	slider_particles.value_changed.connect(_on_particles_val_changed)
-	slider_line.value_changed.connect(_on_line_val_changed)
-	option_pos.item_selected.connect(_on_pos_selected)
-
-	slider_offset_x.value_changed.connect(_on_offset_x_val_changed)
-	slider_offset_y.value_changed.connect(_on_offset_y_val_changed)
-
+	var title = get_node_or_null("Margin/VBox/Title") as Label
+	if title:
+		title.text = "게임 옵션"
+	btn_reset.text = "기본값 초기화"
+	btn_back.text = "저장 및 돌아가기"
 	btn_reset.pressed.connect(_on_reset_pressed)
 	btn_back.pressed.connect(_on_back_pressed)
+	_build_settings_layout()
+	_show_section(current_section)
 
-	# Programmatic Addition of Max Note Speed Slider to Grid
-	var grid = check_shake.get_parent() as GridContainer
-	if grid:
-		var lbl_transition_sfx = Label.new()
-		lbl_transition_sfx.text = "Scene transition SFX"
-		_style_setting_label(lbl_transition_sfx)
-		grid.add_child(lbl_transition_sfx)
 
-		var check_transition_sfx = CheckButton.new()
-		check_transition_sfx.name = "CheckSceneTransitionSFX"
-		check_transition_sfx.button_pressed = Global.enable_scene_transition_sfx
-		check_transition_sfx.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		grid.add_child(check_transition_sfx)
+func _build_settings_layout() -> void:
+	var old_grid = get_node_or_null("Margin/VBox/Grid")
+	var vbox = get_node_or_null("Margin/VBox") as VBoxContainer
+	if vbox == null:
+		return
+	vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+	if old_grid:
+		old_grid.visible = false
+		old_grid.queue_free()
 
-		var spacer_transition_sfx_1 = Control.new()
-		var spacer_transition_sfx_2 = Control.new()
-		grid.add_child(spacer_transition_sfx_1)
-		grid.add_child(spacer_transition_sfx_2)
+	var layout = HBoxContainer.new()
+	layout.name = "SettingsLayout"
+	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_theme_constant_override("separation", 28)
 
-		check_transition_sfx.toggled.connect(func(pressed):
-			Global.enable_scene_transition_sfx = pressed
-			Global.save_settings()
-		)
+	var nav = VBoxContainer.new()
+	nav.name = "SectionNav"
+	nav.custom_minimum_size = Vector2(190.0, 0.0)
+	nav.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	nav.add_theme_constant_override("separation", 10)
+	layout.add_child(nav)
 
-		var lbl_speed = Label.new()
-		lbl_speed.text = "최대 노트 속도"
-		_style_setting_label(lbl_speed)
-		grid.add_child(lbl_speed)
+	_add_section_button(nav, "gameplay", "게임플레이")
+	_add_section_button(nav, "visual", "화면/이펙트")
+	_add_section_button(nav, "sound", "사운드")
+	_add_section_button(nav, "editor", "에디터")
 
-		var spacer = Control.new()
-		grid.add_child(spacer)
+	var scroll = ScrollContainer.new()
+	scroll.name = "SectionScroll"
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	layout.add_child(scroll)
 
-		var slider_speed = HSlider.new()
-		slider_speed.name = "SliderSpeed"
-		slider_speed.min_value = 1000.0
-		slider_speed.max_value = 10000.0
-		slider_speed.step = 100.0
-		slider_speed.value = Global.max_note_speed
-		slider_speed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(slider_speed)
+	section_content = VBoxContainer.new()
+	section_content.name = "SectionContent"
+	section_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section_content.add_theme_constant_override("separation", 14)
+	scroll.add_child(section_content)
 
-		var lbl_speed_val = Label.new()
-		lbl_speed_val.name = "LabelSpeedValue"
-		lbl_speed_val.text = "%d px/s" % int(Global.max_note_speed)
-		_style_setting_value(lbl_speed_val)
-		grid.add_child(lbl_speed_val)
+	var buttons = get_node_or_null("Margin/VBox/HBoxButtons")
+	var insert_index = buttons.get_index() if buttons else vbox.get_child_count()
+	vbox.add_child(layout)
+	vbox.move_child(layout, insert_index)
 
-		slider_speed.value_changed.connect(func(val):
-			Global.max_note_speed = val
-			lbl_speed_val.text = "%d px/s" % int(val)
-			Global.save_settings()
-		)
 
-		# Programmatic Addition of Min Note Interval Slider to Grid
-		var lbl_interval = Label.new()
-		lbl_interval.text = "최소 노트 간격"
-		_style_setting_label(lbl_interval)
-		grid.add_child(lbl_interval)
+func _add_section_button(parent: VBoxContainer, section_id: String, title: String) -> void:
+	var button = Button.new()
+	button.text = title
+	button.toggle_mode = true
+	button.custom_minimum_size = Vector2(170.0, 48.0)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.add_theme_font_size_override("font_size", SECTION_BUTTON_FONT_SIZE)
+	button.pressed.connect(func(): _show_section(section_id))
+	parent.add_child(button)
+	section_buttons[section_id] = button
 
-		var spacer_interval = Control.new()
-		grid.add_child(spacer_interval)
 
-		var slider_interval = HSlider.new()
-		slider_interval.name = "SliderInterval"
-		slider_interval.min_value = 0.01
-		slider_interval.max_value = 0.50
-		slider_interval.step = 0.01
-		slider_interval.value = Global.min_note_interval
-		slider_interval.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(slider_interval)
+func _show_section(section_id: String) -> void:
+	current_section = section_id
+	for key in section_buttons.keys():
+		var button = section_buttons[key] as Button
+		if button:
+			button.button_pressed = key == section_id
 
-		var lbl_interval_val = Label.new()
-		lbl_interval_val.name = "LabelIntervalValue"
-		lbl_interval_val.text = "%d ms" % int(Global.min_note_interval * 1000.0)
-		_style_setting_value(lbl_interval_val)
-		grid.add_child(lbl_interval_val)
+	if section_content == null:
+		return
+	for child in section_content.get_children():
+		child.queue_free()
 
-		slider_interval.value_changed.connect(func(val):
-			Global.min_note_interval = val
-			lbl_interval_val.text = "%d ms" % int(val * 1000.0)
-			Global.save_settings()
-		)
+	match section_id:
+		"gameplay":
+			_build_gameplay_section()
+		"visual":
+			_build_visual_section()
+		"sound":
+			_build_sound_section()
+		"editor":
+			_build_editor_section()
 
-		# Programmatic Addition of Limit Placement Distance Toggle
-		var lbl_limit = Label.new()
-		lbl_limit.text = "배치 영역 제한"
-		_style_setting_label(lbl_limit)
-		grid.add_child(lbl_limit)
 
-		var check_limit = CheckButton.new()
-		check_limit.name = "CheckLimitPlacement"
-		check_limit.button_pressed = Global.limit_placement_distance
-		check_limit.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		grid.add_child(check_limit)
+func _build_gameplay_section() -> void:
+	_add_section_title("게임플레이")
+	_add_slider_setting("최대 노트 속도", 1000.0, 10000.0, 100.0, Global.max_note_speed, "%d px/s", func(val): Global.max_note_speed = val)
+	_add_slider_setting("최소 노트 간격", 0.01, 0.50, 0.01, Global.min_note_interval, "%d ms", func(val): Global.min_note_interval = val, func(val): return int(val * 1000.0))
+	_add_toggle_setting("배치 영역 제한", Global.limit_placement_distance, func(pressed): Global.limit_placement_distance = pressed)
+	_add_slider_setting("최대 노트 거리", 100.0, 2000.0, 50.0, Global.max_note_distance, "%d px", func(val): Global.max_note_distance = val)
+	_add_slider_setting("판정 시간 폭", 0.10, 0.80, 0.01, Global.judgment_perfect_margin, "%.2f초", func(val): Global.judgment_perfect_margin = val)
+	_add_slider_setting("주변 클릭 반경 배율", 0.0, 1.0, 0.05, Global.note_hit_radius, "%.2f배", func(val): Global.note_hit_radius = val)
 
-		var spacer1 = Control.new()
-		var spacer2 = Control.new()
-		grid.add_child(spacer1)
-		grid.add_child(spacer2)
 
-		check_limit.toggled.connect(func(pressed):
-			Global.limit_placement_distance = pressed
-			Global.save_settings()
-		)
+func _build_visual_section() -> void:
+	_add_section_title("화면/이펙트")
+	_add_toggle_slider_setting("카메라 흔들림", Global.enable_camera_shake, Global.camera_shake_intensity, 0.0, 2.0, 0.1, "%d%%", func(pressed): Global.enable_camera_shake = pressed, func(val): Global.camera_shake_intensity = val, func(val): return int(val * 100.0))
+	_add_slider_setting("파티클 밀도", 0.0, 2.0, 0.1, Global.particle_intensity, "%d%%", func(val): Global.particle_intensity = val, func(val): return int(val * 100.0))
+	_add_slider_setting("노트 연결선 두께", 0.0, 12.0, 1.0, Global.judgment_line_width, "%d px", func(val): Global.judgment_line_width = val)
+	_add_option_setting("판정 표시 위치", ["노트 위치", "화면 중앙"], 0 if Global.judgment_text_pos == "note" else 1, func(index): Global.judgment_text_pos = "note" if index == 0 else "center")
+	_add_slider_setting("이펙트 오프셋 X", -500.0, 500.0, 1.0, Global.effect_offset.x, "%d", func(val): Global.effect_offset.x = val)
+	_add_slider_setting("이펙트 오프셋 Y", -500.0, 500.0, 1.0, Global.effect_offset.y, "%d", func(val): Global.effect_offset.y = val)
 
-		# Programmatic Addition of Max Note Distance Slider to Grid
-		var lbl_dist = Label.new()
-		lbl_dist.text = "최대 노트 거리"
-		_style_setting_label(lbl_dist)
-		grid.add_child(lbl_dist)
 
-		var spacer_dist = Control.new()
-		grid.add_child(spacer_dist)
+func _build_sound_section() -> void:
+	_add_section_title("사운드")
+	_add_toggle_slider_setting("타격 효과음 (SFX)", Global.enable_sfx, Global.sfx_volume, 0.0, 1.0, 0.05, "%d%%", func(pressed): Global.enable_sfx = pressed, func(val): Global.sfx_volume = val, func(val): return int(val * 100.0))
+	_add_toggle_setting("Scene transition SFX", Global.enable_scene_transition_sfx, func(pressed): Global.enable_scene_transition_sfx = pressed)
 
-		var slider_dist = HSlider.new()
-		slider_dist.name = "SliderDistance"
-		slider_dist.min_value = 100.0
-		slider_dist.max_value = 2000.0
-		slider_dist.step = 50.0
-		slider_dist.value = Global.max_note_distance
-		slider_dist.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(slider_dist)
 
-		var lbl_dist_val = Label.new()
-		lbl_dist_val.name = "LabelDistanceValue"
-		lbl_dist_val.text = "%d px" % int(Global.max_note_distance)
-		_style_setting_value(lbl_dist_val)
-		grid.add_child(lbl_dist_val)
+func _build_editor_section() -> void:
+	_add_section_title("에디터")
+	_add_slider_setting("최소 배치 원", 0.0, 400.0, 10.0, Global.editor_min_placement_radius, "%d px", func(val): Global.editor_min_placement_radius = val)
+	_add_slider_setting("노트 금지 반경", 0.0, 240.0, 5.0, Global.editor_note_block_radius, "%d px", func(val): Global.editor_note_block_radius = val)
+	_add_slider_setting("노트 미리보기", 0.0, 8.0, 0.5, Global.editor_timeline_note_preview_steps, "%.1f칸", func(val): Global.editor_timeline_note_preview_steps = val)
+	_add_slider_setting("가이드 성장 지연", 0.0, 8.0, 0.5, Global.editor_placement_guide_grow_delay_steps, "%.1f칸", func(val): Global.editor_placement_guide_grow_delay_steps = val)
+	_add_slider_setting("가이드 사라짐 시간", 0.0, 1.5, 0.05, Global.editor_placement_guide_fade_duration, "%.2f초", func(val): Global.editor_placement_guide_fade_duration = val)
 
-		slider_dist.value_changed.connect(func(val):
-			Global.max_note_distance = val
-			lbl_dist_val.text = "%d px" % int(val)
-			Global.save_settings()
-		)
 
-		_add_number_setting(grid, "판정 시간 폭", "SliderJudgmentMargin", "LabelJudgmentMarginValue", 0.10, 0.80, 0.01, Global.judgment_perfect_margin, "%.2f초", func(val): Global.judgment_perfect_margin = val)
-		_add_number_setting(grid, "주변 클릭 반경 배율", "SliderHitRadius", "LabelHitRadiusValue", 0.0, 1.0, 0.05, Global.note_hit_radius, "%.2f배", func(val): Global.note_hit_radius = val)
-		_add_number_setting(grid, "최소 배치 원", "SliderEditorMinRadius", "LabelEditorMinRadiusValue", 0.0, 400.0, 10.0, Global.editor_min_placement_radius, "%d px", func(val): Global.editor_min_placement_radius = val)
-		_add_number_setting(grid, "노트 금지 반경", "SliderNoteBlockRadius", "LabelNoteBlockRadiusValue", 0.0, 240.0, 5.0, Global.editor_note_block_radius, "%d px", func(val): Global.editor_note_block_radius = val)
-		_add_number_setting(grid, "노트 미리보기", "SliderPreviewSteps", "LabelPreviewStepsValue", 0.0, 8.0, 0.5, Global.editor_timeline_note_preview_steps, "%.1f칸", func(val): Global.editor_timeline_note_preview_steps = val)
-		_add_number_setting(grid, "가이드 성장 지연", "SliderGuideGrowDelay", "LabelGuideGrowDelayValue", 0.0, 8.0, 0.5, Global.editor_placement_guide_grow_delay_steps, "%.1f칸", func(val): Global.editor_placement_guide_grow_delay_steps = val)
-		_add_number_setting(grid, "가이드 사라짐 시간", "SliderGuideFade", "LabelGuideFadeValue", 0.0, 1.5, 0.05, Global.editor_placement_guide_fade_duration, "%.2f초", func(val): Global.editor_placement_guide_fade_duration = val)
+func _add_section_title(title: String) -> void:
+	var label = Label.new()
+	label.text = title
+	label.add_theme_font_size_override("font_size", 30)
+	section_content.add_child(label)
+
+
+func _add_slider_setting(title: String, min_value: float, max_value: float, step: float, value: float, format_text: String, apply_value: Callable, display_value: Callable = Callable()) -> void:
+	var row = _create_setting_row(title)
+	var slider = HSlider.new()
+	slider.min_value = min_value
+	slider.max_value = max_value
+	slider.step = step
+	slider.value = value
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(slider)
+
+	var value_label = _create_value_label(_format_setting_value(format_text, value, display_value))
+	row.add_child(value_label)
+
+	slider.value_changed.connect(func(val):
+		apply_value.call(val)
+		value_label.text = _format_setting_value(format_text, val, display_value)
+		Global.save_settings()
+	)
+
+
+func _add_toggle_setting(title: String, value: bool, apply_value: Callable) -> void:
+	var row = _create_setting_row(title)
+	var check = CheckButton.new()
+	check.button_pressed = value
+	check.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	row.add_child(check)
+	row.add_child(Control.new())
+	check.toggled.connect(func(pressed):
+		apply_value.call(pressed)
+		Global.save_settings()
+	)
+
+
+func _add_toggle_slider_setting(title: String, toggle_value: bool, slider_value: float, min_value: float, max_value: float, step: float, format_text: String, apply_toggle: Callable, apply_slider: Callable, display_value: Callable = Callable()) -> void:
+	var row = _create_setting_row(title)
+	var controls = HBoxContainer.new()
+	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	controls.add_theme_constant_override("separation", 14)
+	row.add_child(controls)
+
+	var check = CheckButton.new()
+	check.button_pressed = toggle_value
+	controls.add_child(check)
+
+	var slider = HSlider.new()
+	slider.min_value = min_value
+	slider.max_value = max_value
+	slider.step = step
+	slider.value = slider_value
+	slider.editable = toggle_value
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	controls.add_child(slider)
+
+	var value_label = _create_value_label(_format_setting_value(format_text, slider_value, display_value))
+	row.add_child(value_label)
+
+	check.toggled.connect(func(pressed):
+		apply_toggle.call(pressed)
+		slider.editable = pressed
+		Global.save_settings()
+	)
+	slider.value_changed.connect(func(val):
+		apply_slider.call(val)
+		value_label.text = _format_setting_value(format_text, val, display_value)
+		Global.save_settings()
+	)
+
+
+func _add_option_setting(title: String, options: Array, selected: int, apply_value: Callable) -> void:
+	var row = _create_setting_row(title)
+	var option = OptionButton.new()
+	option.custom_minimum_size = Vector2(300.0, 40.0)
+	option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	option.add_theme_font_size_override("font_size", 20)
+	for i in range(options.size()):
+		option.add_item(str(options[i]), i)
+	option.selected = selected
+	row.add_child(option)
+	row.add_child(Control.new())
+	option.item_selected.connect(func(index):
+		apply_value.call(index)
+		Global.save_settings()
+	)
+
+
+func _create_setting_row(title: String) -> GridContainer:
+	var row = GridContainer.new()
+	row.columns = 3
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("h_separation", 24)
+	row.add_theme_constant_override("v_separation", 8)
+	section_content.add_child(row)
+
+	var label = Label.new()
+	label.text = title
+	label.custom_minimum_size = Vector2(220.0, 0.0)
+	_style_setting_label(label)
+	row.add_child(label)
+	return row
+
+
+func _create_value_label(text_value: String) -> Label:
+	var value_label = Label.new()
+	value_label.text = text_value
+	_style_setting_value(value_label)
+	return value_label
 
 
 func _style_setting_label(label: Label) -> void:
@@ -200,46 +262,16 @@ func _style_setting_label(label: Label) -> void:
 
 
 func _style_setting_value(label: Label) -> void:
-	label.custom_minimum_size = Vector2(96.0, 0.0)
+	label.custom_minimum_size = Vector2(110.0, 0.0)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	label.add_theme_font_size_override("font_size", SETTING_VALUE_FONT_SIZE)
 
 
-func _format_setting_value(format_text: String, value: float) -> String:
+func _format_setting_value(format_text: String, value: float, display_value: Callable = Callable()) -> String:
+	var shown_value = display_value.call(value) if display_value.is_valid() else value
 	if format_text.find("%d") != -1:
-		return format_text % int(value)
-	return format_text % value
-
-
-func _add_number_setting(grid: GridContainer, title: String, slider_name: String, label_name: String, min_value: float, max_value: float, step: float, value: float, format_text: String, apply_value: Callable) -> void:
-	var label = Label.new()
-	label.text = title
-	_style_setting_label(label)
-	grid.add_child(label)
-
-	var spacer = Control.new()
-	grid.add_child(spacer)
-
-	var slider = HSlider.new()
-	slider.name = slider_name
-	slider.min_value = min_value
-	slider.max_value = max_value
-	slider.step = step
-	slider.value = value
-	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid.add_child(slider)
-
-	var value_label = Label.new()
-	value_label.name = label_name
-	value_label.text = _format_setting_value(format_text, value)
-	_style_setting_value(value_label)
-	grid.add_child(value_label)
-
-	slider.value_changed.connect(func(val):
-		apply_value.call(val)
-		value_label.text = _format_setting_value(format_text, val)
-		Global.save_settings()
-	)
+		return format_text % int(shown_value)
+	return format_text % shown_value
 
 
 func _input(event: InputEvent) -> void:
@@ -247,135 +279,6 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_ESCAPE:
 			get_viewport().set_input_as_handled()
 			_on_back_pressed()
-
-
-func _load_values_to_ui() -> void:
-	check_shake.button_pressed = Global.enable_camera_shake
-	slider_shake.editable = Global.enable_camera_shake
-	slider_shake.value = Global.camera_shake_intensity
-	label_shake.text = "%d%%" % int(Global.camera_shake_intensity * 100)
-
-	check_sfx.button_pressed = Global.enable_sfx
-	slider_sfx.editable = Global.enable_sfx
-	slider_sfx.value = Global.sfx_volume
-	label_sfx.text = "%d%%" % int(Global.sfx_volume * 100)
-
-	slider_particles.value = Global.particle_intensity
-	label_particles.text = "%d%%" % int(Global.particle_intensity * 100)
-
-	slider_line.value = Global.judgment_line_width
-	label_line.text = "%d px" % int(Global.judgment_line_width)
-
-	option_pos.clear()
-	option_pos.add_item("노트 위치", 0)
-	option_pos.add_item("화면 중앙", 1)
-	option_pos.selected = 0 if Global.judgment_text_pos == "note" else 1
-
-	slider_offset_x.value = Global.effect_offset.x
-	label_offset_x.text = "%d" % int(Global.effect_offset.x)
-
-	slider_offset_y.value = Global.effect_offset.y
-	label_offset_y.text = "%d" % int(Global.effect_offset.y)
-
-	var slider_speed = check_shake.get_parent().get_node_or_null("SliderSpeed") as HSlider
-	var lbl_speed_val = check_shake.get_parent().get_node_or_null("LabelSpeedValue") as Label
-	if slider_speed:
-		slider_speed.value = Global.max_note_speed
-	if lbl_speed_val:
-		lbl_speed_val.text = "%d px/s" % int(Global.max_note_speed)
-
-	var slider_interval = check_shake.get_parent().get_node_or_null("SliderInterval") as HSlider
-	var lbl_interval_val = check_shake.get_parent().get_node_or_null("LabelIntervalValue") as Label
-	if slider_interval:
-		slider_interval.value = Global.min_note_interval
-	if lbl_interval_val:
-		lbl_interval_val.text = "%d ms" % int(Global.min_note_interval * 1000.0)
-
-	var check_transition_sfx = check_shake.get_parent().get_node_or_null("CheckSceneTransitionSFX") as CheckButton
-	if check_transition_sfx:
-		check_transition_sfx.button_pressed = Global.enable_scene_transition_sfx
-
-	var check_limit = check_shake.get_parent().get_node_or_null("CheckLimitPlacement") as CheckButton
-	if check_limit:
-		check_limit.button_pressed = Global.limit_placement_distance
-
-	var slider_dist = check_shake.get_parent().get_node_or_null("SliderDistance") as HSlider
-	var lbl_dist_val = check_shake.get_parent().get_node_or_null("LabelDistanceValue") as Label
-	if slider_dist:
-		slider_dist.value = Global.max_note_distance
-	if lbl_dist_val:
-		lbl_dist_val.text = "%d px" % int(Global.max_note_distance)
-
-	_set_number_setting_ui("SliderJudgmentMargin", "LabelJudgmentMarginValue", Global.judgment_perfect_margin, "%.2f초")
-	_set_number_setting_ui("SliderHitRadius", "LabelHitRadiusValue", Global.note_hit_radius, "%.2f배")
-	_set_number_setting_ui("SliderEditorMinRadius", "LabelEditorMinRadiusValue", Global.editor_min_placement_radius, "%d px")
-	_set_number_setting_ui("SliderNoteBlockRadius", "LabelNoteBlockRadiusValue", Global.editor_note_block_radius, "%d px")
-	_set_number_setting_ui("SliderPreviewSteps", "LabelPreviewStepsValue", Global.editor_timeline_note_preview_steps, "%.1f칸")
-	_set_number_setting_ui("SliderGuideGrowDelay", "LabelGuideGrowDelayValue", Global.editor_placement_guide_grow_delay_steps, "%.1f칸")
-	_set_number_setting_ui("SliderGuideFade", "LabelGuideFadeValue", Global.editor_placement_guide_fade_duration, "%.2f초")
-
-
-func _set_number_setting_ui(slider_name: String, label_name: String, value: float, format_text: String) -> void:
-	var grid = check_shake.get_parent()
-	var slider = grid.get_node_or_null(slider_name) as HSlider
-	var value_label = grid.get_node_or_null(label_name) as Label
-	if slider:
-		slider.value = value
-	if value_label:
-		value_label.text = _format_setting_value(format_text, value)
-
-
-func _on_shake_toggled(button_pressed: bool) -> void:
-	Global.enable_camera_shake = button_pressed
-	slider_shake.editable = button_pressed
-	Global.save_settings()
-
-
-func _on_shake_val_changed(value: float) -> void:
-	Global.camera_shake_intensity = value
-	label_shake.text = "%d%%" % int(value * 100)
-	Global.save_settings()
-
-
-func _on_sfx_toggled(button_pressed: bool) -> void:
-	Global.enable_sfx = button_pressed
-	slider_sfx.editable = button_pressed
-	Global.save_settings()
-
-
-func _on_sfx_val_changed(value: float) -> void:
-	Global.sfx_volume = value
-	label_sfx.text = "%d%%" % int(value * 100)
-	Global.save_settings()
-
-
-func _on_particles_val_changed(value: float) -> void:
-	Global.particle_intensity = value
-	label_particles.text = "%d%%" % int(value * 100)
-	Global.save_settings()
-
-
-func _on_line_val_changed(value: float) -> void:
-	Global.judgment_line_width = value
-	label_line.text = "%d px" % int(value)
-	Global.save_settings()
-
-
-func _on_pos_selected(index: int) -> void:
-	Global.judgment_text_pos = "note" if index == 0 else "center"
-	Global.save_settings()
-
-
-func _on_offset_x_val_changed(value: float) -> void:
-	Global.effect_offset.x = value
-	label_offset_x.text = "%d" % int(value)
-	Global.save_settings()
-
-
-func _on_offset_y_val_changed(value: float) -> void:
-	Global.effect_offset.y = value
-	label_offset_y.text = "%d" % int(value)
-	Global.save_settings()
 
 
 func _on_reset_pressed() -> void:
@@ -401,7 +304,7 @@ func _on_reset_pressed() -> void:
 	Global.editor_placement_guide_fade_duration = 0.3
 
 	Global.save_settings()
-	_load_values_to_ui()
+	_show_section(current_section)
 
 
 func _on_back_pressed() -> void:

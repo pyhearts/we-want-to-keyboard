@@ -314,6 +314,7 @@ func _on_point_pressed() -> void:
 	var perfect_limit = max_window * 0.5
 	var great_limit = perfect_limit + (max_window - perfect_limit) * 0.5
 	var good_limit = max_window
+	var near_limit = good_limit * 1.35
 
 	if diff_time < 0.0:
 		# 일찍 누른 경우 (Early)
@@ -327,6 +328,9 @@ func _on_point_pressed() -> void:
 		elif diff <= good_limit:
 			judgment_type = "good"
 			earned_score = 50
+		elif diff <= near_limit:
+			judgment_type = "near"
+			earned_score = 20
 		else:
 			judgment_type = "miss"
 			earned_score = 0
@@ -342,11 +346,14 @@ func _on_point_pressed() -> void:
 		elif diff <= good_limit * 1.6:
 			judgment_type = "good"
 			earned_score = 50
+		elif diff <= near_limit * 1.6:
+			judgment_type = "near"
+			earned_score = 20
 		else:
 			judgment_type = "miss"
 			earned_score = 0
 
-	if judgment_type == "miss":
+	if judgment_type == "miss" or judgment_type == "near":
 		Global.reset_combo()
 
 	# 점수 및 판정 반영
