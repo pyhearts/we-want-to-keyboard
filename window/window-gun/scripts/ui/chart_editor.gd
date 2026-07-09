@@ -69,6 +69,7 @@ var autoplay_ripples: Array = []
 var region_start_time: float = -1.0
 var region_end_time: float = -1.0
 var is_region_loop: bool = true
+var is_view_region_only: bool = false
 
 # --- 파형 고해상도 시각화 변수 ---
 var waveform_data: Dictionary = {}
@@ -80,6 +81,7 @@ var drag_start_time: float = 0.0
 var region_settings_box: VBoxContainer = null
 var region_lbl_info: Label = null
 var region_loop_check: CheckBox = null
+var region_view_check: CheckBox = null
 var region_play_btn: Button = null
 
 # 에디터 상태 변수
@@ -269,6 +271,7 @@ func _load_chart() -> void:
 			"events": [],
 			"offset_corrected": true
 		}
+		_load_editor_region_from_chart()
 		_save_chart_file()
 		return
 		
@@ -302,11 +305,62 @@ func _load_chart() -> void:
 	else:
 		chart_data = {"notes": [], "events": [], "offset_corrected": true}
 		
+	_load_editor_region_from_chart()
 	_sort_chart()
 
 func _sort_chart() -> void:
 	if chart_data.has("notes") and chart_data["notes"] is Array:
 		chart_data["notes"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
+
+func _load_editor_region_from_chart() -> void:
+	region_start_time = -1.0
+	region_end_time = -1.0
+	is_region_loop = true
+	is_view_region_only = false
+	
+	var editor_data = chart_data.get("editor", {})
+	if not editor_data is Dictionary:
+		return
+	var region_data = editor_data.get("region", {})
+	if not region_data is Dictionary:
+		return
+	
+	region_start_time = clamp(float(region_data.get("start", -1.0)), -1.0, song_duration)
+	region_end_time = clamp(float(region_data.get("end", -1.0)), -1.0, song_duration)
+	is_region_loop = bool(region_data.get("loop", true))
+	is_view_region_only = bool(region_data.get("view_only", false))
+	
+	if not _has_valid_region():
+		region_start_time = -1.0
+		region_end_time = -1.0
+		is_view_region_only = false
+	_update_region_ui()
+
+func _save_editor_region_to_chart() -> void:
+	if not chart_data.has("editor") or not chart_data["editor"] is Dictionary:
+		chart_data["editor"] = {}
+	chart_data["editor"]["region"] = {
+		"start": region_start_time,
+		"end": region_end_time,
+		"loop": is_region_loop,
+		"view_only": is_view_region_only
+	}
+	_save_chart_file()
+
+func _has_valid_region() -> bool:
+	return region_start_time >= 0.0 and region_end_time > region_start_time
+
+func _is_note_in_view_region(note: Dictionary) -> bool:
+	if not is_view_region_only or not _has_valid_region():
+		return true
+	var note_start = float(note.get("time", 0.0))
+	var note_end = _get_note_end_time(note)
+	return note_start <= region_end_time and note_end >= region_start_time
+
+func _clamp_to_active_time_range(target: float) -> float:
+	if is_view_region_only and _has_valid_region():
+		return clamp(target, region_start_time, region_end_time)
+	return clamp(target, 0.0, song_duration)
 
 func _save_chart_file() -> void:
 	_sort_chart()
@@ -376,7 +430,7 @@ func _process(delta: float) -> void:
 	_update_time_label()
 	
 	# 구간 재생 루프 및 정지 처리
-	if is_playing and is_playing_region and region_end_time > 0.0:
+	if is_playing and (is_playing_region or is_view_region_only) and _has_valid_region():
 		if current_time >= region_end_time:
 			if is_region_loop:
 				_seek_time(region_start_time)
@@ -524,7 +578,10 @@ func _input(event: InputEvent) -> void:
 		var focus_owner = get_viewport().gui_get_focus_owner()
 		if focus_owner == null or not (focus_owner is LineEdit):
 			get_viewport().set_input_as_handled()
-			_on_play_pressed()
+			if event is InputEventWithModifiers and event.shift_pressed:
+				_on_play_region_pressed()
+			else:
+				_on_play_pressed()
 			return
 			
 	# --- 편의 기능 단축키 모음 ---
@@ -881,7 +938,7 @@ func _input(event: InputEvent) -> void:
 				hover_note_index = -1
 				preview_canvas.queue_redraw()
 func _seek_time(target: float) -> void:
-	current_time = clamp(target, 0.0, song_duration)
+	current_time = _clamp_to_active_time_range(target)
 	autoplay_hit_notes.clear()
 	
 	var expected_audio_pos = _chart_time_to_audio_pos(current_time)
@@ -894,6 +951,8 @@ func _seek_time(target: float) -> void:
 func _on_play_pressed() -> void:
 	is_playing = not is_playing
 	if is_playing:
+		if is_view_region_only and _has_valid_region() and (current_time < region_start_time or current_time >= region_end_time):
+			_seek_time(region_start_time)
 		play_button.text = "Pause"
 		audio_player.pitch_scale = playback_speed
 		
@@ -1164,6 +1223,8 @@ func _update_hover_note(logical_pos: Vector2) -> void:
 	
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
+		if not _is_note_in_view_region(note):
+			continue
 		var note_type = str(note.get("type", "normal"))
 		
 		if _get_note_alpha(note, current_time) <= 0.0:
@@ -1185,6 +1246,10 @@ func _update_hover_note(logical_pos: Vector2) -> void:
 				return
 
 func _add_note(time_val: float, logical_pos: Vector2) -> void:
+	if is_view_region_only and _has_valid_region() and (time_val < region_start_time or time_val > region_end_time):
+		_show_toast("Move inside the selected region first!")
+		return
+	
 	if selected_type != "hold" and _is_inside_existing_note_block(logical_pos, time_val):
 		_show_toast("Placement blocked: Inside note size!")
 		return
@@ -1351,7 +1416,7 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 				region_end_time = target_time
 			else:
 				is_dragging_region = false
-				_save_chart_file()
+				_save_editor_region_to_chart()
 				_update_region_ui()
 			timeline.queue_redraw()
 			get_viewport().set_input_as_handled()
@@ -1365,6 +1430,8 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 		
 		region_start_time = min(drag_start_time, target_time)
 		region_end_time = max(drag_start_time, target_time)
+		if is_view_region_only and _has_valid_region():
+			current_time = clamp(current_time, region_start_time, region_end_time)
 		_update_region_ui()
 		timeline.queue_redraw()
 		get_viewport().set_input_as_handled()
@@ -1424,6 +1491,8 @@ func _draw_preview_canvas() -> void:
 	for guide_note in notes:
 		if not guide_note is Dictionary:
 			continue
+		if not _is_note_in_view_region(guide_note):
+			continue
 		var guide_start = _get_note_end_time(guide_note)
 		if current_time < guide_start:
 			continue
@@ -1455,6 +1524,8 @@ func _draw_preview_canvas() -> void:
 	
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
+		if not _is_note_in_view_region(note):
+			continue
 		var note_time = float(note.get("time", 0.0))
 		var note_type = str(note.get("type", "normal"))
 		
@@ -1779,6 +1850,8 @@ func _draw_timeline() -> void:
 	var notes: Array = chart_data["notes"]
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
+		if not _is_note_in_view_region(note):
+			continue
 		var note_time: float = float(note.get("time", 0.0))
 		var note_type: String = str(note.get("type", "normal"))
 		
@@ -2307,9 +2380,31 @@ func _setup_region_settings_ui() -> void:
 	region_loop_check.add_theme_font_size_override("font_size", 12)
 	region_loop_check.toggled.connect(func(is_toggled):
 		is_region_loop = is_toggled
+		_save_editor_region_to_chart()
 		_show_toast("Region Loop: ON" if is_toggled else "Region Loop: OFF")
 	)
 	region_settings_box.add_child(region_loop_check)
+	
+	region_view_check = CheckBox.new()
+	region_view_check.text = "Show Region Only"
+	region_view_check.button_pressed = is_view_region_only
+	region_view_check.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	region_view_check.add_theme_font_size_override("font_size", 12)
+	region_view_check.toggled.connect(func(is_toggled):
+		if is_toggled and not _has_valid_region():
+			is_view_region_only = false
+			region_view_check.set_pressed_no_signal(false)
+			_show_toast("Set Start & End first!")
+			return
+		is_view_region_only = is_toggled
+		if is_view_region_only:
+			_seek_time(current_time)
+		_save_editor_region_to_chart()
+		preview_canvas.queue_redraw()
+		timeline.queue_redraw()
+		_show_toast("Show Region Only: ON" if is_toggled else "Show Region Only: OFF")
+	)
+	region_settings_box.add_child(region_view_check)
 	
 	var hbox_btns = HBoxContainer.new()
 	
@@ -2329,6 +2424,10 @@ func _setup_region_settings_ui() -> void:
 		region_start_time = -1.0
 		region_end_time = -1.0
 		is_playing_region = false
+		is_view_region_only = false
+		if region_view_check:
+			region_view_check.set_pressed_no_signal(false)
+		_save_editor_region_to_chart()
 		_update_region_ui()
 		timeline.queue_redraw()
 		_show_toast("Region Cleared")
@@ -2349,6 +2448,10 @@ func _setup_region_settings_ui() -> void:
 func _update_region_ui() -> void:
 	if region_lbl_info == null:
 		return
+	if region_loop_check:
+		region_loop_check.set_pressed_no_signal(is_region_loop)
+	if region_view_check:
+		region_view_check.set_pressed_no_signal(is_view_region_only)
 	if region_start_time >= 0.0 and region_end_time >= 0.0:
 		region_lbl_info.text = "Start: %.2fs / End: %.2fs" % [region_start_time, region_end_time]
 	elif region_start_time >= 0.0:

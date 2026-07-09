@@ -1,4 +1,12 @@
 {
+	"editor": {
+		"region": {
+			"end": 18.8879682962963,
+			"loop": true,
+			"start": 10.154634962963,
+			"view_only": false
+		}
+	},
 	"events": [],
 	"notes": [
 		{
@@ -1016,7 +1024,7 @@
 			"y": 537.2236328125
 		},
 		{
-			"beat_division": 16,
+			"beat_division": 16.0,
 			"duration": 4.0,
 			"time": 151.296296296296,
 			"type": "hold"
