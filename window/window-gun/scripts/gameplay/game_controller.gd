@@ -400,6 +400,7 @@ func start_chart() -> void:
 		current_time = Global.region_play_start_time
 	else:
 		current_time = 0.0
+	_sync_spawn_indices_to_current_time()
 	is_playing = true
 	print("李⑦듃 濡쒕뱶 ?깃났: ", chart_data.get("notes", []).size(), "媛쒖쓽 ?명듃")
 
@@ -543,6 +544,28 @@ func _time_in_region_segments(time_val: float) -> bool:
 	return false
 
 
+func _sync_spawn_indices_to_current_time() -> void:
+	note_index = _find_first_pending_item_index(chart_data.get("notes", []), current_time)
+	event_index = _find_first_pending_item_index(chart_data.get("events", []), current_time)
+	preview_notes.clear()
+	if note_preview_layer:
+		note_preview_layer.queue_redraw()
+
+
+func _find_first_pending_item_index(items: Array, target_time: float) -> int:
+	var index = 0
+	while index < items.size():
+		var item = items[index]
+		if not item is Dictionary:
+			index += 1
+			continue
+		var item_time = float(item.get("time", 0.0))
+		if item_time >= target_time:
+			break
+		index += 1
+	return index
+
+
 func _process_region_jump() -> void:
 	if Global.region_play_segments.is_empty() or current_region_index >= Global.region_play_segments.size():
 		return
@@ -560,6 +583,7 @@ func _process_region_jump() -> void:
 	var next_segment = Global.region_play_segments[current_region_index]
 	var next_start = float(next_segment.get("start", 0.0))
 	current_time = next_start
+	_sync_spawn_indices_to_current_time()
 	if Global.audio_player:
 		var audio_start = max(0.0, next_start - (0.7 - Global.music_offset))
 		Global.audio_player.play(audio_start)

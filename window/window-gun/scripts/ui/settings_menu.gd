@@ -109,6 +109,10 @@ func _show_section(section_id: String) -> void:
 
 func _build_gameplay_section() -> void:
 	_add_section_title("게임플레이")
+	_add_option_setting("곡 정렬 기준", ["제목", "영역 시간"], 1 if Global.music_sort_order == "duration" else 0, func(index):
+		Global.music_sort_order = "duration" if index == 1 else "title"
+		Global.music_titles = Global.get_folder_list(Global.MUSIC_BASE_PATH)
+	)
 	_add_slider_setting("최대 노트 속도", 1000.0, 10000.0, 100.0, Global.max_note_speed, "%d px/s", func(val): Global.max_note_speed = val)
 	_add_slider_setting("최소 노트 간격", 0.01, 0.50, 0.01, Global.min_note_interval, "%d ms", func(val): Global.min_note_interval = val, func(val): return int(val * 1000.0))
 	_add_toggle_setting("배치 영역 제한", Global.limit_placement_distance, func(pressed): Global.limit_placement_distance = pressed)
@@ -291,6 +295,8 @@ func _on_reset_pressed() -> void:
 	Global.judgment_line_width = 4.0
 	Global.judgment_text_pos = "note"
 	Global.effect_offset = Vector2(-220.0, -90.0)
+	Global.music_sort_order = "title"
+	Global.music_titles = Global.get_folder_list(Global.MUSIC_BASE_PATH)
 	Global.max_note_speed = 4000.0
 	Global.min_note_interval = 0.07
 	Global.limit_placement_distance = false

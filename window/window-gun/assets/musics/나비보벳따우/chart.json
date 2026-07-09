@@ -1,4 +1,20 @@
 {
+	"editor": {
+		"region": {
+			"end": 47.4016136584818,
+			"loop": true,
+			"start": 0.149508196721309,
+			"view_only": false
+		},
+		"regions": [
+			{
+				"enabled": true,
+				"end": 47.4016136584818,
+				"name": "Region 1",
+				"start": 0.149508196721309
+			}
+		]
+	},
 	"events": [],
 	"notes": [
 		{

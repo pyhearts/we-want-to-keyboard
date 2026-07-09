@@ -1,4 +1,20 @@
 {
+	"editor": {
+		"region": {
+			"end": 61.5822839999992,
+			"loop": true,
+			"start": 0.0,
+			"view_only": false
+		},
+		"regions": [
+			{
+				"enabled": true,
+				"end": 61.5822839999992,
+				"name": "Region 1",
+				"start": 0.0
+			}
+		]
+	},
 	"events": [],
 	"notes": [
 		{
@@ -326,24 +342,6 @@
 			"duration": 1.4,
 			"time": 58.25,
 			"type": "hold"
-		},
-		{
-			"curve_control_x": 1220.56909179688,
-			"curve_control_y": 579.491027832031,
-			"move_duration": 1.0,
-			"start_x": 1330.20153808594,
-			"start_y": 821.134033203125,
-			"time": 59.875,
-			"type": "moving",
-			"use_gravity": false,
-			"x": 958.608276367188,
-			"y": 537.216491699219
-		},
-		{
-			"time": 60.625,
-			"type": "normal",
-			"x": 993.308654785156,
-			"y": 677.429321289063
 		},
 		{
 			"time": 61.375,

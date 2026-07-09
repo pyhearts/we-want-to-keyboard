@@ -12,6 +12,7 @@ var max_combo = 0
 var time: float = 0.0
 var music_titles : Array
 var selected_music: String = ""
+var music_sort_order: String = "title"
 var music_offset: float = 0.0
 var editor_test_start_time: float = 0.0
 var is_editor_test_mode: bool = false
@@ -149,6 +150,7 @@ func save_settings() -> void:
 	config.set_value("settings", "judgment_line_width", judgment_line_width)
 	config.set_value("settings", "particle_intensity", particle_intensity)
 	config.set_value("settings", "effect_offset", effect_offset)
+	config.set_value("settings", "music_sort_order", music_sort_order)
 	config.set_value("settings", "max_note_speed", max_note_speed)
 	config.set_value("settings", "min_note_interval", min_note_interval)
 	config.set_value("settings", "max_note_distance", max_note_distance)
@@ -178,6 +180,9 @@ func load_settings() -> void:
 		judgment_line_width = config.get_value("settings", "judgment_line_width", 4.0)
 		particle_intensity = config.get_value("settings", "particle_intensity", 1.0)
 		effect_offset = config.get_value("settings", "effect_offset", Vector2(-220.0, -90.0))
+		music_sort_order = config.get_value("settings", "music_sort_order", "title")
+		if music_sort_order not in ["title", "duration"]:
+			music_sort_order = "title"
 		max_note_speed = config.get_value("settings", "max_note_speed", 4000.0)
 		min_note_interval = config.get_value("settings", "min_note_interval", 0.07)
 		max_note_distance = config.get_value("settings", "max_note_distance", 800.0)
@@ -201,9 +206,72 @@ func get_folder_list(path: String) -> Array:
 	if dir:
 		var folders = dir.get_directories()
 		folder_array = Array(folders)
+		if path == MUSIC_BASE_PATH:
+			folder_array = _sort_music_folders(folder_array)
 	else:
 		print("?뚯씪 寃쎈줈 李얘린 ?ㅽ뙣", path)
 	return folder_array
+
+
+func _sort_music_folders(folders: Array) -> Array:
+	var rows: Array = []
+	for folder in folders:
+		var song_name = str(folder)
+		rows.append({
+			"name": song_name,
+			"title": _get_music_sort_title(song_name),
+			"duration": _get_music_sort_play_duration(song_name)
+		})
+
+	rows.sort_custom(func(a, b):
+		if music_sort_order == "duration":
+			var duration_a = float(a.get("duration", 0.0))
+			var duration_b = float(b.get("duration", 0.0))
+			if not is_equal_approx(duration_a, duration_b):
+				return duration_a < duration_b
+		var title_a = str(a.get("title", a.get("name", ""))).to_lower()
+		var title_b = str(b.get("title", b.get("name", ""))).to_lower()
+		if title_a != title_b:
+			return title_a < title_b
+		return str(a.get("name", "")) < str(b.get("name", ""))
+	)
+
+	var sorted_folders: Array = []
+	for row in rows:
+		sorted_folders.append(row.get("name", ""))
+	return sorted_folders
+
+
+func _get_music_sort_title(song_name: String) -> String:
+	var res_path = get_music_res_path(song_name)
+	if FileAccess.file_exists(res_path):
+		var music_res = load(res_path)
+		if music_res and music_res.get("title") != null and str(music_res.get("title")).strip_edges() != "":
+			return str(music_res.get("title"))
+	return song_name
+
+
+func _get_music_sort_play_duration(song_name: String) -> float:
+	var region = load_region_play_settings(song_name)
+	var segments = region.get("segments", [])
+	if segments is Array and not segments.is_empty():
+		var total_region_duration = 0.0
+		for segment in segments:
+			if not segment is Dictionary:
+				continue
+			var start_time = float(segment.get("start", -1.0))
+			var end_time = float(segment.get("end", -1.0))
+			if start_time >= 0.0 and end_time > start_time:
+				total_region_duration += end_time - start_time
+		if total_region_duration > 0.0:
+			return total_region_duration
+
+	var res_path = get_music_res_path(song_name)
+	if FileAccess.file_exists(res_path):
+		var music_res = load(res_path)
+		if music_res and music_res.get("audio_stream"):
+			return float(music_res.get("audio_stream").get_length())
+	return 0.0
 
 
 func _process(delta: float) -> void:

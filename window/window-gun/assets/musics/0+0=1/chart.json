@@ -1,7 +1,7 @@
 {
 	"editor": {
 		"region": {
-			"end": 8.42333333333333,
+			"end": 72.9731748888879,
 			"loop": true,
 			"start": 3.18895833333333,
 			"view_only": false
@@ -9,7 +9,7 @@
 		"regions": [
 			{
 				"enabled": true,
-				"end": 8.42333333333333,
+				"end": 72.9731748888879,
 				"name": "Region 1",
 				"start": 3.18895833333333
 			}
