@@ -257,15 +257,15 @@ func _calculate_rank(_score_val_int: int) -> String:
 func _get_score_tier_name(score: int) -> String:
 	if score == 1000000:
 		return "PERFECT"
-	elif score >= 900000:
+	elif score >= 950000:
 		return "TIER_1"
-	elif score >= 800000:
+	elif score >= 900000:
 		return "TIER_2"
-	elif score >= 700000:
+	elif score >= 800000:
 		return "TIER_3"
-	elif score >= 600000:
+	elif score >= 700000:
 		return "TIER_4"
-	elif score >= 400000:
+	elif score >= 500000:
 		return "TIER_5"
 	else:
 		return "FAIL"
@@ -621,6 +621,8 @@ func _play_rank_slam_animation() -> void:
 
 func _start_auto_return_countdown() -> void:
 	if not Global.exhibition_fast_turnover:
+		return
+	if not Global.result_auto_return_enabled:
 		return
 	if Global.result_auto_return_seconds <= 0.0:
 		return

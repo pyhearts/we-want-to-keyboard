@@ -20,6 +20,7 @@ const TargetNoteScript = preload("res://scripts/gameplay/target_note.gd")
 const DEFAULT_BPM = 120.0
 const MIN_POSITIVE_DURATION = 0.01
 const MAX_HEALTH = 100.0
+const HEALTH_HEAL_PERFECT = 2.0
 const HEALTH_DAMAGE_GOOD = 8.0
 const HEALTH_DAMAGE_NEAR = 18.0
 const HEALTH_DAMAGE_BAD = 18.0
@@ -31,6 +32,9 @@ const NOTE_PREVIEW_ALPHA = 0.18
 const DAMAGE_VIGNETTE_FLASH_IN = 0.04
 const DAMAGE_VIGNETTE_FADE_OUT = 0.45
 const DAMAGE_VIGNETTE_IDLE_MAX = 0.28
+const HEALTH_BAR_WIDTH = 720.0
+const HEALTH_BAR_HEIGHT = 10.0
+const HEALTH_BAR_BOTTOM_MARGIN = 34.0
 
 enum MoveType {
 	SMOOTH,
@@ -57,6 +61,7 @@ var is_dead: bool = false
 var damage_vignette: ColorRect = null
 var damage_vignette_tween: Tween = null
 var damage_vignette_flash_amount: float = 0.0
+var health_bar_fill: ColorRect = null
 var note_preview_layer: Control = null
 var preview_notes: Array = []
 
@@ -72,6 +77,7 @@ func _ready() -> void:
 	if not Global.judgment_added.is_connected(_on_judgment_added):
 		Global.judgment_added.connect(_on_judgment_added)
 	_create_damage_vignette()
+	_create_health_bar()
 	_create_note_preview_layer()
 	
 	# Notes should render above the playfield and windows.
@@ -273,11 +279,55 @@ void fragment() {
 	layer.add_child(damage_vignette)
 	_update_damage_vignette_amount()
 
+func _create_health_bar() -> void:
+	var layer = CanvasLayer.new()
+	layer.name = "HealthBarLayer"
+	layer.layer = 101
+	add_child(layer)
+
+	var frame = Control.new()
+	frame.name = "HealthBar"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.custom_minimum_size = Vector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)
+	frame.anchor_left = 0.5
+	frame.anchor_right = 0.5
+	frame.anchor_top = 1.0
+	frame.anchor_bottom = 1.0
+	frame.offset_left = -HEALTH_BAR_WIDTH * 0.5
+	frame.offset_right = HEALTH_BAR_WIDTH * 0.5
+	frame.offset_top = -HEALTH_BAR_BOTTOM_MARGIN - HEALTH_BAR_HEIGHT
+	frame.offset_bottom = -HEALTH_BAR_BOTTOM_MARGIN
+	layer.add_child(frame)
+
+	var background = ColorRect.new()
+	background.name = "Background"
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.color = Color(0.04, 0.0, 0.0, 0.65)
+	background.set_anchors_preset(Control.PRESET_FULL_RECT)
+	frame.add_child(background)
+
+	health_bar_fill = ColorRect.new()
+	health_bar_fill.name = "Fill"
+	health_bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	health_bar_fill.color = Color(1.0, 0.02, 0.03, 0.95)
+	health_bar_fill.anchor_left = 0.0
+	health_bar_fill.anchor_right = 0.0
+	health_bar_fill.anchor_top = 0.0
+	health_bar_fill.anchor_bottom = 1.0
+	health_bar_fill.offset_left = 0.0
+	health_bar_fill.offset_top = 0.0
+	health_bar_fill.offset_bottom = 0.0
+	frame.add_child(health_bar_fill)
+
+
+	_update_health_bar()
 
 func _on_judgment_added(judgment_type: String) -> void:
 	if is_dead:
 		return
 	match judgment_type.to_lower():
+		"perfect":
+			_heal_health(HEALTH_HEAL_PERFECT)
 		"good":
 			_damage_health(HEALTH_DAMAGE_GOOD)
 		"near":
@@ -290,9 +340,23 @@ func _on_judgment_added(judgment_type: String) -> void:
 
 func _damage_health(amount: float) -> void:
 	health = max(health - (amount * _get_health_damage_multiplier()), 0.0)
+	_update_health_bar()
 	_flash_damage_vignette(amount)
 	if health <= 0.0:
 		_die()
+
+
+func _heal_health(amount: float) -> void:
+	health = min(health + amount, MAX_HEALTH)
+	_update_health_bar()
+	_update_damage_vignette_amount()
+
+
+func _update_health_bar() -> void:
+	if health_bar_fill == null:
+		return
+	var health_ratio = clamp(health / MAX_HEALTH, 0.0, 1.0)
+	health_bar_fill.offset_right = HEALTH_BAR_WIDTH * health_ratio
 
 
 func _get_health_damage_multiplier() -> float:
@@ -342,6 +406,7 @@ func _die() -> void:
 	is_dead = true
 	is_playing = false
 	health = 0.0
+	_update_health_bar()
 	preview_notes.clear()
 	if note_preview_layer:
 		note_preview_layer.queue_redraw()
@@ -353,6 +418,7 @@ func _die() -> void:
 func start_chart() -> void:
 	health = MAX_HEALTH
 	is_dead = false
+	_update_health_bar()
 	if is_instance_valid(damage_vignette_tween) and damage_vignette_tween.is_running():
 		damage_vignette_tween.kill()
 	damage_vignette_flash_amount = 0.0

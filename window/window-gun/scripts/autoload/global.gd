@@ -15,6 +15,7 @@ var selected_music: String = ""
 var music_sort_order: String = "title"
 var music_offset: float = 0.0
 var exhibition_fast_turnover: bool = true
+var result_auto_return_enabled: bool = true
 var result_auto_return_seconds: float = 8.0
 var result_skip_roulette: bool = true
 var editor_test_start_time: float = 0.0
@@ -155,6 +156,7 @@ func save_settings() -> void:
 	config.set_value("settings", "effect_offset", effect_offset)
 	config.set_value("settings", "music_sort_order", music_sort_order)
 	config.set_value("settings", "exhibition_fast_turnover", exhibition_fast_turnover)
+	config.set_value("settings", "result_auto_return_enabled", result_auto_return_enabled)
 	config.set_value("settings", "result_auto_return_seconds", result_auto_return_seconds)
 	config.set_value("settings", "result_skip_roulette", result_skip_roulette)
 	config.set_value("settings", "max_note_speed", max_note_speed)
@@ -190,6 +192,7 @@ func load_settings() -> void:
 		if music_sort_order not in ["title", "duration"]:
 			music_sort_order = "title"
 		exhibition_fast_turnover = config.get_value("settings", "exhibition_fast_turnover", true)
+		result_auto_return_enabled = config.get_value("settings", "result_auto_return_enabled", true)
 		result_auto_return_seconds = max(float(config.get_value("settings", "result_auto_return_seconds", 8.0)), 0.0)
 		result_skip_roulette = config.get_value("settings", "result_skip_roulette", true)
 		max_note_speed = config.get_value("settings", "max_note_speed", 4000.0)

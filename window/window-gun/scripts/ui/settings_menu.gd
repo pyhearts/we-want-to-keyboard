@@ -144,6 +144,7 @@ func _build_exhibition_section() -> void:
 	_add_section_title("전시 모드")
 	_add_toggle_setting("빠른 회전 모드", Global.exhibition_fast_turnover, func(pressed): Global.exhibition_fast_turnover = pressed)
 	_add_toggle_setting("결과 룰렛 생략", Global.result_skip_roulette, func(pressed): Global.result_skip_roulette = pressed)
+	_add_toggle_setting("결과 자동 복귀 사용", Global.result_auto_return_enabled, func(pressed): Global.result_auto_return_enabled = pressed)
 	_add_slider_setting("결과 자동 복귀", 0.0, 30.0, 1.0, Global.result_auto_return_seconds, "%d초", func(val): Global.result_auto_return_seconds = val)
 
 
@@ -308,6 +309,7 @@ func _on_reset_pressed() -> void:
 	Global.music_sort_order = "title"
 	Global.music_titles = Global.get_folder_list(Global.MUSIC_BASE_PATH)
 	Global.exhibition_fast_turnover = true
+	Global.result_auto_return_enabled = true
 	Global.result_auto_return_seconds = 8.0
 	Global.result_skip_roulette = true
 	Global.max_note_speed = 4000.0
