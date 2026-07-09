@@ -100,6 +100,7 @@ var is_waveform_loaded: bool = false
 var is_playing_region: bool = false
 var is_dragging_region: bool = false
 var drag_start_time: float = 0.0
+var active_play_region_index: int = -1
 
 var region_settings_box: VBoxContainer = null
 var region_lbl_info: Label = null
@@ -437,6 +438,39 @@ func _merge_overlapping_regions() -> void:
 		else:
 			merged.append(region.duplicate(true))
 	regions = merged
+	for i in range(regions.size()):
+		regions[i]["name"] = "Region %d" % (i + 1)
+
+func _get_first_enabled_region_index() -> int:
+	for i in range(regions.size()):
+		var region = regions[i]
+		if region is Dictionary and bool(region.get("enabled", true)):
+			return i
+	return -1
+
+func _find_enabled_region_index_for_time(time_val: float) -> int:
+	for i in range(regions.size()):
+		var region = regions[i]
+		if not region is Dictionary or not bool(region.get("enabled", true)):
+			continue
+		if time_val >= float(region.get("start", -1.0)) and time_val <= float(region.get("end", -1.0)):
+			return i
+	return -1
+
+func _get_next_enabled_region_index(after_index: int) -> int:
+	for i in range(after_index + 1, regions.size()):
+		var region = regions[i]
+		if region is Dictionary and bool(region.get("enabled", true)):
+			return i
+	return -1
+
+func _restore_selected_region_bounds() -> void:
+	if selected_region_index >= 0 and selected_region_index < regions.size():
+		region_start_time = float(regions[selected_region_index].get("start", -1.0))
+		region_end_time = float(regions[selected_region_index].get("end", -1.0))
+	else:
+		region_start_time = -1.0
+		region_end_time = -1.0
 
 func _sync_selected_region_from_current() -> void:
 	if selected_region_index >= 0 and selected_region_index < regions.size() and _has_valid_region():
@@ -550,19 +584,59 @@ func _time_span_in_any_region(start_time: float, end_time: float) -> bool:
 
 func _clamp_to_active_time_range(target: float) -> float:
 	if is_view_region_only and _has_enabled_regions():
+		var last_enabled_end := song_duration
 		for region in regions:
 			if not region is Dictionary or not bool(region.get("enabled", true)):
 				continue
 			var start_time = float(region.get("start", -1.0))
 			var end_time = float(region.get("end", -1.0))
+			last_enabled_end = end_time
 			if target >= start_time and target <= end_time:
 				return target
 			if target < start_time:
 				return start_time
-		return float(regions[regions.size() - 1].get("end", song_duration))
+		return last_enabled_end
 	if is_view_region_only and _has_valid_region():
 		return clamp(target, region_start_time, region_end_time)
 	return clamp(target, 0.0, song_duration)
+
+func _process_editor_region_playback() -> void:
+	if not is_playing or not (is_playing_region or is_view_region_only):
+		return
+	if _has_enabled_regions():
+		if active_play_region_index < 0 or active_play_region_index >= regions.size():
+			active_play_region_index = _find_enabled_region_index_for_time(current_time)
+			if active_play_region_index == -1:
+				active_play_region_index = _get_first_enabled_region_index()
+		if active_play_region_index == -1:
+			return
+		var active_region = regions[active_play_region_index]
+		var active_end = float(active_region.get("end", -1.0))
+		if current_time < active_end:
+			return
+		var next_index = _get_next_enabled_region_index(active_play_region_index)
+		if next_index == -1 and is_region_loop:
+			next_index = _get_first_enabled_region_index()
+		if next_index != -1:
+			active_play_region_index = next_index
+			_select_region(next_index)
+			_seek_time(float(regions[next_index].get("start", 0.0)))
+			return
+		if is_playing:
+			_on_play_pressed()
+		is_playing_region = false
+		active_play_region_index = -1
+		_show_toast("Region Completed")
+		return
+	if _has_valid_region() and current_time >= region_end_time:
+		if is_region_loop:
+			_seek_time(region_start_time)
+		else:
+			if is_playing:
+				_on_play_pressed()
+			is_playing_region = false
+			active_play_region_index = -1
+			_show_toast("Region Completed")
 
 func _save_chart_file() -> void:
 	_sort_chart()
@@ -632,15 +706,7 @@ func _process(delta: float) -> void:
 	_update_time_label()
 
 	# 援ш컙 ?ъ깮 猷⑦봽 諛??뺤? 泥섎━
-	if is_playing and (is_playing_region or is_view_region_only) and _has_valid_region():
-		if current_time >= region_end_time:
-			if is_region_loop:
-				_seek_time(region_start_time)
-			else:
-				if is_playing:
-					_on_play_pressed()
-				is_playing_region = false
-				_show_toast("Region Completed")
+	_process_editor_region_playback()
 
 	# ?먮룞 ?????대㉧ 泥섎━
 	autosave_timer += delta
@@ -1153,7 +1219,9 @@ func _seek_time(target: float) -> void:
 func _on_play_pressed() -> void:
 	is_playing = not is_playing
 	if is_playing:
-		if is_view_region_only and _has_valid_region() and (current_time < region_start_time or current_time >= region_end_time):
+		if is_view_region_only and _has_enabled_regions() and _find_enabled_region_index_for_time(current_time) == -1:
+			_seek_time(_clamp_to_active_time_range(current_time))
+		elif is_view_region_only and _has_valid_region() and (current_time < region_start_time or current_time >= region_end_time):
 			_seek_time(region_start_time)
 		play_button.text = "Pause"
 		audio_player.pitch_scale = playback_speed
@@ -1167,6 +1235,8 @@ func _on_play_pressed() -> void:
 		play_button.text = "Play"
 		audio_player.stop()
 		is_playing_region = false # ?먮룞 ?뺤? ??援ш컙 ?ъ깮 ?ㅽ봽
+
+		active_play_region_index = -1
 
 func _on_song_selected_item(index: int) -> void:
 	_on_song_selected(index)
@@ -1619,7 +1689,11 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 				region_end_time = target_time
 			else:
 				is_dragging_region = false
-				_add_current_region_to_list()
+				if region_end_time - region_start_time >= MIN_REGION_DURATION:
+					_add_current_region_to_list()
+				else:
+					_restore_selected_region_bounds()
+					_update_region_ui()
 			timeline.queue_redraw()
 			get_viewport().set_input_as_handled()
 			return
@@ -2023,7 +2097,7 @@ func _draw_timeline() -> void:
 		timeline.draw_string(font, Vector2(lx + 4, 15), str(idx + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, COLOR_TEXT_WINE_MUTED)
 
 	# --- 援ш컙(Region) ?좏깮 ?곸뿭 諛?寃쎄퀎 ?뚮뜑留?---
-	if region_start_time >= 0.0 and region_end_time >= 0.0 and region_end_time > region_start_time:
+	if regions.is_empty() and region_start_time >= 0.0 and region_end_time >= 0.0 and region_end_time > region_start_time:
 		var dx_start = (region_start_time - current_time) * pixels_per_second
 		var dx_end = (region_end_time - current_time) * pixels_per_second
 		var lx_start = center_x + dx_start
@@ -2744,10 +2818,20 @@ func _on_play_region_pressed() -> void:
 		_show_toast("Set Start & End first!")
 		return
 	is_playing_region = true
-	if _has_valid_region():
+	active_play_region_index = -1
+	if _has_enabled_regions():
+		active_play_region_index = _find_enabled_region_index_for_time(current_time)
+		if active_play_region_index == -1 and selected_region_index >= 0 and selected_region_index < regions.size():
+			var selected_region = regions[selected_region_index]
+			if selected_region is Dictionary and bool(selected_region.get("enabled", true)):
+				active_play_region_index = selected_region_index
+		if active_play_region_index == -1:
+			active_play_region_index = _get_first_enabled_region_index()
+		if active_play_region_index != -1:
+			_select_region(active_play_region_index)
+			_seek_time(float(regions[active_play_region_index].get("start", 0.0)))
+	elif _has_valid_region():
 		_seek_time(region_start_time)
-	elif _has_enabled_regions():
-		_seek_time(float(regions[0].get("start", 0.0)))
 	if not is_playing:
 		_on_play_pressed()
 	_show_toast("Playing Region...")
