@@ -1267,11 +1267,12 @@ func _update_hover_note(logical_pos: Vector2) -> void:
 				return
 
 func _add_note(time_val: float, logical_pos: Vector2) -> void:
+	var note_time = _editor_time_to_note_time(selected_type, time_val)
 	if is_view_region_only and _has_valid_region() and (time_val < region_start_time or time_val > region_end_time):
 		_show_toast("Move inside the selected region first!")
 		return
 	
-	if selected_type != "hold" and _is_inside_existing_note_block(logical_pos, time_val):
+	if selected_type != "hold" and _is_inside_existing_note_block(logical_pos, note_time):
 		_show_toast("Placement blocked: Inside note size!")
 		return
 
