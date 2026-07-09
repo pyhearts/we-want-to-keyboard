@@ -51,6 +51,7 @@ func _build_settings_layout() -> void:
 	_add_section_button(nav, "gameplay", "게임플레이")
 	_add_section_button(nav, "visual", "화면/이펙트")
 	_add_section_button(nav, "sound", "사운드")
+	_add_section_button(nav, "exhibition", "전시 모드")
 	_add_section_button(nav, "editor", "에디터")
 
 	var scroll = ScrollContainer.new()
@@ -103,6 +104,8 @@ func _show_section(section_id: String) -> void:
 			_build_visual_section()
 		"sound":
 			_build_sound_section()
+		"exhibition":
+			_build_exhibition_section()
 		"editor":
 			_build_editor_section()
 
@@ -135,6 +138,13 @@ func _build_sound_section() -> void:
 	_add_section_title("사운드")
 	_add_toggle_slider_setting("타격 효과음 (SFX)", Global.enable_sfx, Global.sfx_volume, 0.0, 1.0, 0.05, "%d%%", func(pressed): Global.enable_sfx = pressed, func(val): Global.sfx_volume = val, func(val): return int(val * 100.0))
 	_add_toggle_setting("Scene transition SFX", Global.enable_scene_transition_sfx, func(pressed): Global.enable_scene_transition_sfx = pressed)
+
+
+func _build_exhibition_section() -> void:
+	_add_section_title("전시 모드")
+	_add_toggle_setting("빠른 회전 모드", Global.exhibition_fast_turnover, func(pressed): Global.exhibition_fast_turnover = pressed)
+	_add_toggle_setting("결과 룰렛 생략", Global.result_skip_roulette, func(pressed): Global.result_skip_roulette = pressed)
+	_add_slider_setting("결과 자동 복귀", 0.0, 30.0, 1.0, Global.result_auto_return_seconds, "%d초", func(val): Global.result_auto_return_seconds = val)
 
 
 func _build_editor_section() -> void:
@@ -297,6 +307,9 @@ func _on_reset_pressed() -> void:
 	Global.effect_offset = Vector2(-220.0, -90.0)
 	Global.music_sort_order = "title"
 	Global.music_titles = Global.get_folder_list(Global.MUSIC_BASE_PATH)
+	Global.exhibition_fast_turnover = true
+	Global.result_auto_return_seconds = 8.0
+	Global.result_skip_roulette = true
 	Global.max_note_speed = 4000.0
 	Global.min_note_interval = 0.07
 	Global.limit_placement_distance = false

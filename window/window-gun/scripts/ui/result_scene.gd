@@ -73,6 +73,10 @@ var probability_label: Label
 var roulette_container: Control
 var roulette_scroll: VBoxContainer
 var roulette_items: Array[String] = []
+var turnover_label: Label
+var auto_return_timer: Timer
+var auto_return_remaining: float = 0.0
+var is_auto_return_active: bool = false
 
 
 func _ready() -> void:
@@ -128,6 +132,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if is_all_perfect:
 		_process_rainbow_effects(delta)
+	if is_auto_return_active:
+		_update_auto_return_countdown(delta)
 
 
 # 올 퍼펙트 무지개 색상 순환(Hue Shift) 및 삐까뻔쩍 글로우 처리 핵심 로직
@@ -327,6 +333,16 @@ func _setup_dynamic_ui() -> void:
 	if custom_font:
 		probability_label.add_theme_font_override("font", custom_font)
 	final_rank_container.add_child(probability_label)
+
+	turnover_label = Label.new()
+	turnover_label.name = "TurnoverLabel"
+	turnover_label.text = ""
+	turnover_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	turnover_label.add_theme_font_size_override("font_size", 24)
+	turnover_label.add_theme_color_override("font_color", Color(DEEP_DARK_COLOR.r, DEEP_DARK_COLOR.g, DEEP_DARK_COLOR.b, 0.78))
+	if custom_font:
+		turnover_label.add_theme_font_override("font", custom_font)
+	left_panel.add_child(turnover_label)
 	
 	# 4. 룰렛 마스크(Roulette Container) 동적 설계
 	roulette_container = Control.new()
@@ -455,6 +471,10 @@ func _play_result_animations() -> void:
 # [UI 연출 로직: 룰렛 애니메이션 구현]
 # ==============================================================================
 func _start_roulette_sequence() -> void:
+	if Global.exhibition_fast_turnover and Global.result_skip_roulette:
+		_play_rank_slam_animation()
+		return
+
 	if not roulette_container or not roulette_scroll:
 		# 안전장치: 동적 생성이 실패한 경우 즉시 슬램 처리
 		_play_rank_slam_animation()
@@ -595,7 +615,53 @@ func _play_rank_slam_animation() -> void:
 			_start_high_rank_loop()
 		if final_score == 1000000:
 			_trigger_all_perfect_effects()
+		_start_auto_return_countdown()
 	)
+
+
+func _start_auto_return_countdown() -> void:
+	if not Global.exhibition_fast_turnover:
+		return
+	if Global.result_auto_return_seconds <= 0.0:
+		return
+
+	auto_return_remaining = Global.result_auto_return_seconds
+	is_auto_return_active = true
+	if turnover_label:
+		turnover_label.visible = true
+		_set_turnover_label_text()
+
+	if auto_return_timer == null:
+		auto_return_timer = Timer.new()
+		auto_return_timer.one_shot = true
+		add_child(auto_return_timer)
+		auto_return_timer.timeout.connect(_on_auto_return_timeout)
+	auto_return_timer.start(Global.result_auto_return_seconds)
+
+
+func _update_auto_return_countdown(delta: float) -> void:
+	auto_return_remaining = max(auto_return_remaining - delta, 0.0)
+	_set_turnover_label_text()
+
+
+func _set_turnover_label_text() -> void:
+	if turnover_label == null:
+		return
+	turnover_label.text = "Next player in %d seconds" % int(ceil(auto_return_remaining))
+
+
+func _cancel_auto_return() -> void:
+	is_auto_return_active = false
+	if auto_return_timer:
+		auto_return_timer.stop()
+	if turnover_label:
+		turnover_label.text = ""
+
+
+func _on_auto_return_timeout() -> void:
+	if not is_auto_return_active:
+		return
+	_on_select_button_pressed()
 
 
 # S랭크 이상 고등급 달성 시 작동하는 무한 둥둥 뜨기(Hovering) 및 숨쉬는 광택(Breathing Glow) 연출
@@ -676,6 +742,7 @@ func _trigger_all_perfect_effects() -> void:
 
 # 다시하기 시그널 버튼 바인딩 함수
 func _on_retry_button_pressed() -> void:
+	_cancel_auto_return()
 	Global.reset_run()
 	
 	# 기존 화면 전환 매니저(싱글톤 SceneTransition) 연동을 통한 자연스러운 씬 교체
@@ -688,6 +755,7 @@ func _on_retry_button_pressed() -> void:
 
 # 악곡 선택하기 시그널 버튼 바인딩 함수
 func _on_select_button_pressed() -> void:
+	_cancel_auto_return()
 	if has_node("/root/SceneTransition") or SceneTransition != null:
 		SceneTransition.transition_to_scene(MUSIC_SELECT_SCENE)
 	else:
