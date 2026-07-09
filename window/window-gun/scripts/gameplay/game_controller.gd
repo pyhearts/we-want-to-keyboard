@@ -19,6 +19,11 @@ const DEFAULT_WINDOW_TEXTURE = "res://assets/image/ingame/怨쇰뀅.png"
 const TargetNoteScript = preload("res://scripts/gameplay/target_note.gd")
 const DEFAULT_BPM = 120.0
 const MIN_POSITIVE_DURATION = 0.01
+const MAX_HEALTH = 100.0
+const HEALTH_DAMAGE_GOOD = 8.0
+const HEALTH_DAMAGE_BAD = 18.0
+const HEALTH_DAMAGE_MISS = 30.0
+const HEALTH_DAMAGE_MULTIPLIER_HARD = 2.0 / 3.0
 
 enum MoveType {
 	SMOOTH,
@@ -40,6 +45,9 @@ var note_index: int = 0
 var event_index: int = 0
 var bpm: float = DEFAULT_BPM
 var current_region_index: int = 0
+var health: float = MAX_HEALTH
+var is_dead: bool = false
+var damage_vignette: ColorRect = null
 
 # 移대찓???곗씠???쒖뼱 蹂??(?듭뀡 C ?꾨꼍 ???
 var shake_timer: float = 0.0
@@ -50,6 +58,9 @@ var original_position: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	original_position = position
 	Global.camera_shake_requested.connect(_on_camera_shake_requested)
+	if not Global.judgment_added.is_connected(_on_judgment_added):
+		Global.judgment_added.connect(_on_judgment_added)
+	_create_damage_vignette()
 	
 	# Notes should render above the playfield and windows.
 	var note_layer = CanvasLayer.new()
@@ -96,7 +107,7 @@ func _input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_process_camera_shake(delta)
 
-	if not is_playing:
+	if is_dead or not is_playing:
 		return
 
 	# Match the chart editor's chart-time/audio-time mapping exactly.
@@ -134,7 +145,93 @@ func _process_camera_shake(delta: float) -> void:
 
 
 
+func _create_damage_vignette() -> void:
+	var layer = CanvasLayer.new()
+	layer.name = "DamageVignetteLayer"
+	layer.layer = 100
+	add_child(layer)
+
+	var shader = Shader.new()
+	shader.code = """
+shader_type canvas_item;
+
+uniform float danger = 0.0;
+uniform vec4 shadow_color : source_color = vec4(1.0, 0.0, 0.0, 1.0);
+
+void fragment() {
+	float edge_dist = min(min(UV.x, 1.0 - UV.x), min(UV.y, 1.0 - UV.y));
+	float width = mix(0.0, 0.38, danger);
+	float softness = mix(0.08, 0.24, danger);
+	float shadow = 1.0 - smoothstep(max(width - softness, 0.0), width + softness, edge_dist);
+
+	vec2 centered = abs(UV - vec2(0.5)) * 2.0;
+	float corner_boost = smoothstep(0.65, 1.35, length(centered));
+	float alpha = shadow * mix(0.45, 1.0, corner_boost) * danger * 0.78;
+
+	COLOR = vec4(shadow_color.rgb, alpha);
+}
+"""
+	var shader_material = ShaderMaterial.new()
+	shader_material.shader = shader
+
+	damage_vignette = ColorRect.new()
+	damage_vignette.name = "DamageVignette"
+	damage_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	damage_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	damage_vignette.color = Color.WHITE
+	damage_vignette.material = shader_material
+	layer.add_child(damage_vignette)
+	_update_damage_vignette()
+
+
+func _on_judgment_added(judgment_type: String) -> void:
+	if is_dead:
+		return
+	match judgment_type.to_lower():
+		"good":
+			_damage_health(HEALTH_DAMAGE_GOOD)
+		"bad":
+			_damage_health(HEALTH_DAMAGE_BAD)
+		"miss":
+			_damage_health(HEALTH_DAMAGE_MISS)
+
+
+func _damage_health(amount: float) -> void:
+	health = max(health - (amount * _get_health_damage_multiplier()), 0.0)
+	_update_damage_vignette()
+	if health <= 0.0:
+		_die()
+
+
+func _get_health_damage_multiplier() -> float:
+	if _is_hard_chart_title(Global.selected_music):
+		return HEALTH_DAMAGE_MULTIPLIER_HARD
+	return 1.0
+
+
+func _update_damage_vignette() -> void:
+	if damage_vignette and damage_vignette.material is ShaderMaterial:
+		var danger = clamp(1.0 - (health / MAX_HEALTH), 0.0, 1.0)
+		var shader_material = damage_vignette.material as ShaderMaterial
+		shader_material.set_shader_parameter("danger", danger)
+
+
+func _die() -> void:
+	if is_dead:
+		return
+	is_dead = true
+	is_playing = false
+	health = 0.0
+	_update_damage_vignette()
+	if Global.audio_player:
+		Global.audio_player.stop()
+	get_tree().create_timer(0.35).timeout.connect(_transition_to_result_scene)
+
+
 func start_chart() -> void:
+	health = MAX_HEALTH
+	is_dead = false
+	_update_damage_vignette()
 	TargetNoteScript.reset_state() # ?댁쟾 ?먯쓽 ?명듃 ?붿옱 ?쒓굅
 	chart_data = load_chart()
 	if chart_data == null:
@@ -797,7 +894,7 @@ func _is_headless_display() -> bool:
 
 # 怨??꾨즺 ?щ? 泥댄겕 ?⑥닔
 func _check_song_finished() -> void:
-	if not is_playing:
+	if is_dead or not is_playing:
 		return
 	if Global.is_region_play_mode and current_region_index < Global.region_play_segments.size():
 		var segment = Global.region_play_segments[current_region_index]

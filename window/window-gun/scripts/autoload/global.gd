@@ -3,6 +3,7 @@
 signal score_changed(new_score: int)
 signal combo_changed(new_combo: int)
 signal camera_shake_requested(intensity: float, duration: float)
+signal judgment_added(judgment_type: String)
 
 
 var score = 0
@@ -254,6 +255,7 @@ func add_judgment(judgment_type: String) -> void:
 			good_count += 1
 		"miss":
 			miss_count += 1
+	judgment_added.emit(judgment_type)
 
 
 # 1,000,000???ㅼ??쇰쭅 怨꾩궛??
