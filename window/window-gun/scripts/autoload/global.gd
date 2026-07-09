@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 signal score_changed(new_score: int)
 signal combo_changed(new_combo: int)
@@ -14,13 +14,17 @@ var selected_music: String = ""
 var music_offset: float = 0.0
 var editor_test_start_time: float = 0.0
 var is_editor_test_mode: bool = false
+var is_region_play_mode: bool = false
+var region_play_start_time: float = -1.0
+var region_play_end_time: float = -1.0
+var region_play_segments: Array = []
 var max_note_speed: float = 4000.0
-var note_limit_seconds_interval: float = 0.8 # 노래 길이를 나눌 초 단위 값 (노트 제한 기준 간격)
-var min_note_interval: float = 0.07 # 최소 노트 시간 간격 (TOO_CLOSE 판정 기준)
-var max_note_distance: float = 800.0 # 이전 노트와의 최대 허용 거리 (px)
-var limit_placement_distance: bool = false # 이전 노트 기준 배치 영역 강제 제한 여부
+var note_limit_seconds_interval: float = 0.8 # ?몃옒 湲몄씠瑜??섎닃 珥??⑥쐞 媛?(?명듃 ?쒗븳 湲곗? 媛꾧꺽)
+var min_note_interval: float = 0.07 # 理쒖냼 ?명듃 ?쒓컙 媛꾧꺽 (TOO_CLOSE ?먯젙 湲곗?)
+var max_note_distance: float = 800.0 # ?댁쟾 ?명듃???理쒕? ?덉슜 嫄곕━ (px)
+var limit_placement_distance: bool = false # ?댁쟾 ?명듃 湲곗? 諛곗튂 ?곸뿭 媛뺤젣 ?쒗븳 ?щ?
 
-# 1,000,000점 스케일링을 위한 점수 계산 변수
+# 1,000,000???ㅼ??쇰쭅???꾪븳 ?먯닔 怨꾩궛 蹂??
 var judgment_perfect_margin: float = 0.45
 var note_hit_radius: float = 1.0
 var editor_min_placement_radius: float = 120.0
@@ -32,7 +36,7 @@ var editor_placement_guide_fade_duration: float = 0.3
 var max_base_score: int = 100
 var current_base_score: int = 0
 
-# 판정 통계 개수 카운트
+# ?먯젙 ?듦퀎 媛쒖닔 移댁슫??
 var perfect_count: int = 0
 var great_count: int = 0
 var good_count: int = 0
@@ -40,7 +44,7 @@ var miss_count: int = 0
 
 var audio_player: AudioStreamPlayer = null
 
-# 게임 플레이 연출 설정 변수들 (로컬 저장 연동)
+# 寃뚯엫 ?뚮젅???곗텧 ?ㅼ젙 蹂?섎뱾 (濡쒖뺄 ????곕룞)
 var enable_camera_shake: bool = true
 var camera_shake_intensity: float = 1.0 # 0.0 ~ 2.0
 var enable_sfx: bool = true
@@ -73,35 +77,35 @@ func _ready() -> void:
 
 
 func _init_sfx() -> void:
-	# 찰진 비프/클랩 타격감 효과음 WAV 실시간 생성
+	# 李곗쭊 鍮꾪봽/?대옪 ?寃⑷컧 ?④낵??WAV ?ㅼ떆媛??앹꽦
 	hit_sfx_stream = AudioStreamWAV.new()
 	hit_sfx_stream.format = AudioStreamWAV.FORMAT_16_BITS
 	hit_sfx_stream.mix_rate = 44100
 	hit_sfx_stream.stereo = false
-	
+
 	var sample_rate = 44100.0
 	var duration = 0.08 # 80ms
 	var num_samples = int(duration * sample_rate)
 	var data = PackedByteArray()
 	data.resize(num_samples * 2)
-	
+
 	for i in range(num_samples):
 		var t = float(i) / sample_rate
 		var freq = lerp(1200.0, 200.0, float(i) / num_samples)
 		var amplitude = exp(-25.0 * t)
 		var sample_val = sin(t * freq * 2.0 * PI) * amplitude
-		
-		# 초반 10ms에 강렬한 트랜지언트 스냅 노이즈 추가하여 타격감 극대화
+
+		# 珥덈컲 10ms??媛뺣젹???몃옖吏?명듃 ?ㅻ깄 ?몄씠利?異붽??섏뿬 ?寃⑷컧 洹밸???
 		if t < 0.01:
 			var noise = randf_range(-1.0, 1.0) * 0.45 * (1.0 - t/0.01)
 			sample_val = clamp(sample_val + noise, -1.0, 1.0)
-			
+
 		var int_val = int(sample_val * 32767.0)
 		data.encode_s16(i * 2, int_val)
-		
+
 	hit_sfx_stream.data = data
-	
-	# 효과음 중첩 재생을 위한 폴리포니 오디오 풀 구성 (SFX 버스가 없을 경우 Master로 안전한 폴백)
+
+	# ?④낵??以묒꺽 ?ъ깮???꾪븳 ?대━?щ땲 ?ㅻ뵒??? 援ъ꽦 (SFX 踰꾩뒪媛 ?놁쓣 寃쎌슦 Master濡??덉쟾???대갚)
 	for i in range(MAX_SFX_PLAYERS):
 		var asp = AudioStreamPlayer.new()
 		asp.stream = hit_sfx_stream
@@ -116,15 +120,15 @@ func _init_sfx() -> void:
 func play_hit_sound() -> void:
 	if not enable_sfx:
 		return
-	
-	# 풀에서 쉬고 있는 오디오 플레이어를 찾아 재생
+
+	# ??먯꽌 ?ш퀬 ?덈뒗 ?ㅻ뵒???뚮젅?댁뼱瑜?李얠븘 ?ъ깮
 	for asp in sfx_players:
 		if not asp.playing:
 			asp.volume_db = linear_to_db(sfx_volume)
 			asp.play()
 			return
-	
-	# 전부 바쁘다면 첫 번째 플레이어를 강제 재시작 (순환 풀링)
+
+	# ?꾨? 諛붿걯?ㅻ㈃ 泥?踰덉㎏ ?뚮젅?댁뼱瑜?媛뺤젣 ?ъ떆??(?쒗솚 ?留?
 	var first_asp = sfx_players[0]
 	first_asp.volume_db = linear_to_db(sfx_volume)
 	first_asp.play()
@@ -191,12 +195,12 @@ func load_settings() -> void:
 func get_folder_list(path: String) -> Array:
 	var folder_array = []
 	var dir = DirAccess.open(path)
-	
+
 	if dir:
 		var folders = dir.get_directories()
 		folder_array = Array(folders)
 	else:
-		print("파일 경로 찾기 실패", path)
+		print("?뚯씪 寃쎈줈 李얘린 ?ㅽ뙣", path)
 	return folder_array
 
 
@@ -222,7 +226,7 @@ func add_score(amount: int) -> void:
 	current_base_score += amount
 	if current_base_score < 0:
 		current_base_score = 0
-	# 100만점 만점으로 실시간 보정 계산
+	# 100留뚯젏 留뚯젏?쇰줈 ?ㅼ떆媛?蹂댁젙 怨꾩궛
 	score = calculate_scaled_score()
 	score_changed.emit(score)
 
@@ -239,7 +243,7 @@ func reset_combo() -> void:
 	combo_changed.emit(combo)
 
 
-# 판정 카운트 수집 함수
+# ?먯젙 移댁슫???섏쭛 ?⑥닔
 func add_judgment(judgment_type: String) -> void:
 	match judgment_type.to_lower():
 		"perfect":
@@ -252,12 +256,12 @@ func add_judgment(judgment_type: String) -> void:
 			miss_count += 1
 
 
-# 1,000,000점 스케일링 계산식
+# 1,000,000???ㅼ??쇰쭅 怨꾩궛??
 func calculate_scaled_score() -> int:
 	if max_base_score <= 0:
 		return 0
 	var ratio = float(current_base_score) / float(max_base_score)
-	# 0~100만 점 사이로 보정
+	# 0~100留????ъ씠濡?蹂댁젙
 	return int(clamp(ratio * 1000000.0, 0.0, 1000000.0))
 
 const MUSIC_BASE_PATH = "res://assets/musics/"
@@ -277,3 +281,82 @@ func get_music_chart_path(song_name: String) -> String:
 
 func get_music_res_path(song_name: String) -> String:
 	return get_music_folder_path(song_name) + "Res.tres"
+
+func load_region_play_settings(song_name: String) -> Dictionary:
+	var result = {
+		"enabled": false,
+		"start": -1.0,
+		"end": -1.0,
+		"segments": []
+	}
+	if song_name == "":
+		return result
+	var chart_path = get_music_chart_path(song_name)
+	if not FileAccess.file_exists(chart_path):
+		return result
+	var file = FileAccess.open(chart_path, FileAccess.READ)
+	if file == null:
+		return result
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		return result
+	var editor_data = parsed.get("editor", {})
+	if not editor_data is Dictionary:
+		return result
+
+	var segments: Array = []
+	var regions_data = editor_data.get("regions", [])
+	if regions_data is Array:
+		for region in regions_data:
+			if not region is Dictionary or not bool(region.get("enabled", true)):
+				continue
+			var start_time = float(region.get("start", -1.0))
+			var end_time = float(region.get("end", -1.0))
+			if start_time >= 0.0 and end_time > start_time:
+				segments.append({"start": start_time, "end": end_time})
+
+	if segments.is_empty():
+		var region_data = editor_data.get("region", {})
+		if region_data is Dictionary:
+			var start_time = float(region_data.get("start", -1.0))
+			var end_time = float(region_data.get("end", -1.0))
+			if start_time >= 0.0 and end_time > start_time:
+				segments.append({"start": start_time, "end": end_time})
+
+	segments = merge_region_segments(segments)
+	if segments.size() > 0:
+		result["enabled"] = true
+		result["start"] = float(segments[0]["start"])
+		result["end"] = float(segments[segments.size() - 1]["end"])
+		result["segments"] = segments
+	return result
+
+func merge_region_segments(segments: Array) -> Array:
+	if segments.size() <= 1:
+		return segments
+	segments.sort_custom(func(a, b): return float(a.get("start", 0.0)) < float(b.get("start", 0.0)))
+	var merged: Array = []
+	for segment in segments:
+		if not segment is Dictionary:
+			continue
+		var start_time = float(segment.get("start", -1.0))
+		var end_time = float(segment.get("end", -1.0))
+		if start_time < 0.0 or end_time <= start_time:
+			continue
+		if merged.is_empty():
+			merged.append({"start": start_time, "end": end_time})
+			continue
+		var last_segment = merged[merged.size() - 1]
+		var last_end = float(last_segment.get("end", -1.0))
+		if start_time <= last_end + 0.001:
+			last_segment["end"] = max(last_end, end_time)
+		else:
+			merged.append({"start": start_time, "end": end_time})
+	return merged
+
+func apply_region_play_settings(song_name: String) -> void:
+	var region = load_region_play_settings(song_name)
+	is_region_play_mode = bool(region.get("enabled", false))
+	region_play_start_time = float(region.get("start", -1.0))
+	region_play_end_time = float(region.get("end", -1.0))
+	region_play_segments = region.get("segments", [])

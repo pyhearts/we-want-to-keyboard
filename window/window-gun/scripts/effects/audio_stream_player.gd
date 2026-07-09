@@ -28,6 +28,8 @@ func _ready() -> void:
 		music_offset = GLOBAL_TIMING_OFFSET
 		print("Music resource or offset not found. Using default timing.")
 
+	Global.apply_region_play_settings(Global.selected_music)
+
 	if Global.is_editor_test_mode and Global.editor_test_start_time > 0.01:
 		var actual_start = max(0.0, Global.editor_test_start_time - 1.0)
 		var audio_start_pos = actual_start - music_offset
@@ -36,6 +38,13 @@ func _ready() -> void:
 		else:
 			# 오디오 시작 시점이 미래인 경우, 남은 시간만큼 대기 후 재생 시작
 			await get_tree().create_timer(-audio_start_pos).timeout
+			play_selected_music(Global.selected_music, 0.0)
+	elif Global.is_region_play_mode:
+		var region_audio_start_pos = Global.region_play_start_time - music_offset
+		if region_audio_start_pos >= 0.0:
+			play_selected_music(Global.selected_music, region_audio_start_pos)
+		else:
+			await get_tree().create_timer(-region_audio_start_pos).timeout
 			play_selected_music(Global.selected_music, 0.0)
 	else:
 		if music_offset > 0.0:

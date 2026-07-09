@@ -39,6 +39,7 @@ var is_playing: bool = false
 var note_index: int = 0
 var event_index: int = 0
 var bpm: float = DEFAULT_BPM
+var current_region_index: int = 0
 
 # 移대찓???곗씠???쒖뼱 蹂??(?듭뀡 C ?꾨꼍 ???
 var shake_timer: float = 0.0
@@ -109,6 +110,8 @@ func _process(delta: float) -> void:
 		
 	_process_due_notes()
 	_process_due_events()
+	if Global.is_region_play_mode:
+		_process_region_jump()
 	_check_song_finished()
 
 func _on_camera_shake_requested(intensity: float, duration: float) -> void:
@@ -170,6 +173,9 @@ func start_chart() -> void:
 	
 	if Global.is_editor_test_mode and Global.editor_test_start_time > 0.01:
 		current_time = max(0.0, Global.editor_test_start_time - 1.0)
+	elif Global.is_region_play_mode:
+		current_region_index = 0
+		current_time = Global.region_play_start_time
 	else:
 		current_time = 0.0
 	is_playing = true
@@ -181,6 +187,7 @@ func load_chart() -> Variant:
 	if Global.selected_music == "":
 		push_error("No music is selected.")
 		return null
+	Global.apply_region_play_settings(Global.selected_music)
 
 	var path = Global.get_music_chart_path(Global.selected_music)
 	if not FileAccess.file_exists(path):
@@ -264,6 +271,9 @@ func load_chart() -> Variant:
 					
 		chart["notes"] = filtered_notes
 	chart["events"].sort_custom(func(a, b): return float(a.get("time", 0.0)) < float(b.get("time", 0.0)))
+	if Global.is_region_play_mode:
+		chart["notes"] = _filter_items_to_regions(chart["notes"])
+		chart["events"] = _filter_items_to_regions(chart["events"])
 	# ----------------------------------------
 
 	# 援щ쾭??李⑦듃 醫뚰몴 蹂댁젙 (offset_corrected ?뚮옒洹멸? ?녿뒗 寃쎌슦)
@@ -281,6 +291,56 @@ func load_chart() -> Variant:
 		chart["offset_corrected"] = true
 
 	return chart
+
+
+func _filter_items_to_regions(items: Array) -> Array:
+	var filtered: Array = []
+	for item in items:
+		if not item is Dictionary:
+			continue
+		var item_time = _get_region_compare_time(item)
+		if _time_in_region_segments(item_time):
+			filtered.append(item)
+	return filtered
+
+
+func _get_region_compare_time(item: Dictionary) -> float:
+	var item_time = float(item.get("time", 0.0))
+	var item_type = str(item.get("type", ""))
+	if item_type == NORMAL_NOTE_MODE or item_type == MOVING_NOTE_MODE:
+		return item_time + 0.7
+	return item_time
+
+
+func _time_in_region_segments(time_val: float) -> bool:
+	for segment in Global.region_play_segments:
+		if not segment is Dictionary:
+			continue
+		if time_val >= float(segment.get("start", -1.0)) and time_val <= float(segment.get("end", -1.0)):
+			return true
+	return false
+
+
+func _process_region_jump() -> void:
+	if Global.region_play_segments.is_empty() or current_region_index >= Global.region_play_segments.size():
+		return
+	var segment = Global.region_play_segments[current_region_index]
+	var segment_end = float(segment.get("end", -1.0))
+	if segment_end < 0.0 or current_time < segment_end:
+		return
+	current_region_index += 1
+	if current_region_index >= Global.region_play_segments.size():
+		if Global.audio_player:
+			Global.audio_player.stop()
+		is_playing = false
+		_transition_to_result_scene()
+		return
+	var next_segment = Global.region_play_segments[current_region_index]
+	var next_start = float(next_segment.get("start", 0.0))
+	current_time = next_start
+	if Global.audio_player:
+		var audio_start = max(0.0, next_start - (0.7 - Global.music_offset))
+		Global.audio_player.play(audio_start)
 
 
 func _sanitize_chart(chart: Dictionary) -> Dictionary:
@@ -739,6 +799,10 @@ func _is_headless_display() -> bool:
 func _check_song_finished() -> void:
 	if not is_playing:
 		return
+	if Global.is_region_play_mode and current_region_index < Global.region_play_segments.size():
+		var segment = Global.region_play_segments[current_region_index]
+		if segment is Dictionary and current_time < float(segment.get("end", -1.0)):
+			return
 
 	# 李⑦듃??紐⑤뱺 ?명듃媛 諛⑹텧?섏뿀?붿? ?뺤씤
 	if note_index < chart_data.get("notes", []).size():

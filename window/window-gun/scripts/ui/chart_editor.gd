@@ -33,7 +33,7 @@ func _is_hard_chart_title(title: String) -> bool:
 
 func _uses_difficulty_filter() -> bool:
 	return not _is_hard_chart_title(selected_song)
-# UI 노드 바인딩
+# UI ?몃뱶 諛붿씤??
 @onready var song_select: OptionButton = %SongSelect
 @onready var bpm_input: LineEdit = %BpmInput
 @onready var offset_input: LineEdit = %OffsetInput
@@ -61,38 +61,40 @@ var start_y_input: LineEdit
 var set_start_btn: Button
 var is_setting_start_pos: bool = false
 
-# --- 포물선 드래그 모드 상태 ---
-var is_curve_draw_mode: bool = false       # 곡선 드래그 모드 활성화 여부
-var is_curve_dragging: bool = false        # 현재 마우스 드래그 중 여부
-var curve_drag_start: Vector2 = Vector2.ZERO   # 마우스 누른 시작점 (논리 좌표)
-var curve_drag_end: Vector2 = Vector2.ZERO     # 마우스 뗀 끝점 (논리 좌표)
-var curve_drag_current: Vector2 = Vector2.ZERO # 실시간 마우스 위치 (논리 좌표)
-var curve_drag_max_deviation: float = 0.0  # 드래그 중 최대 이탈 거리
-var curve_drag_side: float = 1.0           # 이탈 방향 부호 (+1 또는 -1)
+# --- ?щЪ???쒕옒洹?紐⑤뱶 ?곹깭 ---
+var is_curve_draw_mode: bool = false       # 怨≪꽑 ?쒕옒洹?紐⑤뱶 ?쒖꽦???щ?
+var is_curve_dragging: bool = false        # ?꾩옱 留덉슦???쒕옒洹?以??щ?
+var curve_drag_start: Vector2 = Vector2.ZERO   # 留덉슦???꾨Ⅸ ?쒖옉??(?쇰━ 醫뚰몴)
+var curve_drag_end: Vector2 = Vector2.ZERO     # 留덉슦??? ?앹젏 (?쇰━ 醫뚰몴)
+var curve_drag_current: Vector2 = Vector2.ZERO # ?ㅼ떆媛?留덉슦???꾩튂 (?쇰━ 醫뚰몴)
+var curve_drag_max_deviation: float = 0.0  # ?쒕옒洹?以?理쒕? ?댄깉 嫄곕━
+var curve_drag_side: float = 1.0           # ?댄깉 諛⑺뼢 遺??(+1 ?먮뒗 -1)
 
-# --- 중력 토글 및 이동 시간 ---
+# --- 以묐젰 ?좉? 諛??대룞 ?쒓컙 ---
 var use_gravity_check: CheckBox = null
 var moving_duration_input: LineEdit = null
 var draw_curve_btn: Button = null
 var moving_duration: float = 1.0
 
-# --- 편의 기능 관련 추가 변수 ---
-var bookmarks: Dictionary = {}             # 북마크 (Alt+1~5 저장, 1~5 이동)
-var timeline_zoom: float = 1.0             # 타임라인 마우스 휠 줌 배율
-var autosave_timer: float = 0.0            # 자동 저장용 누적 타이머
+# --- ?몄쓽 湲곕뒫 愿??異붽? 蹂??---
+var bookmarks: Dictionary = {}             # 遺곷쭏??(Alt+1~5 ??? 1~5 ?대룞)
+var timeline_zoom: float = 1.0             # ??꾨씪??留덉슦????以?諛곗쑉
+var autosave_timer: float = 0.0            # ?먮룞 ??μ슜 ?꾩쟻 ??대㉧
 
-# --- 오토플레이 및 리플 효과 변수 ---
+# --- ?ㅽ넗?뚮젅??諛?由ы뵆 ?④낵 蹂??---
 var is_autoplay: bool = false
 var autoplay_hit_notes: Dictionary = {}
 var autoplay_ripples: Array = []
 
-# --- 구간 재생 및 반복 재생 (Region Selection & Looping) ---
+# --- 援ш컙 ?ъ깮 諛?諛섎났 ?ъ깮 (Region Selection & Looping) ---
 var region_start_time: float = -1.0
 var region_end_time: float = -1.0
 var is_region_loop: bool = true
 var is_view_region_only: bool = false
+var regions: Array = []
+var selected_region_index: int = -1
 
-# --- 파형 고해상도 시각화 변수 ---
+# --- ?뚰삎 怨좏빐?곷룄 ?쒓컖??蹂??---
 var waveform_data: Dictionary = {}
 var is_waveform_loaded: bool = false
 var is_playing_region: bool = false
@@ -101,11 +103,12 @@ var drag_start_time: float = 0.0
 
 var region_settings_box: VBoxContainer = null
 var region_lbl_info: Label = null
+var region_list_label: Label = null
 var region_loop_check: CheckBox = null
 var region_view_check: CheckBox = null
 var region_play_btn: Button = null
 
-# 에디터 상태 변수
+# ?먮뵒???곹깭 蹂??
 var music_list: Array = []
 var selected_song: String = ""
 var chart_data: Dictionary = {"notes": [], "events": []}
@@ -117,15 +120,15 @@ var playback_speed: float = 1.0
 var snap_division: int = 16 # 4, 8, 16, 32
 var selected_type: String = "normal" # normal, moving, hold
 
-# Hold 노트 설정 기본값
+# Hold ?명듃 ?ㅼ젙 湲곕낯媛?
 var hold_duration: float = 3.0
 var hold_division: int = 16
 
-# 오디오 플레이어
+# ?ㅻ뵒???뚮젅?댁뼱
 var audio_player: AudioStreamPlayer
 var song_duration: float = 0.0
 
-# 노트 조작 관련
+# ?명듃 議곗옉 愿??
 var hover_note_index: int = -1
 var selected_note_index: int = -1
 var drag_offset = Vector2.ZERO
@@ -135,7 +138,7 @@ var redo_stack: Array = []
 const MAX_UNDO_DEPTH: int = 50
 var copied_note_data: Dictionary = {}
 
-# 핑크 테마 컬러 상수
+# ?묓겕 ?뚮쭏 而щ윭 ?곸닔
 # New variables for mouse hover tracking and allowed distance guide
 var mouse_logical_pos: Vector2 = Vector2.ZERO
 var is_mouse_hovering_canvas: bool = false
@@ -152,77 +155,78 @@ const COLOR_NOTE_HOLD = Color(0.788235, 0.0941176, 0.290196, 1.0)    # #C9184A
 const COLOR_NOTE_SELECTED = Color(1.0, 0.0, 0.329412, 1.0)         # #FF0054
 
 const COLOR_BG_TIMELINE = Color(1.0, 0.898039, 0.92549, 1.0)       # #FFE5EC
-const COLOR_HEADER_TIMELINE = Color(1.0, 0.0, 0.329412, 0.95)     # #FF0054 (재생헤드)
-const COLOR_GRID_TIMELINE_MAIN = Color(0.788235, 0.0941176, 0.290196, 0.6) # #C9184A (1비트선)
-const COLOR_GRID_TIMELINE_SUB = Color(1.0, 0.760784, 0.819608, 0.5)  # #FFC2D1 (스냅선)
+const COLOR_HEADER_TIMELINE = Color(1.0, 0.0, 0.329412, 0.95)     # #FF0054 (?ъ깮?ㅻ뱶)
+const COLOR_GRID_TIMELINE_MAIN = Color(0.788235, 0.0941176, 0.290196, 0.6) # #C9184A (1鍮꾪듃??
+const COLOR_GRID_TIMELINE_SUB = Color(1.0, 0.760784, 0.819608, 0.5)  # #FFC2D1 (?ㅻ깄??
+const MIN_REGION_DURATION = 0.05
 
 func _ready() -> void:
-	# AudioStreamPlayer 생성 및 씬 추가
+	# AudioStreamPlayer ?앹꽦 諛???異붽?
 	audio_player = AudioStreamPlayer.new()
 	add_child(audio_player)
-	
-	# 드롭다운 초기화
+
+	# ?쒕∼?ㅼ슫 珥덇린??
 	_setup_dropdowns()
-	
-	# 이벤트 바인딩
+
+	# ?대깽??諛붿씤??
 	song_select.item_selected.connect(_on_song_selected)
 	snap_select.item_selected.connect(_on_snap_selected)
 	type_select.item_selected.connect(_on_type_selected)
 	speed_select.item_selected.connect(_on_speed_selected)
-	
+
 	play_button.pressed.connect(_on_play_pressed)
-	
+
 	bpm_input.text_submitted.connect(_on_bpm_submitted)
 	offset_input.text_submitted.connect(_on_offset_submitted)
 	duration_input.text_submitted.connect(_on_hold_duration_submitted)
 	division_input.text_submitted.connect(_on_hold_division_submitted)
-	
-	# 프리뷰 캔버스 마우스 입력 이벤트
+
+	# ?꾨━酉?罹붾쾭??留덉슦???낅젰 ?대깽??
 	preview_canvas.gui_input.connect(_on_canvas_gui_input)
 	preview_canvas.mouse_exited.connect(_on_preview_canvas_mouse_exited)
 	timeline.gui_input.connect(_on_timeline_gui_input)
-	
-	# 토스트 투명도 초기화
+
+	# ?좎뒪???щ챸??珥덇린??
 	toast.modulate.a = 0.0
-	
-	# 곡 목록 로드
+
+	# 怨?紐⑸줉 濡쒕뱶
 	_load_song_list()
-	
-	# 첫 번째 곡 자동 로드
+
+	# 泥?踰덉㎏ 怨??먮룞 濡쒕뱶
 	if song_select.item_count > 0:
 		_on_song_selected(0)
-	
+
 	_setup_top_bar()
 	_setup_moving_settings_ui()
 	_setup_region_settings_ui()
 	_setup_note_count_ui()
-	
-	# 에디터 테스트 모드에서 회귀 시 시간 복구 및 정리
+
+	# ?먮뵒???뚯뒪??紐⑤뱶?먯꽌 ?뚭? ???쒓컙 蹂듦뎄 諛??뺣━
 	if Global.is_editor_test_mode:
 		current_time = Global.editor_test_start_time
 		Global.is_editor_test_mode = false
 		_seek_time(current_time)
 
 func _setup_dropdowns() -> void:
-	# 그리드 스냅 분주 설정
+	# 洹몃━???ㅻ깄 遺꾩＜ ?ㅼ젙
 	snap_select.clear()
 	snap_select.add_item("No Snap (Free)", 1)
 	snap_select.add_item("4 Beats", 4)
 	snap_select.add_item("8 Beats", 8)
 	snap_select.add_item("16 Beats", 16)
 	snap_select.add_item("32 Beats", 32)
-	snap_select.selected = 3 # 16 Beats 기본값
+	snap_select.selected = 3 # 16 Beats 湲곕낯媛?
 	snap_division = 16
-	
-	# 노트 타입 설정
+
+	# ?명듃 ????ㅼ젙
 	type_select.clear()
 	type_select.add_item("Normal Note", 0)
 	type_select.add_item("Moving Note", 1)
 	type_select.add_item("Hold Note", 2)
 	type_select.selected = 0
 	hold_settings.visible = false
-	
-	# 재생 배속 설정
+
+	# ?ъ깮 諛곗냽 ?ㅼ젙
 	speed_select.clear()
 	speed_select.add_item("0.5x Speed", 0)
 	speed_select.add_item("0.75x Speed", 1)
@@ -240,16 +244,16 @@ func _load_song_list() -> void:
 func _on_song_selected(index: int) -> void:
 	if index < 0 or index >= music_list.size():
 		return
-	
+
 	selected_song = music_list[index]
 	Global.selected_music = selected_song
-	
-	# 음악 파일 및 BPM 리소스 로드
+
+	# ?뚯븙 ?뚯씪 諛?BPM 由ъ냼??濡쒕뱶
 	var res_path = MUSIC_BASE_PATH + selected_song + "/Res.tres"
 	var music_res = null
 	if FileAccess.file_exists(res_path):
 		music_res = load(res_path)
-	
+
 	if music_res:
 		bpm = float(music_res.get("bpm"))
 		offset = float(music_res.get("offset"))
@@ -258,29 +262,29 @@ func _on_song_selected(index: int) -> void:
 		bpm = 120.0
 		offset = 0.0
 		audio_player.stream = null
-		
-	# UI 동기화
+
+	# UI ?숆린??
 	bpm_input.text = str(bpm)
 	offset_input.text = str(offset)
-	
-	# 오디오 플레이어 세팅
+
+	# ?ㅻ뵒???뚮젅?댁뼱 ?명똿
 	if audio_player.stream:
 		song_duration = audio_player.stream.get_length()
 	else:
-		song_duration = 180.0 # 예비 3분
+		song_duration = 180.0 # ?덈퉬 3遺?
 
-	# 고해상도 주파수별 파형 로딩 시작
+	# 怨좏빐?곷룄 二쇳뙆?섎퀎 ?뚰삎 濡쒕뵫 ?쒖옉
 	_load_waveform_data()
-	
+
 	current_time = 0.0
 	is_playing = false
 	audio_player.stop()
 	play_button.text = "Play"
-	
-	# 채보 로드
+
+	# 梨꾨낫 濡쒕뱶
 	_load_chart()
-	
-	# 캔버스 갱신
+
+	# 罹붾쾭??媛깆떊
 	preview_canvas.queue_redraw()
 	timeline.queue_redraw()
 
@@ -295,7 +299,7 @@ func _load_chart() -> void:
 		_load_editor_region_from_chart()
 		_save_chart_file()
 		return
-		
+
 	var file = FileAccess.open(path, FileAccess.READ)
 	if file:
 		var json_str = file.get_as_text()
@@ -306,8 +310,8 @@ func _load_chart() -> void:
 				chart_data["notes"] = []
 			if not chart_data.has("events"):
 				chart_data["events"] = []
-				
-			# 구버전 차트 좌표 보정 (offset_corrected 플래그가 없는 경우)
+
+			# 援щ쾭??李⑦듃 醫뚰몴 蹂댁젙 (offset_corrected ?뚮옒洹멸? ?녿뒗 寃쎌슦)
 			if not chart_data.get("offset_corrected", false):
 				for note in chart_data["notes"]:
 					if note is Dictionary:
@@ -325,7 +329,7 @@ func _load_chart() -> void:
 			chart_data = {"notes": [], "events": [], "offset_corrected": true}
 	else:
 		chart_data = {"notes": [], "events": [], "offset_corrected": true}
-		
+
 	_load_editor_region_from_chart()
 	_sort_chart()
 
@@ -338,19 +342,47 @@ func _load_editor_region_from_chart() -> void:
 	region_end_time = -1.0
 	is_region_loop = true
 	is_view_region_only = false
-	
+	regions = []
+	selected_region_index = -1
+
 	var editor_data = chart_data.get("editor", {})
 	if not editor_data is Dictionary:
 		return
+	var regions_data = editor_data.get("regions", [])
+	if regions_data is Array:
+		for region in regions_data:
+			if region is Dictionary:
+				var start_time = clamp(float(region.get("start", -1.0)), -1.0, song_duration)
+				var end_time = clamp(float(region.get("end", -1.0)), -1.0, song_duration)
+				if start_time >= 0.0 and end_time > start_time:
+					regions.append({
+						"start": start_time,
+						"end": end_time,
+						"name": str(region.get("name", "Region %d" % (regions.size() + 1))),
+						"enabled": bool(region.get("enabled", true))
+					})
+		_sort_regions()
+		if regions.size() > 0:
+			selected_region_index = 0
+			region_start_time = float(regions[0]["start"])
+			region_end_time = float(regions[0]["end"])
+
 	var region_data = editor_data.get("region", {})
-	if not region_data is Dictionary:
-		return
-	
-	region_start_time = clamp(float(region_data.get("start", -1.0)), -1.0, song_duration)
-	region_end_time = clamp(float(region_data.get("end", -1.0)), -1.0, song_duration)
-	is_region_loop = bool(region_data.get("loop", true))
-	is_view_region_only = bool(region_data.get("view_only", false))
-	
+	if region_data is Dictionary:
+		is_region_loop = bool(region_data.get("loop", true))
+		is_view_region_only = bool(region_data.get("view_only", false))
+		if regions.is_empty():
+			region_start_time = clamp(float(region_data.get("start", -1.0)), -1.0, song_duration)
+			region_end_time = clamp(float(region_data.get("end", -1.0)), -1.0, song_duration)
+			if _has_valid_region():
+				regions.append({
+					"start": region_start_time,
+					"end": region_end_time,
+					"name": "Region 1",
+					"enabled": true
+				})
+				selected_region_index = 0
+
 	if not _has_valid_region():
 		region_start_time = -1.0
 		region_end_time = -1.0
@@ -360,6 +392,8 @@ func _load_editor_region_from_chart() -> void:
 func _save_editor_region_to_chart() -> void:
 	if not chart_data.has("editor") or not chart_data["editor"] is Dictionary:
 		chart_data["editor"] = {}
+	_sort_regions()
+	chart_data["editor"]["regions"] = regions.duplicate(true)
 	chart_data["editor"]["region"] = {
 		"start": region_start_time,
 		"end": region_end_time,
@@ -371,14 +405,161 @@ func _save_editor_region_to_chart() -> void:
 func _has_valid_region() -> bool:
 	return region_start_time >= 0.0 and region_end_time > region_start_time
 
+func _has_enabled_regions() -> bool:
+	for region in regions:
+		if region is Dictionary and bool(region.get("enabled", true)):
+			return true
+	return false
+
+func _sort_regions() -> void:
+	regions.sort_custom(func(a, b): return float(a.get("start", 0.0)) < float(b.get("start", 0.0)))
+	_merge_overlapping_regions()
+
+func _merge_overlapping_regions() -> void:
+	if regions.size() <= 1:
+		return
+	var merged: Array = []
+	for region in regions:
+		if not region is Dictionary:
+			continue
+		var start_time = float(region.get("start", -1.0))
+		var end_time = float(region.get("end", -1.0))
+		if start_time < 0.0 or end_time <= start_time:
+			continue
+		if merged.is_empty():
+			merged.append(region.duplicate(true))
+			continue
+		var last_region = merged[merged.size() - 1]
+		var last_end = float(last_region.get("end", -1.0))
+		if start_time <= last_end + 0.001:
+			last_region["end"] = max(last_end, end_time)
+			last_region["enabled"] = bool(last_region.get("enabled", true)) or bool(region.get("enabled", true))
+		else:
+			merged.append(region.duplicate(true))
+	regions = merged
+
+func _sync_selected_region_from_current() -> void:
+	if selected_region_index >= 0 and selected_region_index < regions.size() and _has_valid_region():
+		var old_start = region_start_time
+		regions[selected_region_index]["start"] = region_start_time
+		regions[selected_region_index]["end"] = region_end_time
+		_sort_regions()
+		selected_region_index = _find_region_containing_time(old_start)
+		if selected_region_index >= 0:
+			region_start_time = float(regions[selected_region_index].get("start", region_start_time))
+			region_end_time = float(regions[selected_region_index].get("end", region_end_time))
+
+func _find_region_index(start_time: float, end_time: float) -> int:
+	for i in range(regions.size()):
+		var region = regions[i]
+		if region is Dictionary and absf(float(region.get("start", -1.0)) - start_time) < 0.001 and absf(float(region.get("end", -1.0)) - end_time) < 0.001:
+			return i
+	return -1
+
+func _add_current_region_to_list() -> void:
+	if not _has_valid_region():
+		_show_toast("Set Start & End first!")
+		return
+	if region_end_time - region_start_time < MIN_REGION_DURATION:
+		_show_toast("Region too short")
+		return
+	var existing_idx = _find_region_index(region_start_time, region_end_time)
+	if existing_idx != -1:
+		selected_region_index = existing_idx
+		_update_region_ui()
+		return
+	regions.append({
+		"start": region_start_time,
+		"end": region_end_time,
+		"name": "Region %d" % (regions.size() + 1),
+		"enabled": true
+	})
+	_sort_regions()
+	selected_region_index = _find_region_containing_time(region_start_time)
+	if selected_region_index >= 0:
+		region_start_time = float(regions[selected_region_index].get("start", region_start_time))
+		region_end_time = float(regions[selected_region_index].get("end", region_end_time))
+	_save_editor_region_to_chart()
+	_update_region_ui()
+	timeline.queue_redraw()
+
+func _find_region_containing_time(time_val: float) -> int:
+	for i in range(regions.size()):
+		var region = regions[i]
+		if region is Dictionary and time_val >= float(region.get("start", -1.0)) and time_val <= float(region.get("end", -1.0)):
+			return i
+	return -1
+
+func _delete_selected_region() -> void:
+	if selected_region_index < 0 or selected_region_index >= regions.size():
+		_show_toast("No region selected")
+		return
+	regions.remove_at(selected_region_index)
+	selected_region_index = min(selected_region_index, regions.size() - 1)
+	if selected_region_index >= 0:
+		region_start_time = float(regions[selected_region_index].get("start", -1.0))
+		region_end_time = float(regions[selected_region_index].get("end", -1.0))
+	else:
+		region_start_time = -1.0
+		region_end_time = -1.0
+	_save_editor_region_to_chart()
+	_update_region_ui()
+	timeline.queue_redraw()
+
+func _select_region(index: int) -> void:
+	if index < 0 or index >= regions.size():
+		return
+	selected_region_index = index
+	region_start_time = float(regions[index].get("start", -1.0))
+	region_end_time = float(regions[index].get("end", -1.0))
+	_update_region_ui()
+	timeline.queue_redraw()
+
+func _select_previous_region() -> void:
+	if regions.is_empty():
+		_show_toast("No regions")
+		return
+	_select_region(max(selected_region_index - 1, 0))
+
+func _select_next_region() -> void:
+	if regions.is_empty():
+		_show_toast("No regions")
+		return
+	_select_region(min(selected_region_index + 1, regions.size() - 1))
+
 func _is_note_in_view_region(note: Dictionary) -> bool:
-	if not is_view_region_only or not _has_valid_region():
+	if not is_view_region_only or (not _has_valid_region() and not _has_enabled_regions()):
 		return true
-	var note_start = float(note.get("time", 0.0))
-	var note_end = _get_note_end_time(note)
-	return note_start <= region_end_time and note_end >= region_start_time
+	var note_start = _get_timeline_display_time(note)
+	var note_end = note_start
+	if str(note.get("type", "normal")) == "hold":
+		note_end += float(note.get("duration", 3.0))
+	return _time_span_in_any_region(note_start, note_end)
+
+func _time_span_in_any_region(start_time: float, end_time: float) -> bool:
+	if _has_enabled_regions():
+		for region in regions:
+			if not region is Dictionary or not bool(region.get("enabled", true)):
+				continue
+			if start_time <= float(region.get("end", -1.0)) and end_time >= float(region.get("start", -1.0)):
+				return true
+		return false
+	if _has_valid_region():
+		return start_time <= region_end_time and end_time >= region_start_time
+	return true
 
 func _clamp_to_active_time_range(target: float) -> float:
+	if is_view_region_only and _has_enabled_regions():
+		for region in regions:
+			if not region is Dictionary or not bool(region.get("enabled", true)):
+				continue
+			var start_time = float(region.get("start", -1.0))
+			var end_time = float(region.get("end", -1.0))
+			if target >= start_time and target <= end_time:
+				return target
+			if target < start_time:
+				return start_time
+		return float(regions[regions.size() - 1].get("end", song_duration))
 	if is_view_region_only and _has_valid_region():
 		return clamp(target, region_start_time, region_end_time)
 	return clamp(target, 0.0, song_duration)
@@ -412,45 +593,45 @@ func _show_toast(message: String) -> void:
 
 func _process(delta: float) -> void:
 	if is_playing:
-		# 오디오 포지션을 매 프레임 강제 동기화하지 않고 CPU 정밀 delta를 누적하여 누적 밀림(Drift) 원천 차단
+		# ?ㅻ뵒???ъ??섏쓣 留??꾨젅??媛뺤젣 ?숆린?뷀븯吏 ?딄퀬 CPU ?뺣? delta瑜??꾩쟻?섏뿬 ?꾩쟻 諛由?Drift) ?먯쿇 李⑤떒
 		current_time += delta * playback_speed
-		
+
 		if audio_player.playing:
 			var audio_pos = audio_player.get_playback_position()
 			# Match the same chart-time/audio-time mapping used by gameplay.
 			var expected_audio_pos = _chart_time_to_audio_pos(current_time)
-			
+
 			if expected_audio_pos < 0.0:
 				if audio_player.playing:
 					audio_player.stop()
 			else:
 				if not audio_player.playing:
 					audio_player.play(expected_audio_pos)
-			
-			# 장기적인 오버런/언더런 방지용 보정 코드 (150ms 이상 차이 발생 시 하드 싱크)
+
+			# ?κ린?곸씤 ?ㅻ쾭???몃뜑??諛⑹???蹂댁젙 肄붾뱶 (150ms ?댁긽 李⑥씠 諛쒖깮 ???섎뱶 ?깊겕)
 			var current_audio_time = _audio_pos_to_chart_time(audio_pos)
 			if absf(current_time - current_audio_time) > 0.15:
 				current_time = current_audio_time
 		else:
-			# 재생이 완전히 끝난 상태 또는 초기 대기 상태
+			# ?ъ깮???꾩쟾???앸궃 ?곹깭 ?먮뒗 珥덇린 ?湲??곹깭
 			var expected_audio_pos = _chart_time_to_audio_pos(current_time)
 			if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 				audio_player.pitch_scale = playback_speed
 				audio_player.play(expected_audio_pos)
-			
-			# 총 곡 길이를 초과하면 재생 정지
+
+			# 珥?怨?湲몄씠瑜?珥덇낵?섎㈃ ?ъ깮 ?뺤?
 			if current_time >= song_duration:
 				current_time = song_duration
-				_on_play_pressed() # Pause 자동 정지
-	
-	# 시간 초과 보정
+				_on_play_pressed() # Pause ?먮룞 ?뺤?
+
+	# ?쒓컙 珥덇낵 蹂댁젙
 	if current_time < 0:
 		current_time = 0.0
-		
-	# 시간 표시 갱신
+
+	# ?쒓컙 ?쒖떆 媛깆떊
 	_update_time_label()
-	
-	# 구간 재생 루프 및 정지 처리
+
+	# 援ш컙 ?ъ깮 猷⑦봽 諛??뺤? 泥섎━
 	if is_playing and (is_playing_region or is_view_region_only) and _has_valid_region():
 		if current_time >= region_end_time:
 			if is_region_loop:
@@ -460,14 +641,14 @@ func _process(delta: float) -> void:
 					_on_play_pressed()
 				is_playing_region = false
 				_show_toast("Region Completed")
-	
-	# 자동 저장 타이머 처리
+
+	# ?먮룞 ?????대㉧ 泥섎━
 	autosave_timer += delta
 	if autosave_timer >= 60.0:
 		autosave_timer = 0.0
 		_auto_save_backup()
-		
-	# 오토플레이 히트 및 이펙트 처리
+
+	# ?ㅽ넗?뚮젅???덊듃 諛??댄럺??泥섎━
 	if is_playing and is_autoplay:
 		var notes = chart_data.get("notes", [])
 		for i in range(notes.size()):
@@ -478,14 +659,14 @@ func _process(delta: float) -> void:
 					autoplay_hit_notes[i] = true
 					Global.play_hit_sound()
 					_trigger_autoplay_hit_effect(note)
-					
-	# 오토플레이 리플 수명 갱신
+
+	# ?ㅽ넗?뚮젅??由ы뵆 ?섎챸 媛깆떊
 	for i in range(autoplay_ripples.size() - 1, -1, -1):
 		autoplay_ripples[i]["life"] -= delta
 		if autoplay_ripples[i]["life"] <= 0.0:
 			autoplay_ripples.remove_at(i)
-	
-	# 캔버스 및 타임라인 갱신
+
+	# 罹붾쾭??諛???꾨씪??媛깆떊
 	preview_canvas.queue_redraw()
 	timeline.queue_redraw()
 
@@ -493,11 +674,11 @@ func _update_time_label() -> void:
 	var cur_min = int(current_time) / 60
 	var cur_sec = int(current_time) % 60
 	var cur_ms = int((current_time - int(current_time)) * 1000)
-	
+
 	var total_min = int(song_duration) / 60
 	var total_sec = int(song_duration) % 60
 	var total_ms = int((song_duration - int(song_duration)) * 1000)
-	
+
 	time_label.text = "%02d:%02d.%03d / %02d:%02d.%03d" % [cur_min, cur_sec, cur_ms, total_min, total_sec, total_ms]
 	_update_note_count()
 
@@ -509,7 +690,7 @@ func _setup_note_count_ui() -> void:
 	note_count_label.add_theme_font_size_override("font_size", 12)
 	note_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note_count_label.text = "Total Notes: 0\n(Normal: 0 | Moving: 0 | Hold: 0)"
-	
+
 	var playback_section = time_label.get_parent()
 	playback_section.add_child(note_count_label)
 
@@ -545,7 +726,7 @@ func _update_note_count() -> void:
 		note_count_label.text = "Total Notes: %d / Max: %d\n(Normal: %d | Moving: %d | Hold: %d)" % [total, max_notes, normal, moving, hold]
 
 # ==========================================
-# 스냅 연산
+# ?ㅻ깄 ?곗궛
 # ==========================================
 func get_snapped_time(raw_time: float) -> float:
 	if snap_division <= 1:
@@ -583,18 +764,18 @@ func _get_note_pre_appear_alpha(note_time: float) -> float:
 	return _get_timeline_note_alpha(note_time)
 
 # ==========================================
-# 입력 콜백 및 이벤트
+# ?낅젰 肄쒕갚 諛??대깽??
 # ==========================================
 func _input(event: InputEvent) -> void:
-	# ESC 누르면 메인 메뉴로 나가기
+	# ESC ?꾨Ⅴ硫?硫붿씤 硫붾돱濡??섍?湲?
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		if is_playing:
 			audio_player.stop()
 		get_viewport().set_input_as_handled()
 		SceneTransition.transition_to_scene(MAIN_MENU_SCENE)
 		return
-		
-	# Space 누르면 재생 / 정지
+
+	# Space ?꾨Ⅴ硫??ъ깮 / ?뺤?
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
 		var focus_owner = get_viewport().gui_get_focus_owner()
 		if focus_owner == null or not (focus_owner is LineEdit):
@@ -604,19 +785,19 @@ func _input(event: InputEvent) -> void:
 			else:
 				_on_play_pressed()
 			return
-			
-	# --- 편의 기능 단축키 모음 ---
+
+	# --- ?몄쓽 湲곕뒫 ?⑥텞??紐⑥쓬 ---
 	if event is InputEventKey and event.pressed and not event.echo:
 		var focus_owner = get_viewport().gui_get_focus_owner()
 		if focus_owner == null or not (focus_owner is LineEdit):
-			# A. 북마크 기능 (Alt+1~5 저장, 1~5 이동)
+			# A. 遺곷쭏??湲곕뒫 (Alt+1~5 ??? 1~5 ?대룞)
 			var code_val = event.keycode
 			if code_val >= KEY_1 and code_val <= KEY_5:
 				var idx = code_val - KEY_0
 				var is_alt = false
 				if event is InputEventWithModifiers:
 					is_alt = event.alt_pressed
-				
+
 				if is_alt:
 					get_viewport().set_input_as_handled()
 					bookmarks[idx] = current_time
@@ -628,8 +809,8 @@ func _input(event: InputEvent) -> void:
 						_seek_time(bookmarks[idx])
 						_show_toast("Jumped to Bookmark %d" % idx)
 						return
-						
-			# B. 노트 미러링 (H: 좌우 반전, V: 상하 반전)
+
+			# B. ?명듃 誘몃윭留?(H: 醫뚯슦 諛섏쟾, V: ?곹븯 諛섏쟾)
 			elif selected_note_index != -1 and code_val == KEY_H:
 				get_viewport().set_input_as_handled()
 				save_state_for_undo()
@@ -645,7 +826,7 @@ func _input(event: InputEvent) -> void:
 				_show_toast("Mirrored Horizontally")
 				preview_canvas.queue_redraw()
 				return
-				
+
 			elif selected_note_index != -1 and code_val == KEY_V:
 				get_viewport().set_input_as_handled()
 				save_state_for_undo()
@@ -661,8 +842,8 @@ func _input(event: InputEvent) -> void:
 				_show_toast("Mirrored Vertically")
 				preview_canvas.queue_redraw()
 				return
-				
-			# C. 선택된 노트 시간 미세 이동 (PageUp: 한 스냅 비트 뒤로, PageDown: 한 스냅 비트 앞으로)
+
+			# C. ?좏깮???명듃 ?쒓컙 誘몄꽭 ?대룞 (PageUp: ???ㅻ깄 鍮꾪듃 ?ㅻ줈, PageDown: ???ㅻ깄 鍮꾪듃 ?욎쑝濡?
 			elif selected_note_index != -1 and code_val == KEY_PAGEUP:
 				get_viewport().set_input_as_handled()
 				save_state_for_undo()
@@ -677,7 +858,7 @@ func _input(event: InputEvent) -> void:
 				preview_canvas.queue_redraw()
 				timeline.queue_redraw()
 				return
-				
+
 			elif selected_note_index != -1 and code_val == KEY_PAGEDOWN:
 				get_viewport().set_input_as_handled()
 				save_state_for_undo()
@@ -692,8 +873,8 @@ func _input(event: InputEvent) -> void:
 				preview_canvas.queue_redraw()
 				timeline.queue_redraw()
 				return
-				
-			# D. 재생 배속 단축키 ([ : 감속, ] : 가속)
+
+			# D. ?ъ깮 諛곗냽 ?⑥텞??([ : 媛먯냽, ] : 媛??
 			elif code_val == KEY_BRACKETLEFT:
 				get_viewport().set_input_as_handled()
 				var new_sel = max(0, speed_select.selected - 1)
@@ -702,13 +883,13 @@ func _input(event: InputEvent) -> void:
 					_on_speed_selected(new_sel)
 					_show_toast("Speed: %s" % speed_select.get_item_text(new_sel))
 				return
-				
-			# E. 즉시 테스트 단축키 (F5)
+
+			# E. 利됱떆 ?뚯뒪???⑥텞??(F5)
 			elif code_val == KEY_F5:
 				get_viewport().set_input_as_handled()
 				_on_instant_test_pressed()
 				return
-			
+
 			elif code_val == KEY_BRACKETLEFT:
 				get_viewport().set_input_as_handled()
 				var new_sel = max(0, speed_select.selected - 1)
@@ -717,7 +898,7 @@ func _input(event: InputEvent) -> void:
 					_on_speed_selected(new_sel)
 					_show_toast("Speed: %s" % speed_select.get_item_text(new_sel))
 				return
-				
+
 			elif code_val == KEY_BRACKETRIGHT:
 				get_viewport().set_input_as_handled()
 				var new_sel = min(speed_select.item_count - 1, speed_select.selected + 1)
@@ -727,12 +908,12 @@ func _input(event: InputEvent) -> void:
 					_show_toast("Speed: %s" % speed_select.get_item_text(new_sel))
 				return
 
-	# Ctrl 단축키 처리 (Undo / Redo / Copy / Paste)
+	# Ctrl ?⑥텞??泥섎━ (Undo / Redo / Copy / Paste)
 	if event is InputEventKey and event.pressed and not event.echo:
 		var is_ctrl = false
 		if event is InputEventWithModifiers:
 			is_ctrl = event.ctrl_pressed
-		
+
 		if is_ctrl:
 			if event.keycode == KEY_Z:
 				get_viewport().set_input_as_handled()
@@ -762,21 +943,21 @@ func _input(event: InputEvent) -> void:
 					preview_canvas.queue_redraw()
 					return
 
-	# 선택된 노트 미세 이동 (WASD / Shift+WASD)
+	# ?좏깮???명듃 誘몄꽭 ?대룞 (WASD / Shift+WASD)
 	if selected_note_index != -1 and event is InputEventKey and event.pressed:
 		var focus_owner = get_viewport().gui_get_focus_owner()
 		if focus_owner == null or not (focus_owner is LineEdit):
 			var step_size = 1.0
 			if event is InputEventWithModifiers and event.shift_pressed:
 				step_size = 10.0
-				
+
 			var move_vec = Vector2.ZERO
 			match event.keycode:
 				KEY_W: move_vec.y = -step_size
 				KEY_S: move_vec.y = step_size
 				KEY_A: move_vec.x = -step_size
 				KEY_D: move_vec.x = step_size
-				
+
 			if move_vec != Vector2.ZERO:
 				get_viewport().set_input_as_handled()
 				if not event.echo:
@@ -784,7 +965,7 @@ func _input(event: InputEvent) -> void:
 				var note = chart_data["notes"][selected_note_index]
 				var new_x = float(note.get("x", 960.0)) + move_vec.x
 				var new_y = float(note.get("y", 540.0)) + move_vec.y
-				
+
 				if note.get("type", "normal") == "moving":
 					var dx = new_x - float(note.get("x", 960.0))
 					var dy = new_y - float(note.get("y", 540.0))
@@ -794,24 +975,24 @@ func _input(event: InputEvent) -> void:
 						note["start_y"] = float(note["start_y"]) + dy
 					if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", new_x))
 					if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", new_y + 300.0))
-					
+
 				note["x"] = new_x
 				note["y"] = new_y
 				_save_chart_file()
 				preview_canvas.queue_redraw()
 				return
 
-	# 방향키 좌우 이동 (시간 탐색)
+	# 諛⑺뼢??醫뚯슦 ?대룞 (?쒓컙 ?먯깋)
 	if event is InputEventKey and event.pressed:
 		var step = 0.1
 		var is_ctrl = false
 		if event is InputEventWithModifiers:
 			is_ctrl = event.ctrl_pressed
-		
+
 		if is_ctrl:
 			var beat_length = 60.0 / bpm
 			step = beat_length * (4.0 / snap_division)
-			
+
 		if event.keycode == KEY_LEFT:
 			get_viewport().set_input_as_handled()
 			var target = current_time - step
@@ -824,15 +1005,15 @@ func _input(event: InputEvent) -> void:
 			if is_ctrl:
 				target = get_snapped_time(target + 0.001)
 			_seek_time(target)
-			
-	# Delete 키 누르면 선택된 노트 삭제
+
+	# Delete ???꾨Ⅴ硫??좏깮???명듃 ??젣
 	if event is InputEventKey and event.pressed and event.keycode == KEY_DELETE:
 		if selected_note_index != -1:
 			get_viewport().set_input_as_handled()
 			save_state_for_undo()
 			_delete_note(selected_note_index)
 
-	# 드래그 중인 동안에는 마우스의 위치가 어디든 최우선으로 드래그 이동과 릴리즈를 처리
+	# ?쒕옒洹?以묒씤 ?숈븞?먮뒗 留덉슦?ㅼ쓽 ?꾩튂媛 ?대뵒??理쒖슦?좎쑝濡??쒕옒洹??대룞怨?由대━利덈? 泥섎━
 	if is_dragging_note and selected_note_index != -1 and (event is InputEventMouseMotion or event is InputEventMouseButton):
 		var global_pos = event.global_position
 		var local_pos = preview_canvas.get_global_transform().affine_inverse() * global_pos
@@ -843,18 +1024,18 @@ func _input(event: InputEvent) -> void:
 				local_pos.x * (1920.0 / canvas_w),
 				local_pos.y * (1080.0 / canvas_h)
 			)
-			
+
 			if event is InputEventMouseMotion:
 				var note = chart_data["notes"][selected_note_index]
 				var old_x = float(note.get("x", 960.0))
 				var old_y = float(note.get("y", 540.0))
-				
+
 				var new_x = logical_pos.x - drag_offset.x
 				var new_y = logical_pos.y - drag_offset.y
-				
+
 				note["x"] = new_x
 				note["y"] = new_y
-				
+
 				if note.get("type", "normal") == "moving":
 					var dx = new_x - old_x
 					var dy = new_y - old_y
@@ -864,11 +1045,11 @@ func _input(event: InputEvent) -> void:
 							note["start_y"] = float(note["start_y"]) + dy
 					if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", new_x))
 					if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", new_y + 300.0))
-					
+
 				preview_canvas.queue_redraw()
 				get_viewport().set_input_as_handled()
 				return
-				
+
 			elif event is InputEventMouseButton:
 				if not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 					is_dragging_note = false
@@ -877,11 +1058,11 @@ func _input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 					return
 
-	# 캔버스 밖 영역(여백) 마우스 입력 처리 (화면 밖 생성 및 삭제 지원)
+	# 罹붾쾭??諛??곸뿭(?щ갚) 留덉슦???낅젰 泥섎━ (?붾㈃ 諛??앹꽦 諛???젣 吏??
 	var canvas_container = get_node_or_null("Split/MainArea/CanvasContainer") as Control
 	if canvas_container and (event is InputEventMouseButton or event is InputEventMouseMotion):
 		var global_pos = event.global_position
-		# 마우스가 CanvasContainer 내부이되 PreviewCanvas 외부인 경우
+		# 留덉슦?ㅺ? CanvasContainer ?대??대릺 PreviewCanvas ?몃???寃쎌슦
 		if canvas_container.get_global_rect().has_point(global_pos) and not preview_canvas.get_global_rect().has_point(global_pos):
 			var local_pos = preview_canvas.get_global_transform().affine_inverse() * global_pos
 			var canvas_w = preview_canvas.size.x
@@ -891,15 +1072,15 @@ func _input(event: InputEvent) -> void:
 					local_pos.x * (1920.0 / canvas_w),
 					local_pos.y * (1080.0 / canvas_h)
 				)
-				
+
 				if event is InputEventMouseMotion:
 					if not is_dragging_note:
 						_update_hover_note(logical_pos)
-						
+
 				elif event is InputEventMouseButton:
 					if event.pressed:
 						var snapped_time = get_snapped_time(current_time)
-						
+
 						if event.button_index == MOUSE_BUTTON_LEFT:
 							if is_setting_start_pos and selected_note_index != -1:
 								var note = chart_data["notes"][selected_note_index]
@@ -914,12 +1095,12 @@ func _input(event: InputEvent) -> void:
 								if hover_note_index != -1:
 									selected_note_index = hover_note_index
 									_show_toast("Note Selected")
-									
+
 									is_dragging_note = true
 									var note = chart_data["notes"][selected_note_index]
 									drag_offset = logical_pos - Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
 									save_state_for_undo()
-									
+
 									var note_type = note.get("type", "normal")
 									if note_type == "normal":
 										type_select.selected = 0
@@ -945,7 +1126,7 @@ func _input(event: InputEvent) -> void:
 									preview_canvas.queue_redraw()
 								else:
 									_add_note(snapped_time, logical_pos)
-									
+
 						elif event.button_index == MOUSE_BUTTON_RIGHT:
 							if hover_note_index != -1:
 								_delete_note(hover_note_index)
@@ -961,7 +1142,7 @@ func _input(event: InputEvent) -> void:
 func _seek_time(target: float) -> void:
 	current_time = _clamp_to_active_time_range(target)
 	autoplay_hit_notes.clear()
-	
+
 	var expected_audio_pos = _chart_time_to_audio_pos(current_time)
 	if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 		if audio_player.playing:
@@ -976,7 +1157,7 @@ func _on_play_pressed() -> void:
 			_seek_time(region_start_time)
 		play_button.text = "Pause"
 		audio_player.pitch_scale = playback_speed
-		
+
 		var expected_audio_pos = _chart_time_to_audio_pos(current_time)
 		if expected_audio_pos >= 0.0 and expected_audio_pos < song_duration:
 			audio_player.play(expected_audio_pos)
@@ -985,7 +1166,7 @@ func _on_play_pressed() -> void:
 	else:
 		play_button.text = "Play"
 		audio_player.stop()
-		is_playing_region = false # 자동 정지 시 구간 재생 오프
+		is_playing_region = false # ?먮룞 ?뺤? ??援ш컙 ?ъ깮 ?ㅽ봽
 
 func _on_song_selected_item(index: int) -> void:
 	_on_song_selected(index)
@@ -1009,7 +1190,7 @@ func _on_type_selected(index: int) -> void:
 			selected_type = "hold"
 			hold_settings.visible = true
 			if moving_settings: moving_settings.visible = false
-			
+
 	duration_input.text = str(hold_duration)
 	division_input.text = str(hold_division)
 
@@ -1020,7 +1201,7 @@ func _on_speed_selected(index: int) -> void:
 		2: playback_speed = 1.0
 		3: playback_speed = 1.25
 		4: playback_speed = 1.5
-	
+
 	if audio_player.playing:
 		audio_player.pitch_scale = playback_speed
 
@@ -1050,28 +1231,28 @@ func _on_hold_division_submitted(new_text: String) -> void:
 		division_input.release_focus()
 
 # ==========================================
-# 캔버스 2D 조작
+# 罹붾쾭??2D 議곗옉
 # ==========================================
 func _on_canvas_gui_input(event: InputEvent) -> void:
 	if not chart_data.has("notes"): return
-	
+
 	var canvas_w = preview_canvas.size.x
 	var canvas_h = preview_canvas.size.y
 	if canvas_w == 0 or canvas_h == 0: return
-	
+
 	var local_pos: Vector2 = event.position
 	var logical_pos = Vector2(
 		local_pos.x * (1920.0 / canvas_w),
 		local_pos.y * (1080.0 / canvas_h)
 	)
-	
+
 	if event is InputEventMouseMotion or event is InputEventMouseButton:
 		mouse_logical_pos = logical_pos
 		is_mouse_hovering_canvas = true
 		preview_canvas.queue_redraw()
-	
+
 	if event is InputEventMouseMotion:
-		# 곡선 드래그 모드: 실시간 제어점 업데이트
+		# 怨≪꽑 ?쒕옒洹?紐⑤뱶: ?ㅼ떆媛??쒖뼱???낅뜲?댄듃
 		if is_curve_draw_mode and is_curve_dragging:
 			curve_drag_current = logical_pos
 			var seg = curve_drag_end - curve_drag_start
@@ -1093,13 +1274,13 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 			var note = chart_data["notes"][selected_note_index]
 			var old_x = float(note.get("x", 960.0))
 			var old_y = float(note.get("y", 540.0))
-			
+
 			var new_x = logical_pos.x - drag_offset.x
 			var new_y = logical_pos.y - drag_offset.y
-			
+
 			note["x"] = new_x
 			note["y"] = new_y
-			
+
 			if note.get("type", "normal") == "moving":
 				var dx = new_x - old_x
 				var dy = new_y - old_y
@@ -1109,15 +1290,15 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 					note["start_y"] = float(note["start_y"]) + dy
 				if start_x_input: start_x_input.text = "%.1f" % float(note.get("start_x", new_x))
 				if start_y_input: start_y_input.text = "%.1f" % float(note.get("start_y", new_y + 300.0))
-				
+
 			preview_canvas.queue_redraw()
 		else:
 			_update_hover_note(logical_pos)
-		
+
 	if event is InputEventMouseButton:
 		if event.pressed:
 			var snapped_time = get_snapped_time(current_time)
-			
+
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				if is_curve_draw_mode and selected_note_index != -1:
 					is_curve_dragging = true
@@ -1139,16 +1320,16 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 					_save_chart_file()
 					preview_canvas.queue_redraw()
 					return
-					
+
 				if hover_note_index != -1:
 					selected_note_index = hover_note_index
 					_show_toast("Note Selected")
-					
+
 					is_dragging_note = true
 					var note = chart_data["notes"][selected_note_index]
 					drag_offset = logical_pos - Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
 					save_state_for_undo()
-					
+
 					var note_type = note.get("type", "normal")
 					if note_type == "normal":
 						type_select.selected = 0
@@ -1178,7 +1359,7 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 					preview_canvas.queue_redraw()
 				else:
 					_add_note(snapped_time, logical_pos)
-					
+
 			elif event.button_index == MOUSE_BUTTON_RIGHT:
 				if hover_note_index != -1:
 					_delete_note(hover_note_index)
@@ -1206,26 +1387,26 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 				preview_canvas.queue_redraw()
 
 func _get_note_alpha(note: Dictionary, current_time: float) -> float:
-	var note_time = float(note.get("time", 0.0))
+	var note_time = _get_timeline_display_time(note)
 	var note_type = str(note.get("type", "normal"))
 	var dt = current_time - note_time
-	
+
 	var judgment_time = 0.7
 	var perfect_margin = Global.judgment_perfect_margin
 	var note_timeout = judgment_time + perfect_margin * 1.8
 	var normal_fade_duration = 0.15
 	var hold_fade_duration = 0.3
-	
+
 	if dt < 0.0:
 		return _get_note_pre_appear_alpha(note_time)
-	
+
 	if note_type == "hold":
 		var duration = float(note.get("duration", 3.0))
 		if dt <= duration:
 			return 1.0
 		elif dt <= duration + hold_fade_duration:
 			return 1.0 - ((dt - duration) / hold_fade_duration)
-		else: 
+		else:
 			return 0.0
 	else:
 		if dt <= note_timeout:
@@ -1238,19 +1419,19 @@ func _get_note_alpha(note: Dictionary, current_time: float) -> float:
 func _update_hover_note(logical_pos: Vector2) -> void:
 	hover_note_index = -1
 	if not chart_data.has("notes"): return
-	
+
 	var threshold = 40.0
 	var notes: Array = chart_data["notes"]
-	
+
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
 		if not _is_note_in_view_region(note):
 			continue
 		var note_type = str(note.get("type", "normal"))
-		
+
 		if _get_note_alpha(note, current_time) <= 0.0:
 			continue
-			
+
 		if note_type == "hold":
 			var dist = logical_pos.distance_to(Vector2(960, 540))
 			if dist < threshold + 20.0:
@@ -1268,10 +1449,10 @@ func _update_hover_note(logical_pos: Vector2) -> void:
 
 func _add_note(time_val: float, logical_pos: Vector2) -> void:
 	var note_time = _editor_time_to_note_time(selected_type, time_val)
-	if is_view_region_only and _has_valid_region() and (time_val < region_start_time or time_val > region_end_time):
+	if is_view_region_only and not _time_span_in_any_region(time_val, time_val):
 		_show_toast("Move inside the selected region first!")
 		return
-	
+
 	if selected_type != "hold" and _is_inside_existing_note_block(logical_pos, note_time):
 		_show_toast("Placement blocked: Inside note size!")
 		return
@@ -1285,12 +1466,12 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 			if logical_pos.distance_to(prev_pos) > allowed_radius:
 				_show_toast("Placement blocked: Too far for this timing!")
 				return
-				
+
 	save_state_for_undo()
 	var note_node = {}
 	note_node["time"] = note_time
 	note_node["type"] = selected_type
-	
+
 	if selected_type == "hold":
 		note_node["duration"] = hold_duration
 		note_node["beat_division"] = hold_division
@@ -1304,10 +1485,10 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 	else:
 		note_node["x"] = logical_pos.x
 		note_node["y"] = logical_pos.y
-		
+
 	chart_data["notes"].append(note_node)
 	_save_chart_file()
-	
+
 	selected_note_index = chart_data["notes"].find(note_node)
 	if selected_type == "moving":
 		if start_x_input: start_x_input.text = "%.1f" % note_node["start_x"]
@@ -1315,7 +1496,7 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 		if moving_duration_input: moving_duration_input.text = "%.1f" % moving_duration
 		if use_gravity_check: use_gravity_check.button_pressed = note_node.get("use_gravity", false)
 		if moving_settings: moving_settings.visible = true
-		
+
 	_update_hover_note(logical_pos)
 	preview_canvas.queue_redraw()
 
@@ -1415,22 +1596,22 @@ func _delete_note(index: int) -> void:
 		timeline.queue_redraw()
 
 # ==========================================
-# 타임라인 조작
+# ??꾨씪??議곗옉
 # ==========================================
 func _on_timeline_gui_input(event: InputEvent) -> void:
 	var timeline_w = timeline.size.x
 	if timeline_w == 0: return
-	
+
 	var pixels_per_second = 150.0 * timeline_zoom
-	
-	# Shift + 드래그를 이용한 구간 마우스 지정 처리
+
+	# Shift + ?쒕옒洹몃? ?댁슜??援ш컙 留덉슦??吏??泥섎━
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.shift_pressed:
 			var local_x: float = event.position.x
 			var dx = local_x - (timeline_w / 2.0)
 			var dt = dx / pixels_per_second
 			var target_time = clamp(current_time + dt, 0.0, song_duration)
-			
+
 			if event.pressed:
 				is_dragging_region = true
 				drag_start_time = target_time
@@ -1438,27 +1619,26 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 				region_end_time = target_time
 			else:
 				is_dragging_region = false
-				_save_editor_region_to_chart()
-				_update_region_ui()
+				_add_current_region_to_list()
 			timeline.queue_redraw()
 			get_viewport().set_input_as_handled()
 			return
-			
+
 	if event is InputEventMouseMotion and is_dragging_region:
 		var local_x: float = event.position.x
 		var dx = local_x - (timeline_w / 2.0)
 		var dt = dx / pixels_per_second
 		var target_time = clamp(current_time + dt, 0.0, song_duration)
-		
+
 		region_start_time = min(drag_start_time, target_time)
 		region_end_time = max(drag_start_time, target_time)
-		if is_view_region_only and _has_valid_region():
+		if is_view_region_only and (_has_valid_region() or _has_enabled_regions()):
 			current_time = clamp(current_time, region_start_time, region_end_time)
 		_update_region_ui()
 		timeline.queue_redraw()
 		get_viewport().set_input_as_handled()
 		return
-	
+
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			timeline_zoom = min(4.0, timeline_zoom + 0.1)
@@ -1470,44 +1650,44 @@ func _on_timeline_gui_input(event: InputEvent) -> void:
 			timeline.queue_redraw()
 			get_viewport().set_input_as_handled()
 			return
-	
+
 	if event is InputEventMouseButton and event.pressed:
 		var local_x: float = event.position.x
 		var dx = local_x - (timeline_w / 2.0)
 		var dt = dx / pixels_per_second
 		var target_time = current_time + dt
-		
+
 		var is_ctrl = false
 		if event is InputEventWithModifiers:
 			is_ctrl = event.ctrl_pressed
 		if is_ctrl:
 			target_time = get_snapped_time(target_time)
-			
+
 		_seek_time(target_time)
 
 # ==========================================
-# 핑크 테마 렌더링 (_draw)
+# ?묓겕 ?뚮쭏 ?뚮뜑留?(_draw)
 # ==========================================
 func _draw_preview_canvas() -> void:
 	var canvas_w = preview_canvas.size.x
 	var canvas_h = preview_canvas.size.y
 	if canvas_w == 0 or canvas_h == 0: return
-	
+
 	var sx = canvas_w / 1920.0
 	var sy = canvas_h / 1080.0
-	
-	# 캔버스 핑크 배경 및 핑크 에스테틱 테두리
+
+	# 罹붾쾭???묓겕 諛곌꼍 諛??묓겕 ?먯뒪?뚰떛 ?뚮몢由?
 	preview_canvas.draw_rect(Rect2(Vector2.ZERO, preview_canvas.size), COLOR_BG_CANVAS, true)
 	preview_canvas.draw_rect(Rect2(Vector2.ZERO, preview_canvas.size), COLOR_BORDER_CANVAS, false, 2.0 * sx)
-	
-	# 핑크 십자 가선
+
+	# ?묓겕 ??옄 媛??
 	preview_canvas.draw_line(Vector2(canvas_w/2, 0), Vector2(canvas_w/2, canvas_h), COLOR_GRID_CANVAS, 1.0)
 	preview_canvas.draw_line(Vector2(0, canvas_h/2), Vector2(canvas_w, canvas_h/2), COLOR_GRID_CANVAS, 1.0)
-	
+
 	if not chart_data.has("notes"): return
-	
+
 	var notes: Array = chart_data["notes"]
-	
+
 	# Draw placement boundary guides. The previous guide fades out after the next note appears.
 	var active_guide_note = _get_placement_guide_note_for_time(current_time)
 	for guide_note in notes:
@@ -1530,7 +1710,7 @@ func _draw_preview_canvas() -> void:
 		var prev_pos = Vector2(float(guide_note.get("x", 960.0)), float(guide_note.get("y", 540.0)))
 		var p_draw = prev_pos * Vector2(sx, sy)
 		var allowed_radius = _get_visual_placement_radius(guide_note, min(current_time, next_start))
-		
+
 		preview_canvas.draw_circle(p_draw, allowed_radius * sx, Color(0.2, 0.8, 0.3, 0.06 * guide_alpha))
 		preview_canvas.draw_arc(p_draw, allowed_radius * sx, 0.0, TAU, 64, Color(0.2, 0.8, 0.3, 0.3 * guide_alpha), 1.5 * sx)
 
@@ -1543,7 +1723,7 @@ func _draw_preview_canvas() -> void:
 			elif distance_ratio > 0.75:
 				line_color = Color(0.9, 0.75, 0.15, 0.5)
 			preview_canvas.draw_line(p_draw, m_draw, line_color, 1.5 * sx)
-	
+
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
 		if not _is_note_in_view_region(note):
@@ -1551,12 +1731,12 @@ func _draw_preview_canvas() -> void:
 		var note_time = float(note.get("time", 0.0))
 		var note_type = str(note.get("type", "normal"))
 		var display_time: float = _get_timeline_display_time(note)
-		
+
 		var alpha = _get_note_alpha(note, current_time)
 		if alpha <= 0.0:
 			continue
 		var color = COLOR_NOTE_NORMAL
-		
+
 		match note_type:
 			"normal":
 				color = COLOR_NOTE_NORMAL
@@ -1564,51 +1744,51 @@ func _draw_preview_canvas() -> void:
 				color = COLOR_NOTE_MOVING
 			"hold":
 				color = COLOR_NOTE_HOLD
-				
+
 		color.a = alpha
-		
+
 		var is_hovered = (i == hover_note_index)
 		var is_selected = (i == selected_note_index)
-		
+
 		if is_selected:
 			color = COLOR_NOTE_SELECTED
 			color.a = alpha
 		elif is_hovered:
 			color = color.lightened(0.2)
 			color.a = alpha
-			
+
 		if note_type == "hold":
 			var center = Vector2(canvas_w / 2.0, canvas_h / 2.0)
 			var radius = 80.0 * sx
 			if is_hovered or is_selected:
-				# 핑크 블렌딩 헤일로 링
+				# ?묓겕 釉붾젋???ㅼ씪濡?留?
 				preview_canvas.draw_circle(center, radius + 10.0*sx, Color(1.0, 0.301961, 0.427451, alpha * 0.25))
-			
+
 			preview_canvas.draw_arc(center, radius, 0.0, TAU, 64, color, 8.0 * sx, true)
-			
+
 			var hold_font = get_theme_font("font")
 			var text_str = "HOLD (%.1fs)" % float(note.get("duration", 3.0))
 			var hold_text_color = COLOR_TEXT_WINE
 			hold_text_color.a = alpha * 0.85
 			preview_canvas.draw_string(hold_font, center + Vector2(-60.0*sx, 10.0*sy), text_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, hold_text_color)
 
-			# --- 롱 노트 경고 표시 ---
+			# --- 濡??명듃 寃쎄퀬 ?쒖떆 ---
 			var warning = _get_note_warnings(i) if current_time >= display_time else ""
 			if warning != "":
 				var w_font = get_theme_font("font")
 				if warning == "LIMIT_EXCEEDED":
-					# 곡 길이 기준 초과 경고 (빨강)
+					# 怨?湲몄씠 湲곗? 珥덇낵 寃쎄퀬 (鍮④컯)
 					preview_canvas.draw_circle(center, radius + 20.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), false, 2.5 * sx)
-					preview_canvas.draw_string(w_font, center + Vector2(-60.0 * sx, - (radius + 25.0 * sy)), "⚠️ Over Limit", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
+					preview_canvas.draw_string(w_font, center + Vector2(-60.0 * sx, - (radius + 25.0 * sy)), "?좑툘 Over Limit", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
 				elif warning == "SIMULTANEOUS":
-					# 동시치기 불가 경고 (빨강)
+					# ?숈떆移섍린 遺덇? 寃쎄퀬 (鍮④컯)
 					preview_canvas.draw_circle(center, radius + 20.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), false, 2.5 * sx)
-					preview_canvas.draw_string(w_font, center + Vector2(-60.0 * sx, - (radius + 25.0 * sy)), "⚠️ Double Key", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
+					preview_canvas.draw_string(w_font, center + Vector2(-60.0 * sx, - (radius + 25.0 * sy)), "?좑툘 Double Key", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
 		else:
 			var nx = float(note.get("x", 960.0))
 			var ny = float(note.get("y", 540.0))
 			var is_offscreen = (nx < 0.0 or nx > 1920.0 or ny < 0.0 or ny > 1080.0)
-			
+
 			var rx = clamp(nx, 0.0, 1920.0) * sx
 			var ry = clamp(ny, 0.0, 1080.0) * sy
 			var pos = Vector2(rx, ry)
@@ -1616,7 +1796,7 @@ func _draw_preview_canvas() -> void:
 			var block_radius = Global.editor_note_block_radius * sx
 			preview_canvas.draw_circle(pos, block_radius, Color(1.0, 0.0, 0.0, alpha * 0.035))
 			preview_canvas.draw_arc(pos, block_radius, 0.0, TAU, 64, Color(1.0, 0.0, 0.0, alpha * 0.22), 1.5 * sx)
-			
+
 			if is_offscreen:
 				var guide_color = color
 				if is_selected:
@@ -1624,15 +1804,15 @@ func _draw_preview_canvas() -> void:
 				elif is_hovered:
 					guide_color = color.lightened(0.2)
 				guide_color.a = alpha * 0.4
-				
+
 				preview_canvas.draw_circle(pos, radius, guide_color)
 				preview_canvas.draw_circle(pos, radius - 4.0 * sx, COLOR_BG_CANVAS)
-				
+
 				var real_pos_scaled = Vector2(nx * sx, ny * sy)
 				var dir = (real_pos_scaled - pos).normalized()
 				if dir != Vector2.ZERO:
 					preview_canvas.draw_line(pos, pos + dir * 30.0 * sx, guide_color, 4.0 * sx)
-					
+
 				var offscreen_font = get_theme_font("font")
 				var offscreen_text_color = COLOR_TEXT_WINE
 				offscreen_text_color.a = alpha * 0.7
@@ -1640,15 +1820,15 @@ func _draw_preview_canvas() -> void:
 			else:
 				if is_hovered or is_selected:
 					preview_canvas.draw_circle(pos, radius + 8.0*sx, Color(1.0, 0.301961, 0.427451, alpha * 0.25))
-					
+
 				preview_canvas.draw_circle(pos, radius, color)
-			
-			# 도넛 형태 내부 (가장자리와 대비되는 어두운 핑크 와인 색상)
+
+			# ?꾨꽋 ?뺥깭 ?대? (媛?μ옄由ъ? ?鍮꾨릺???대몢???묓겕 ????됱긽)
 			var inner_dark_color = COLOR_TEXT_WINE
 			inner_dark_color.a = alpha
 			preview_canvas.draw_circle(pos, radius - 5.0*sx, inner_dark_color)
 			preview_canvas.draw_circle(pos, radius - 10.0*sx, color)
-			
+
 			if note_type == "moving":
 				var s_x = float(note.get("start_x", note.get("x", 960.0))) * sx
 				var s_y = float(note.get("start_y", float(note.get("y", 540.0)) + 300.0)) * sy
@@ -1656,7 +1836,7 @@ func _draw_preview_canvas() -> void:
 				var line_color = Color(1.0, 0.458824, 0.560784, alpha * 0.5)
 				var has_curve = note.has("curve_control_x") and note.has("curve_control_y")
 				var has_gravity = note.get("use_gravity", false)
-				
+
 				if has_curve:
 					var ctrl_x = float(note["curve_control_x"]) * sx
 					var ctrl_y = float(note["curve_control_y"]) * sy
@@ -1691,47 +1871,47 @@ func _draw_preview_canvas() -> void:
 					var grav_font = get_theme_font("font")
 					var grav_color = Color(0.4, 0.7, 1.0, alpha * 0.9)
 					preview_canvas.draw_string(grav_font, pos + Vector2(15.0 * sx, 25.0 * sy), "G", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, grav_color)
-					
-			# --- 불가능한 패턴 자동 검출 및 시각 경고 ---
+
+			# --- 遺덇??ν븳 ?⑦꽩 ?먮룞 寃異?諛??쒓컖 寃쎄퀬 ---
 			var warning = _get_note_warnings(i) if current_time >= display_time else ""
 			if warning != "":
 				var w_font = get_theme_font("font")
 				if warning == "LIMIT_EXCEEDED":
-					# 곡 길이 기준 초과 경고 (빨강)
+					# 怨?湲몄씠 湲곗? 珥덇낵 寃쎄퀬 (鍮④컯)
 					preview_canvas.draw_circle(pos, 35.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), false, 2.5 * sx)
-					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠️ Over Limit", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "?좑툘 Over Limit", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
 				elif warning == "SIMULTANEOUS":
-					# 동시치기 불가 경고 (빨강)
+					# ?숈떆移섍린 遺덇? 寃쎄퀬 (鍮④컯)
 					preview_canvas.draw_circle(pos, 35.0 * sx, Color(1.0, 0.0, 0.0, alpha * 0.8), false, 2.5 * sx)
-					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Double Key", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
+					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "?좑툘 Double Key", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.3, 0.3, alpha * 0.9))
 				elif warning == "TOO_CLOSE":
-					# 초고속 피지컬 경고 (오렌지)
+					# 珥덇퀬???쇱?而?寃쎄퀬 (?ㅻ젋吏)
 					preview_canvas.draw_circle(pos, 32.0 * sx, Color(1.0, 0.5, 0.0, alpha * 0.8), false, 2.0 * sx)
-					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Extreme Speed", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.6, 0.2, alpha * 0.9))
+					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "?좑툘 Extreme Speed", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.6, 0.2, alpha * 0.9))
 				elif warning == "OVERLAP":
-					# 겹침 배치 차폐 경고 (노랑)
+					# 寃뱀묠 諛곗튂 李⑦룓 寃쎄퀬 (?몃옉)
 					preview_canvas.draw_circle(pos, 30.0 * sx, Color(1.0, 0.8, 0.0, alpha * 0.7), false, 1.5 * sx)
-					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "⚠️ Hidden Note", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.85, 0.2, alpha * 0.9))
+					preview_canvas.draw_string(w_font, pos + Vector2(-45.0 * sx, -40.0 * sy), "?좑툘 Hidden Note", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.85, 0.2, alpha * 0.9))
 				elif warning == "NOTE_SIZE_BLOCKED":
 					preview_canvas.draw_circle(pos, Global.editor_note_block_radius * sx, Color(1.0, 0.0, 0.0, alpha * 0.85), false, 2.5 * sx)
-					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠ Note Area", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.25, 0.25, alpha * 0.9))
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "??Note Area", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.25, 0.25, alpha * 0.9))
 				elif warning == "TOO_DISTANT":
-					# 절대 거리 제한 경고 (빨간색)
+					# ?덈? 嫄곕━ ?쒗븳 寃쎄퀬 (鍮④컙??
 					preview_canvas.draw_circle(pos, 36.0 * sx, Color(0.9, 0.2, 0.2, alpha * 0.8), false, 2.5 * sx)
-					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠ Too Distant", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.2, alpha * 0.9))
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "??Too Distant", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.2, alpha * 0.9))
 				elif warning == "TOO_FAR":
-					# 칠 수 없는 노트 경고 (자주색)
+					# 移????녿뒗 ?명듃 寃쎄퀬 (?먯＜??
 					preview_canvas.draw_circle(pos, 38.0 * sx, Color(0.7, 0.0, 0.7, alpha * 0.9), false, 3.0 * sx)
-					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "⚠ Too Far (Unhittable)", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.9, alpha * 0.9))
-			
-			# 텍스트 라벨 (딥 와인 색상)
+					preview_canvas.draw_string(w_font, pos + Vector2(-55.0 * sx, -40.0 * sy), "??Too Far (Unhittable)", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.2, 0.9, alpha * 0.9))
+
+			# ?띿뒪???쇰꺼 (??????됱긽)
 			var lbl_font = get_theme_font("font")
 			var lbl_text_color = COLOR_TEXT_WINE
 			lbl_text_color.a = alpha * 0.8
 			preview_canvas.draw_string(lbl_font, pos + Vector2(15.0*sx, -15.0*sy), "%.2fs" % display_time, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, lbl_text_color)
 
 
-	# --- 오토플레이 리플 효과 렌더링 ---
+	# --- ?ㅽ넗?뚮젅??由ы뵆 ?④낵 ?뚮뜑留?---
 	for rip in autoplay_ripples:
 		var r_pos = rip["pos"] * Vector2(sx, sy)
 		var progress = 1.0 - (rip["life"] / 0.3)
@@ -1739,7 +1919,7 @@ func _draw_preview_canvas() -> void:
 		var rip_color = Color(1.0, 0.0, 0.329412, lerp(0.8, 0.0, progress))
 		preview_canvas.draw_circle(r_pos, radius, rip_color, false, 2.0 * sx)
 
-	# --- 실시간 곡선 드래그 미리보기 렌더링 ---
+	# --- ?ㅼ떆媛?怨≪꽑 ?쒕옒洹?誘몃━蹂닿린 ?뚮뜑留?---
 	if is_curve_draw_mode and is_curve_dragging and selected_note_index != -1:
 		var c_note_p = chart_data["notes"][selected_note_index]
 		var d_sx = float(c_note_p.get("start_x", c_note_p.get("x", 960.0))) * sx
@@ -1765,45 +1945,45 @@ func _draw_timeline() -> void:
 	var timeline_w: float = timeline.size.x
 	var timeline_h: float = timeline.size.y
 	if timeline_w == 0 or timeline_h == 0: return
-	
+
 	timeline.draw_rect(Rect2(Vector2.ZERO, timeline.size), COLOR_BG_TIMELINE, true)
 	timeline.draw_line(Vector2(0, 0), Vector2(timeline_w, 0), COLOR_BORDER_CANVAS, 1.5)
-	
 
-	
+
+
 	var center_x: float = timeline_w / 2.0
 	timeline.draw_line(Vector2(center_x, 0), Vector2(center_x, timeline_h), COLOR_HEADER_TIMELINE, 2.0)
-	
+
 	var pixels_per_second: float = 150.0 * timeline_zoom
 	var beat_length: float = 60.0 / bpm
 	var view_start_time: float = current_time - (center_x / pixels_per_second)
 	var view_end_time: float = current_time + (center_x / pixels_per_second)
-	# --- 고해상도 주파수별 색상화 오디오 파형 렌더링 ---
+	# --- 怨좏빐?곷룄 二쇳뙆?섎퀎 ?됱긽???ㅻ뵒???뚰삎 ?뚮뜑留?---
 	if is_waveform_loaded and waveform_data.has("low"):
 		var samples_per_second: float = float(waveform_data.get("samples_per_second", 60.0))
 		var low_arr: Array = waveform_data["low"]
 		var mid_arr: Array = waveform_data["mid"]
 		var high_arr: Array = waveform_data["high"]
 		var center_y: float = timeline_h / 2.0
-		
-		# 2픽셀 간격으로 촘촘히 렌더링하여 고해상도 속도 보장
+
+		# 2?쎌? 媛꾧꺽?쇰줈 珥섏킌???뚮뜑留곹븯??怨좏빐?곷룄 ?띾룄 蹂댁옣
 		var step: int = 2
 		for x in range(0, int(timeline_w), step):
 			var dx: float = x - center_x
 			var t: float = current_time + (dx / pixels_per_second)
-			
+
 			# Draw waveform samples at the audio position that matches chart time.
 			var t_audio = _chart_time_to_audio_pos(t)
 			if t_audio < 0.0 or t_audio >= song_duration:
 				continue
-				
+
 			var idx: int = int(t_audio * samples_per_second)
 			if idx >= 0 and idx < low_arr.size():
 				var low_val: float = float(low_arr[idx])
 				var mid_val: float = float(mid_arr[idx])
 				var high_val: float = float(high_arr[idx])
-				
-				# 킥(빨강 - 저역), 스네어(파랑 - 중역), 보컬/멜로디(초록 - 고역) 주파수 대역 반투명 대칭형 중첩 그리기
+
+				# ??鍮④컯 - ???, ?ㅻ꽕???뚮옉 - 以묒뿭), 蹂댁뺄/硫쒕줈??珥덈줉 - 怨좎뿭) 二쇳뙆?????諛섑닾紐??移?삎 以묒꺽 洹몃━湲?
 				if low_val > 0.01:
 					var lh = low_val * (timeline_h * 0.45)
 					timeline.draw_line(Vector2(x, center_y - lh), Vector2(x, center_y + lh), Color(0.9, 0.25, 0.25, 0.38), 2.0)
@@ -1813,63 +1993,83 @@ func _draw_timeline() -> void:
 				if high_val > 0.01:
 					var hh = high_val * (timeline_h * 0.28)
 					timeline.draw_line(Vector2(x, center_y - hh), Vector2(x, center_y + hh), Color(0.25, 0.85, 0.35, 0.38), 2.0)
-	
+
 	var first_beat_index: int = ceili(view_start_time / beat_length)
 	var last_beat_index: int = floori(view_end_time / beat_length)
-	
+
 	if snap_division > 1:
 		var snap_step_time: float = beat_length * (4.0 / snap_division)
 		var first_snap_idx: int = ceili(view_start_time / snap_step_time)
 		var last_snap_idx: int = floori(view_end_time / snap_step_time)
-		
+
 		for idx in range(first_snap_idx, last_snap_idx + 1):
 			var t: float = idx * snap_step_time
 			var dx: float = (t - current_time) * pixels_per_second
 			var lx: float = center_x + dx
-			
+
 			if absf(fmod(t, beat_length)) < 0.001:
 				continue
-				
+
 			timeline.draw_line(Vector2(lx, 20), Vector2(lx, timeline_h - 10), COLOR_GRID_TIMELINE_SUB, 1.0)
-			
+
 	var font = get_theme_font("font")
 	for idx in range(first_beat_index, last_beat_index + 1):
 		var t: float = idx * beat_length
 		var dx: float = (t - current_time) * pixels_per_second
 		var lx: float = center_x + dx
-		
+
 		timeline.draw_line(Vector2(lx, 10), Vector2(lx, timeline_h), COLOR_GRID_TIMELINE_MAIN, 1.5)
-		
+
 		timeline.draw_string(font, Vector2(lx + 4, 15), str(idx + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, COLOR_TEXT_WINE_MUTED)
-	
-	# --- 구간(Region) 선택 영역 및 경계 렌더링 ---
+
+	# --- 援ш컙(Region) ?좏깮 ?곸뿭 諛?寃쎄퀎 ?뚮뜑留?---
 	if region_start_time >= 0.0 and region_end_time >= 0.0 and region_end_time > region_start_time:
 		var dx_start = (region_start_time - current_time) * pixels_per_second
 		var dx_end = (region_end_time - current_time) * pixels_per_second
 		var lx_start = center_x + dx_start
 		var lx_end = center_x + dx_end
-		
+
 		var rx_start = clamp(lx_start, 0.0, timeline_w)
 		var rx_end = clamp(lx_end, 0.0, timeline_w)
-		
+
 		if rx_end > rx_start:
-			# 반투명 딥 와인 색상으로 영역을 그림
+			# 諛섑닾紐???????됱긽?쇰줈 ?곸뿭??洹몃┝
 			var overlay_rect = Rect2(Vector2(rx_start, 0.0), Vector2(rx_end - rx_start, timeline_h))
 			timeline.draw_rect(overlay_rect, Color(0.788235, 0.0941176, 0.290196, 0.22), true)
-			
-			# 경계선 점선/실선 렌더링
+
+			# 寃쎄퀎???먯꽑/?ㅼ꽑 ?뚮뜑留?
 			timeline.draw_line(Vector2(lx_start, 0.0), Vector2(lx_start, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
 			timeline.draw_line(Vector2(lx_end, 0.0), Vector2(lx_end, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.8), 2.0)
-			
-			# 시작/종료 시간 텍스트 표기
+
+			# ?쒖옉/醫낅즺 ?쒓컙 ?띿뒪???쒓린
 			var r_font = get_theme_font("font")
 			if lx_start >= 0.0 and lx_start <= timeline_w:
 				timeline.draw_string(r_font, Vector2(lx_start + 4, timeline_h - 6), "[Start", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
 			if lx_end >= 0.0 and lx_end <= timeline_w:
 				timeline.draw_string(r_font, Vector2(lx_end - 45, timeline_h - 6), "End]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.788235, 0.0941176, 0.290196, 0.8))
 
+	if regions.size() > 0:
+		for region_idx in range(regions.size()):
+			var draw_region = regions[region_idx]
+			if not draw_region is Dictionary or not bool(draw_region.get("enabled", true)):
+				continue
+			var draw_start = float(draw_region.get("start", -1.0))
+			var draw_end = float(draw_region.get("end", -1.0))
+			if draw_start < 0.0 or draw_end <= draw_start:
+				continue
+			var draw_lx_start = center_x + ((draw_start - current_time) * pixels_per_second)
+			var draw_lx_end = center_x + ((draw_end - current_time) * pixels_per_second)
+			var draw_rx_start = clamp(draw_lx_start, 0.0, timeline_w)
+			var draw_rx_end = clamp(draw_lx_end, 0.0, timeline_w)
+			if draw_rx_end <= draw_rx_start:
+				continue
+			var multi_color = Color(1.0, 0.0, 0.329412, 0.28) if region_idx == selected_region_index else Color(0.788235, 0.0941176, 0.290196, 0.14)
+			timeline.draw_rect(Rect2(Vector2(draw_rx_start, 0.0), Vector2(draw_rx_end - draw_rx_start, timeline_h)), multi_color, true)
+			timeline.draw_line(Vector2(draw_lx_start, 0.0), Vector2(draw_lx_start, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.75), 1.5)
+			timeline.draw_line(Vector2(draw_lx_end, 0.0), Vector2(draw_lx_end, timeline_h), Color(0.788235, 0.0941176, 0.290196, 0.75), 1.5)
+
 	if not chart_data.has("notes"): return
-	
+
 	var notes: Array = chart_data["notes"]
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
@@ -1878,22 +2078,22 @@ func _draw_timeline() -> void:
 		var note_time: float = float(note.get("time", 0.0))
 		var note_type: String = str(note.get("type", "normal"))
 		var display_time: float = _get_timeline_display_time(note)
-		
+
 		var dx: float = (display_time - current_time) * pixels_per_second
 		var lx: float = center_x + dx
-		
+
 		if lx < 0 or lx > timeline_w:
 			continue
-			
+
 		var color = COLOR_NOTE_NORMAL
 		match note_type:
 			"normal": color = COLOR_NOTE_NORMAL
 			"moving": color = COLOR_NOTE_MOVING
 			"hold":   color = COLOR_NOTE_HOLD
-			
+
 		if i == selected_note_index:
 			color = COLOR_NOTE_SELECTED
-			
+
 		var pts = PackedVector2Array([
 			Vector2(lx, timeline_h / 2.0 - 10.0),
 			Vector2(lx + 8.0, timeline_h / 2.0),
@@ -1902,7 +2102,7 @@ func _draw_timeline() -> void:
 		])
 		timeline.draw_colored_polygon(pts, color)
 
-		# 타임라인 내 오류 표시 기능 추가
+		# ??꾨씪?????ㅻ쪟 ?쒖떆 湲곕뒫 異붽?
 		var warning = _get_note_warnings(i) if current_time >= display_time else ""
 		if warning != "":
 			var border_pts = PackedVector2Array([
@@ -1913,35 +2113,35 @@ func _draw_timeline() -> void:
 				Vector2(lx, timeline_h / 2.0 - 10.0)
 			])
 			timeline.draw_polyline(border_pts, Color(0.85, 0.15, 0.15, 0.95), 2.0)
-		
+
 		if note_type == "hold":
 			var duration: float = float(note.get("duration", 3.0))
 			var end_dx: float = ((display_time + duration) - current_time) * pixels_per_second
 			var end_lx: float = center_x + end_dx
-			
+
 			timeline.draw_line(Vector2(lx, timeline_h/2.0), Vector2(clamp(end_lx, 0.0, timeline_w), timeline_h/2.0), Color(0.788235, 0.0941176, 0.290196, 0.5), 4.0)
 func _setup_top_bar() -> void:
 	top_bar = Panel.new()
 	top_bar.name = "TopBar"
 	top_bar.custom_minimum_size = Vector2(0, 50)
-	
+
 	var style_box = StyleBoxFlat.new()
 	style_box.bg_color = Color(1.0, 0.890196, 0.909804, 1.0)
 	style_box.border_width_bottom = 2
 	style_box.border_color = Color(1.0, 0.560784, 0.639216, 0.8)
 	top_bar.add_theme_stylebox_override("panel", style_box)
-	
+
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 20)
 	margin.add_theme_constant_override("margin_right", 20)
 	margin.add_theme_constant_override("margin_top", 5)
 	margin.add_theme_constant_override("margin_bottom", 5)
-	
+
 	var hbox = HBoxContainer.new()
 	hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	hbox.alignment = BoxContainer.ALIGNMENT_END
-	
+
 	var title = Label.new()
 	title.text = "WE WANT TO KEYBOARD - CHART EDITOR"
 	title.add_theme_color_override("font_color", COLOR_TEXT_WINE)
@@ -1949,35 +2149,35 @@ func _setup_top_bar() -> void:
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(title)
-	
+
 	to_effect_editor_btn = Button.new()
 	to_effect_editor_btn.text = "Go to Effect Editor"
 	to_effect_editor_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
 	to_effect_editor_btn.add_theme_font_size_override("font_size", 14)
-	
+
 	var btn_style_normal = StyleBoxFlat.new()
 	btn_style_normal.bg_color = Color(1.0, 0.760784, 0.819608, 0.8)
 	btn_style_normal.set_corner_radius_all(5)
 	btn_style_normal.set_content_margin_all(8)
-	
+
 	var btn_style_hover = StyleBoxFlat.new()
 	btn_style_hover.bg_color = Color(1.0, 0.560784, 0.639216, 0.9)
 	btn_style_hover.set_corner_radius_all(5)
 	btn_style_hover.set_content_margin_all(8)
-	
+
 	var btn_style_pressed = StyleBoxFlat.new()
 	btn_style_pressed.bg_color = Color(1.0, 0.301961, 0.427451, 1.0)
 	btn_style_pressed.set_corner_radius_all(5)
 	btn_style_pressed.set_content_margin_all(8)
-	
+
 	to_effect_editor_btn.add_theme_stylebox_override("normal", btn_style_normal)
 	to_effect_editor_btn.add_theme_stylebox_override("hover", btn_style_hover)
 	to_effect_editor_btn.add_theme_stylebox_override("pressed", btn_style_pressed)
-	
+
 	to_effect_editor_btn.pressed.connect(_on_go_to_effect_editor)
 	hbox.add_child(to_effect_editor_btn)
-	
-	# 즉시 테스트 (F5) 버튼 추가
+
+	# 利됱떆 ?뚯뒪??(F5) 踰꾪듉 異붽?
 	var test_btn = Button.new()
 	test_btn.text = "Instant Test (F5)"
 	test_btn.add_theme_color_override("font_color", Color.WHITE)
@@ -1991,8 +2191,8 @@ func _setup_top_bar() -> void:
 	test_btn.add_theme_stylebox_override("pressed", btn_style_pressed)
 	test_btn.pressed.connect(_on_instant_test_pressed)
 	hbox.add_child(test_btn)
-	
-	# 모든 채보 지우기 버튼 추가
+
+	# 紐⑤뱺 梨꾨낫 吏?곌린 踰꾪듉 異붽?
 	var clear_chart_btn = Button.new()
 	clear_chart_btn.text = "Clear All Notes"
 	clear_chart_btn.add_theme_color_override("font_color", Color.WHITE)
@@ -2006,8 +2206,8 @@ func _setup_top_bar() -> void:
 	clear_chart_btn.add_theme_stylebox_override("pressed", btn_style_pressed)
 	clear_chart_btn.pressed.connect(_on_clear_all_notes_pressed)
 	hbox.add_child(clear_chart_btn)
-	
-	# 오토 플레이 버튼 추가
+
+	# ?ㅽ넗 ?뚮젅??踰꾪듉 異붽?
 	var autoplay_btn = Button.new()
 	autoplay_btn.text = "Auto-Play: OFF"
 	autoplay_btn.toggle_mode = true
@@ -2021,12 +2221,12 @@ func _setup_top_bar() -> void:
 	autoplay_btn.add_theme_stylebox_override("pressed", play_pressed_style)
 	autoplay_btn.toggled.connect(_on_autoplay_toggled)
 	hbox.add_child(autoplay_btn)
-	
+
 	margin.add_child(hbox)
 	top_bar.add_child(margin)
-	
+
 	add_child(top_bar)
-	
+
 	var split = get_node("Split") as Control
 	split.anchor_top = 0.0
 	split.offset_top = 50.0
@@ -2040,13 +2240,13 @@ func _setup_moving_settings_ui() -> void:
 	moving_settings = VBoxContainer.new()
 	moving_settings.name = "MovingSettings"
 	moving_settings.visible = false
-	
+
 	var label = Label.new()
 	label.text = "Moving Note Settings"
 	label.add_theme_color_override("font_color", COLOR_TEXT_WINE)
 	label.add_theme_font_size_override("font_size", 14)
 	moving_settings.add_child(label)
-	
+
 	var hbox_x = HBoxContainer.new()
 	var lbl_x = Label.new()
 	lbl_x.text = "Start X:"
@@ -2062,7 +2262,7 @@ func _setup_moving_settings_ui() -> void:
 	start_x_input.text_submitted.connect(_on_start_x_submitted)
 	hbox_x.add_child(start_x_input)
 	moving_settings.add_child(hbox_x)
-	
+
 	var hbox_y = HBoxContainer.new()
 	var lbl_y = Label.new()
 	lbl_y.text = "Start Y:"
@@ -2078,7 +2278,7 @@ func _setup_moving_settings_ui() -> void:
 	start_y_input.text_submitted.connect(_on_start_y_submitted)
 	hbox_y.add_child(start_y_input)
 	moving_settings.add_child(hbox_y)
-	
+
 	set_start_btn = Button.new()
 	set_start_btn.text = "Click Canvas to Set Start"
 	set_start_btn.toggle_mode = true
@@ -2086,10 +2286,10 @@ func _setup_moving_settings_ui() -> void:
 	set_start_btn.add_theme_font_size_override("font_size", 12)
 	set_start_btn.toggled.connect(_on_set_start_toggled)
 	moving_settings.add_child(set_start_btn)
-	
+
 	var sep1 = HSeparator.new()
 	moving_settings.add_child(sep1)
-	
+
 	var hbox_dur = HBoxContainer.new()
 	var lbl_dur = Label.new()
 	lbl_dur.text = "Duration:"
@@ -2110,17 +2310,17 @@ func _setup_moving_settings_ui() -> void:
 	lbl_dur_unit.add_theme_font_size_override("font_size", 12)
 	hbox_dur.add_child(lbl_dur_unit)
 	moving_settings.add_child(hbox_dur)
-	
+
 	use_gravity_check = CheckBox.new()
 	use_gravity_check.text = "Use Gravity"
 	use_gravity_check.add_theme_color_override("font_color", COLOR_TEXT_WINE)
 	use_gravity_check.add_theme_font_size_override("font_size", 12)
 	use_gravity_check.toggled.connect(_on_use_gravity_toggled)
 	moving_settings.add_child(use_gravity_check)
-	
+
 	var sep2 = HSeparator.new()
 	moving_settings.add_child(sep2)
-	
+
 	draw_curve_btn = Button.new()
 	draw_curve_btn.text = "Draw Curve (Drag on Canvas)"
 	draw_curve_btn.toggle_mode = true
@@ -2143,7 +2343,7 @@ func _setup_moving_settings_ui() -> void:
 	draw_curve_btn.add_theme_stylebox_override("hover", curve_btn_hover)
 	draw_curve_btn.toggled.connect(_on_draw_curve_toggled)
 	moving_settings.add_child(draw_curve_btn)
-	
+
 	var controls_parent = hold_settings.get_parent()
 	controls_parent.add_child(moving_settings)
 	var hold_idx = hold_settings.get_index()
@@ -2215,7 +2415,7 @@ func _calculate_bezier_control_from_drag(start: Vector2, end_pt: Vector2, max_de
 	return midpoint + perpendicular * max_dev * side
 
 # ==========================================
-# 실행 취소 / 다시 실행 및 복사 붙여넣기 헬퍼
+# ?ㅽ뻾 痍⑥냼 / ?ㅼ떆 ?ㅽ뻾 諛?蹂듭궗 遺숈뿬?ｊ린 ?ы띁
 # ==========================================
 func save_state_for_undo() -> void:
 	undo_stack.append(chart_data.duplicate(true))
@@ -2248,7 +2448,7 @@ func perform_redo() -> void:
 	_show_toast("Redo")
 
 
-# --- 자동 저장 백업 기능 ---
+# --- ?먮룞 ???諛깆뾽 湲곕뒫 ---
 func _auto_save_backup() -> void:
 	if selected_song == "" or not chart_data.has("notes") or chart_data["notes"].is_empty():
 		return
@@ -2260,12 +2460,12 @@ func _auto_save_backup() -> void:
 		_show_toast("Auto-backup saved!")
 
 
-# --- 오토플레이 및 불가능한 패턴 검출 도우미 함수 ---
+# --- ?ㅽ넗?뚮젅??諛?遺덇??ν븳 ?⑦꽩 寃異??꾩슦誘??⑥닔 ---
 func _on_autoplay_toggled(is_toggled: bool) -> void:
 	is_autoplay = is_toggled
 	autoplay_hit_notes.clear()
 	var btn = get_viewport().gui_get_focus_owner() as Button
-	# 버튼 텍스트 동적 업데이트
+	# 踰꾪듉 ?띿뒪???숈쟻 ?낅뜲?댄듃
 	for child in top_bar.get_child(0).get_child(0).get_children():
 		if child is Button and "Auto-Play:" in child.text:
 			child.text = "Auto-Play: ON" if is_toggled else "Auto-Play: OFF"
@@ -2276,8 +2476,8 @@ func _on_autoplay_toggled(is_toggled: bool) -> void:
 
 func _on_clear_all_notes_pressed() -> void:
 	var confirm = ConfirmationDialog.new()
-	confirm.title = "Warning / 경고"
-	confirm.dialog_text = "Are you sure you want to delete all notes in this chart?\n현재 열린 곡의 모든 채보(노트)를 삭제하시겠습니까?"
+	confirm.title = "Warning / 寃쎄퀬"
+	confirm.dialog_text = "Are you sure you want to delete all notes in this chart?\n?꾩옱 ?대┛ 怨≪쓽 紐⑤뱺 梨꾨낫(?명듃)瑜???젣?섏떆寃좎뒿?덇퉴?"
 	confirm.confirmed.connect(func():
 		chart_data["notes"] = []
 		selected_note_index = -1
@@ -2300,7 +2500,7 @@ func _on_instant_test_pressed() -> void:
 	Global.editor_test_start_time = current_time
 	_save_chart_file()
 	_show_toast("Launching Instant Test...")
-	# 씬 페이드 트랜지션을 이용해 자연스럽게 전환
+	# ???섏씠???몃옖吏?섏쓣 ?댁슜???먯뿰?ㅻ읇寃??꾪솚
 	SceneTransition.transition_to_scene("res://scenes/game/game.tscn")
 
 func _trigger_autoplay_hit_effect(note: Dictionary) -> void:
@@ -2310,51 +2510,51 @@ func _trigger_autoplay_hit_effect(note: Dictionary) -> void:
 func _get_note_warnings(idx: int) -> String:
 	var notes = chart_data.get("notes", [])
 	if idx >= notes.size(): return ""
-	
-	# 시간 순으로 정렬한 복사본을 만들어 현재 노트의 시간상 순서 파악
+
+	# ?쒓컙 ?쒖쑝濡??뺣젹??蹂듭궗蹂몄쓣 留뚮뱾???꾩옱 ?명듃???쒓컙???쒖꽌 ?뚯븙
 	var indexed_notes = []
 	for i in range(notes.size()):
 		indexed_notes.append({"index": i, "note": notes[i]})
 	indexed_notes.sort_custom(func(a, b): return float(a["note"].get("time", 0.0)) < float(b["note"].get("time", 0.0)))
-	
+
 	var sorted_idx = -1
 	for i in range(indexed_notes.size()):
 		if indexed_notes[i]["index"] == idx:
 			sorted_idx = i
 			break
-			
-	# 1. 노래 길이 기준 초과 경고 (더 늦은 뒷 시간에 위치한 노트부터 우선적으로 오류 부여)
+
+	# 1. ?몃옒 湲몄씠 湲곗? 珥덇낵 寃쎄퀬 (????? ???쒓컙???꾩튂???명듃遺???곗꽑?곸쑝濡??ㅻ쪟 遺??
 	var max_notes = int(song_duration / Global.note_limit_seconds_interval)
 	if _uses_difficulty_filter() and sorted_idx >= max_notes:
 		return "LIMIT_EXCEEDED"
-		
+
 	var note = notes[idx]
 	var t = float(note.get("time", 0.0))
 	var pos = Vector2(float(note.get("x", 960.0)), float(note.get("y", 540.0)))
-	
+
 	for i in range(notes.size()):
 		if i == idx: continue
 		var other = notes[i]
 		var other_t = float(other.get("time", 0.0))
 		var other_pos = Vector2(float(other.get("x", 960.0)), float(other.get("y", 540.0)))
-		
-		# 2. 동시 치기 불가 경고 (0.01초 이내 동일 시간대 타격 요구)
+
+		# 2. ?숈떆 移섍린 遺덇? 寃쎄퀬 (0.01珥??대궡 ?숈씪 ?쒓컙? ?寃??붽뎄)
 		if abs(t - other_t) < 0.01:
 			return "SIMULTANEOUS"
-		# 3. 초고속 피지컬 경고 (0.07초 이내 타격 요구 - 80ms 미만)
+		# 3. 珥덇퀬???쇱?而?寃쎄퀬 (0.07珥??대궡 ?寃??붽뎄 - 80ms 誘몃쭔)
 		elif _uses_difficulty_filter() and abs(t - other_t) < Global.min_note_interval:
 			return "TOO_CLOSE"
-		# 4. 위치 및 시간 겹침 차폐 경고 (반경 65px 이내 및 시간차 0.4초 이내)
+		# 4. ?꾩튂 諛??쒓컙 寃뱀묠 李⑦룓 寃쎄퀬 (諛섍꼍 65px ?대궡 諛??쒓컙李?0.4珥??대궡)
 		elif pos.distance_to(other_pos) < 65.0 and abs(t - other_t) < 0.4:
 			return "OVERLAP"
 		elif _is_point_note(note) and other is Dictionary and _is_point_note(other) and _note_times_overlap(t, other) and pos.distance_to(other_pos) < Global.editor_note_block_radius:
 			return "NOTE_SIZE_BLOCKED"
-			
-	# 5. 시간 대비 거리가 너무 먼 노트 (칠 수 없는 노트 경고)
+
+	# 5. ?쒓컙 ?鍮?嫄곕━媛 ?덈Т 癒??명듃 (移????녿뒗 ?명듃 寃쎄퀬)
 	var prev_note = null
 	if sorted_idx > 0:
 		prev_note = indexed_notes[sorted_idx - 1]["note"]
-		
+
 	if prev_note != null and _uses_difficulty_filter():
 		var t1 = float(prev_note.get("time", 0.0))
 		if str(prev_note.get("type", "normal")) == "hold":
@@ -2362,41 +2562,48 @@ func _get_note_warnings(idx: int) -> String:
 		var dt = t - t1
 		var p1 = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
 		var dist = pos.distance_to(p1)
-		
-		# 인접 노트 간 거리가 매우 가까우면(예: 50px 미만) 칠 수 있는 것으로 간주하여 TOO_FAR 판정 제외
+
+		# ?몄젒 ?명듃 媛?嫄곕━媛 留ㅼ슦 媛源뚯슦硫??? 50px 誘몃쭔) 移????덈뒗 寃껋쑝濡?媛꾩＜?섏뿬 TOO_FAR ?먯젙 ?쒖쇅
 		var speed = 0.0
 		if dist >= 50.0:
 			speed = dist / dt if dt > 0.001 else 999999.0
 		else:
 			speed = 0.0 if dt >= 0.0 else 999999.0
-			
-		# 6. 절대 물리적 거리 제한 초과 경고
+
+		# 6. ?덈? 臾쇰━??嫄곕━ ?쒗븳 珥덇낵 寃쎄퀬
 		if dist > Global.max_note_distance:
 			return "TOO_DISTANT"
-			
+
 		if speed > Global.max_note_speed:
-			return "TOO_FAR" 
-			
+			return "TOO_FAR"
+
 	return ""
 
 
-# --- 구간 재생 및 반복 재생 UI 바인딩 및 헬퍼 ---
+# --- 援ш컙 ?ъ깮 諛?諛섎났 ?ъ깮 UI 諛붿씤??諛??ы띁 ---
 func _setup_region_settings_ui() -> void:
 	region_settings_box = VBoxContainer.new()
 	region_settings_box.name = "RegionSettings"
-	
+
 	var label = Label.new()
 	label.text = "Region Loop Settings"
 	label.add_theme_color_override("font_color", COLOR_TEXT_WINE)
 	label.add_theme_font_size_override("font_size", 14)
 	region_settings_box.add_child(label)
-	
+
 	region_lbl_info = Label.new()
 	region_lbl_info.text = "Start: -- / End: --"
 	region_lbl_info.add_theme_color_override("font_color", COLOR_TEXT_WINE_MUTED)
 	region_lbl_info.add_theme_font_size_override("font_size", 12)
 	region_settings_box.add_child(region_lbl_info)
-	
+
+	region_list_label = Label.new()
+	region_list_label.text = "Regions: --"
+	region_list_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	region_list_label.add_theme_color_override("font_color", COLOR_TEXT_WINE_MUTED)
+	region_list_label.add_theme_font_size_override("font_size", 11)
+	region_settings_box.add_child(region_list_label)
+
 	region_loop_check = CheckBox.new()
 	region_loop_check.text = "Loop Region"
 	region_loop_check.button_pressed = is_region_loop
@@ -2408,14 +2615,14 @@ func _setup_region_settings_ui() -> void:
 		_show_toast("Region Loop: ON" if is_toggled else "Region Loop: OFF")
 	)
 	region_settings_box.add_child(region_loop_check)
-	
+
 	region_view_check = CheckBox.new()
 	region_view_check.text = "Show Region Only"
 	region_view_check.button_pressed = is_view_region_only
 	region_view_check.add_theme_color_override("font_color", COLOR_TEXT_WINE)
 	region_view_check.add_theme_font_size_override("font_size", 12)
 	region_view_check.toggled.connect(func(is_toggled):
-		if is_toggled and not _has_valid_region():
+		if is_toggled and not _has_valid_region() and not _has_enabled_regions():
 			is_view_region_only = false
 			region_view_check.set_pressed_no_signal(false)
 			_show_toast("Set Start & End first!")
@@ -2429,9 +2636,9 @@ func _setup_region_settings_ui() -> void:
 		_show_toast("Show Region Only: ON" if is_toggled else "Show Region Only: OFF")
 	)
 	region_settings_box.add_child(region_view_check)
-	
+
 	var hbox_btns = HBoxContainer.new()
-	
+
 	region_play_btn = Button.new()
 	region_play_btn.text = "Play Region (Shift+Space)"
 	region_play_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2439,7 +2646,7 @@ func _setup_region_settings_ui() -> void:
 	region_play_btn.add_theme_font_size_override("font_size", 12)
 	region_play_btn.pressed.connect(_on_play_region_pressed)
 	hbox_btns.add_child(region_play_btn)
-	
+
 	var clear_btn = Button.new()
 	clear_btn.text = "Clear"
 	clear_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
@@ -2447,6 +2654,8 @@ func _setup_region_settings_ui() -> void:
 	clear_btn.pressed.connect(func():
 		region_start_time = -1.0
 		region_end_time = -1.0
+		regions = []
+		selected_region_index = -1
 		is_playing_region = false
 		is_view_region_only = false
 		if region_view_check:
@@ -2457,13 +2666,48 @@ func _setup_region_settings_ui() -> void:
 		_show_toast("Region Cleared")
 	)
 	hbox_btns.add_child(clear_btn)
-	
+
 	region_settings_box.add_child(hbox_btns)
-	
+
+	var hbox_multi_1 = HBoxContainer.new()
+	var add_region_btn = Button.new()
+	add_region_btn.text = "Add Region"
+	add_region_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_region_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	add_region_btn.add_theme_font_size_override("font_size", 12)
+	add_region_btn.pressed.connect(_add_current_region_to_list)
+	hbox_multi_1.add_child(add_region_btn)
+
+	var delete_region_btn = Button.new()
+	delete_region_btn.text = "Delete"
+	delete_region_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	delete_region_btn.add_theme_font_size_override("font_size", 12)
+	delete_region_btn.pressed.connect(_delete_selected_region)
+	hbox_multi_1.add_child(delete_region_btn)
+	region_settings_box.add_child(hbox_multi_1)
+
+	var hbox_multi_2 = HBoxContainer.new()
+	var prev_region_btn = Button.new()
+	prev_region_btn.text = "< Prev"
+	prev_region_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	prev_region_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	prev_region_btn.add_theme_font_size_override("font_size", 12)
+	prev_region_btn.pressed.connect(_select_previous_region)
+	hbox_multi_2.add_child(prev_region_btn)
+
+	var next_region_btn = Button.new()
+	next_region_btn.text = "Next >"
+	next_region_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	next_region_btn.add_theme_color_override("font_color", COLOR_TEXT_WINE)
+	next_region_btn.add_theme_font_size_override("font_size", 12)
+	next_region_btn.pressed.connect(_select_next_region)
+	hbox_multi_2.add_child(next_region_btn)
+	region_settings_box.add_child(hbox_multi_2)
+
 	var sep = HSeparator.new()
 	region_settings_box.add_child(sep)
-	
-	# 사이드바 컨트롤즈 자식 목록에 RegionSettings 삽입 (MovingSettings 아래에 배치)
+
+	# ?ъ씠?쒕컮 而⑦듃濡ㅼ쫰 ?먯떇 紐⑸줉??RegionSettings ?쎌엯 (MovingSettings ?꾨옒??諛곗튂)
 	var controls_parent = hold_settings.get_parent()
 	controls_parent.add_child(region_settings_box)
 	var moving_idx = moving_settings.get_index() if moving_settings else hold_settings.get_index()
@@ -2476,6 +2720,16 @@ func _update_region_ui() -> void:
 		region_loop_check.set_pressed_no_signal(is_region_loop)
 	if region_view_check:
 		region_view_check.set_pressed_no_signal(is_view_region_only)
+	if region_list_label:
+		if regions.is_empty():
+			region_list_label.text = "Regions: --"
+		else:
+			var list_text = "Regions:"
+			for i in range(regions.size()):
+				var region = regions[i]
+				var marker = "* " if i == selected_region_index else "  "
+				list_text += "\n%s%d. %.2fs - %.2fs" % [marker, i + 1, float(region.get("start", -1.0)), float(region.get("end", -1.0))]
+			region_list_label.text = list_text
 	if region_start_time >= 0.0 and region_end_time >= 0.0:
 		region_lbl_info.text = "Start: %.2fs / End: %.2fs" % [region_start_time, region_end_time]
 	elif region_start_time >= 0.0:
@@ -2486,44 +2740,47 @@ func _update_region_ui() -> void:
 		region_lbl_info.text = "Start: -- / End: --"
 
 func _on_play_region_pressed() -> void:
-	if region_start_time < 0.0 or region_end_time < 0.0 or region_end_time <= region_start_time:
+	if not _has_valid_region() and not _has_enabled_regions():
 		_show_toast("Set Start & End first!")
 		return
 	is_playing_region = true
-	_seek_time(region_start_time)
+	if _has_valid_region():
+		_seek_time(region_start_time)
+	elif _has_enabled_regions():
+		_seek_time(float(regions[0].get("start", 0.0)))
 	if not is_playing:
 		_on_play_pressed()
 	_show_toast("Playing Region...")
 
 
 # ==========================================
-# 고해상도 주파수 분할 색상 오디오 파형 처리 시스템
+# 怨좏빐?곷룄 二쇳뙆??遺꾪븷 ?됱긽 ?ㅻ뵒???뚰삎 泥섎━ ?쒖뒪??
 # ==========================================
 
 func _load_waveform_data() -> void:
 	is_waveform_loaded = false
 	waveform_data = {}
-	
+
 	if selected_song == "":
 		return
-		
+
 	var song_folder = MUSIC_BASE_PATH + selected_song + "/"
 	var mp3_path = ProjectSettings.globalize_path(song_folder + selected_song + ".mp3")
 	var json_path = ProjectSettings.globalize_path(song_folder + "waveform_data.json")
-	
-	# 1. 이미 파형 JSON이 존재할 경우 파일 Access로 즉각 파싱
+
+	# 1. ?대? ?뚰삎 JSON??議댁옱??寃쎌슦 ?뚯씪 Access濡?利됯컖 ?뚯떛
 	if FileAccess.file_exists(song_folder + "waveform_data.json"):
 		_parse_waveform_json(song_folder + "waveform_data.json")
 		return
-		
-	# 2. 캐시 데이터가 없으면 백그라운드로 파이썬 스펙트럼 추출 스크립트 실행
+
+	# 2. 罹먯떆 ?곗씠?곌? ?놁쑝硫?諛깃렇?쇱슫?쒕줈 ?뚯씠???ㅽ럺?몃읆 異붿텧 ?ㅽ겕由쏀듃 ?ㅽ뻾
 	var script_path = ProjectSettings.globalize_path("res://scripts/ui/extract_waveform.py")
 	var ffmpeg_path = ProjectSettings.globalize_path("res://ffmpeg.exe")
-	
+
 	if not FileAccess.file_exists("res://scripts/ui/extract_waveform.py"):
 		push_error("extract_waveform.py not found.")
 		return
-	
+
 	# Git LFS pointer file check for ffmpeg.exe
 	var ffmpeg_file = FileAccess.open("res://ffmpeg.exe", FileAccess.READ)
 	if ffmpeg_file:
@@ -2531,23 +2788,23 @@ func _load_waveform_data() -> void:
 		ffmpeg_file.close()
 		if ffmpeg_size < 1024:
 			push_error("FFmpeg executable is invalid (Git LFS pointer file detected!). Size: " + str(ffmpeg_size) + " bytes.")
-			_show_toast("오류: ffmpeg.exe가 정상적으로 다운로드되지 않았습니다. Git LFS를 설치하고 'git lfs pull'을 실행하세요.")
+			_show_toast("?ㅻ쪟: ffmpeg.exe媛 ?뺤긽?곸쑝濡??ㅼ슫濡쒕뱶?섏? ?딆븯?듬땲?? Git LFS瑜??ㅼ튂?섍퀬 'git lfs pull'???ㅽ뻾?섏꽭??")
 			return
 	else:
 		push_error("ffmpeg.exe not found.")
-		_show_toast("오류: ffmpeg.exe 파일을 찾을 수 없습니다.")
+		_show_toast("?ㅻ쪟: ffmpeg.exe ?뚯씪??李얠쓣 ???놁뒿?덈떎.")
 		return
-		
+
 	print("Starting high-res colorful waveform generation process...")
-	
+
 	var args = [script_path, mp3_path, json_path, ffmpeg_path]
 	var output = []
-	
-	# 파이썬 실행
+
+	# ?뚯씠???ㅽ뻾
 	var exit_code = OS.execute("python", args, output, true, false)
 	if exit_code != 0:
 		exit_code = OS.execute("python3", args, output, true, false)
-		
+
 	if exit_code == 0:
 		if FileAccess.file_exists(song_folder + "waveform_data.json"):
 			_parse_waveform_json(song_folder + "waveform_data.json")
