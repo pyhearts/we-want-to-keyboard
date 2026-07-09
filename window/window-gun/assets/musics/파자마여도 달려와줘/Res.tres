@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_eufnn")
+composer = "카미야도"
 bpm = 172
 audio_stream = ExtResource("1_2ogbp")
 metadata/_custom_type_script = "uid://ciljglxaby7qn"

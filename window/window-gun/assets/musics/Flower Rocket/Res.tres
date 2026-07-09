@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="MusicData" format=3]
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://dnor7i5rnvce0"]
 
-[ext_resource type="Script" path="res://scripts/data/music_data.gd" id="1_h1yfg"]
-[ext_resource type="AudioStream" path="res://assets/musics/Flower Rocket/Flower Rocket.mp3" id="1_io1uk"]
+[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_h1yfg"]
+[ext_resource type="AudioStream" uid="uid://buy1ek20egj7x" path="res://assets/musics/Flower Rocket/Flower Rocket.mp3" id="1_io1uk"]
 
 [resource]
 script = ExtResource("1_h1yfg")

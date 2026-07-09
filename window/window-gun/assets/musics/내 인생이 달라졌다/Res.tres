@@ -1,10 +1,11 @@
-[gd_resource type="Resource" script_class="MusicData" format=3]
+[gd_resource type="Resource" script_class="MusicData" format=3 uid="uid://bi6u0r62x6v3u"]
 
-[ext_resource type="AudioStream" path="res://assets/musics/내 인생이 달라졌다/내 인생이 달라졌다.mp3" id="1_u2vf8"]
-[ext_resource type="Script" path="res://scripts/data/music_data.gd" id="1_vbh7l"]
+[ext_resource type="AudioStream" uid="uid://drc763kxrwj4i" path="res://assets/musics/내 인생이 달라졌다/내 인생이 달라졌다.mp3" id="1_u2vf8"]
+[ext_resource type="Script" uid="uid://ciljglxaby7qn" path="res://scripts/data/music_data.gd" id="1_vbh7l"]
 
 [resource]
 script = ExtResource("1_vbh7l")
+composer = "한경록"
 bpm = 174
 audio_stream = ExtResource("1_u2vf8")
 metadata/_custom_type_script = "uid://ciljglxaby7qn"

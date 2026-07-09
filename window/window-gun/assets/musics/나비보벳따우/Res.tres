@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_wo1g3")
+composer = "후지이 시호"
 bpm = 122
 offset = 2.5
 audio_stream = ExtResource("1_2c3s3")

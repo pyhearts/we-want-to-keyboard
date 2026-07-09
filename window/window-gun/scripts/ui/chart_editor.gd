@@ -12,6 +12,27 @@ func _chart_time_to_audio_pos(chart_time: float) -> float:
 func _audio_pos_to_chart_time(audio_pos: float) -> float:
 	return audio_pos + GLOBAL_TIMING_OFFSET - offset
 
+
+func _get_timeline_display_time(note: Dictionary) -> float:
+	var note_time = float(note.get("time", 0.0))
+	var note_type = str(note.get("type", "normal"))
+	if note_type == "normal" or note_type == "moving":
+		return note_time + GLOBAL_TIMING_OFFSET
+	return note_time
+
+
+func _editor_time_to_note_time(note_type: String, editor_time: float) -> float:
+	if note_type == "normal" or note_type == "moving":
+		return max(0.0, editor_time - GLOBAL_TIMING_OFFSET)
+	return max(0.0, editor_time)
+
+
+func _is_hard_chart_title(title: String) -> bool:
+	return title.strip_edges().ends_with("Hard")
+
+
+func _uses_difficulty_filter() -> bool:
+	return not _is_hard_chart_title(selected_song)
 # UI 노드 바인딩
 @onready var song_select: OptionButton = %SongSelect
 @onready var bpm_input: LineEdit = %BpmInput
@@ -451,7 +472,7 @@ func _process(delta: float) -> void:
 		var notes = chart_data.get("notes", [])
 		for i in range(notes.size()):
 			var note = notes[i]
-			var note_time = float(note.get("time", 0.0))
+			var note_time = _get_timeline_display_time(note)
 			if current_time >= note_time and current_time < note_time + 0.15:
 				if not autoplay_hit_notes.has(i):
 					autoplay_hit_notes[i] = true
@@ -512,7 +533,7 @@ func _update_note_count() -> void:
 				else:
 					normal += 1
 	var max_notes = int(song_duration / Global.note_limit_seconds_interval)
-	if total > max_notes:
+	if _uses_difficulty_filter() and total > max_notes:
 		if not _prev_note_count_over_limit:
 			_show_toast("WARNING: Over Limit (%d notes max)! (In-game play disabled)" % max_notes)
 			_prev_note_count_over_limit = true
@@ -733,7 +754,7 @@ func _input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 					save_state_for_undo()
 					var new_note = copied_note_data.duplicate(true)
-					new_note["time"] = get_snapped_time(current_time)
+					new_note["time"] = _editor_time_to_note_time(str(new_note.get("type", "normal")), get_snapped_time(current_time))
 					chart_data["notes"].append(new_note)
 					_save_chart_file()
 					selected_note_index = chart_data["notes"].find(new_note)
@@ -1255,18 +1276,18 @@ func _add_note(time_val: float, logical_pos: Vector2) -> void:
 		return
 
 	# Enforce note placement distance restriction
-	if Global.limit_placement_distance:
-		var prev_note = _get_previous_note_for_time(time_val)
+	if Global.limit_placement_distance and _uses_difficulty_filter():
+		var prev_note = _get_previous_note_for_time(note_time)
 		if prev_note != null:
 			var prev_pos = Vector2(float(prev_note.get("x", 960.0)), float(prev_note.get("y", 540.0)))
-			var allowed_radius = _get_allowed_placement_radius(prev_note, time_val)
+			var allowed_radius = _get_allowed_placement_radius(prev_note, note_time)
 			if logical_pos.distance_to(prev_pos) > allowed_radius:
 				_show_toast("Placement blocked: Too far for this timing!")
 				return
 				
 	save_state_for_undo()
 	var note_node = {}
-	note_node["time"] = time_val
+	note_node["time"] = note_time
 	note_node["type"] = selected_type
 	
 	if selected_type == "hold":
@@ -1528,6 +1549,7 @@ func _draw_preview_canvas() -> void:
 			continue
 		var note_time = float(note.get("time", 0.0))
 		var note_type = str(note.get("type", "normal"))
+		var display_time: float = _get_timeline_display_time(note)
 		
 		var alpha = _get_note_alpha(note, current_time)
 		if alpha <= 0.0:
@@ -1570,7 +1592,7 @@ func _draw_preview_canvas() -> void:
 			preview_canvas.draw_string(hold_font, center + Vector2(-60.0*sx, 10.0*sy), text_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, hold_text_color)
 
 			# --- 롱 노트 경고 표시 ---
-			var warning = _get_note_warnings(i) if current_time >= note_time else ""
+			var warning = _get_note_warnings(i) if current_time >= display_time else ""
 			if warning != "":
 				var w_font = get_theme_font("font")
 				if warning == "LIMIT_EXCEEDED":
@@ -1670,7 +1692,7 @@ func _draw_preview_canvas() -> void:
 					preview_canvas.draw_string(grav_font, pos + Vector2(15.0 * sx, 25.0 * sy), "G", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, grav_color)
 					
 			# --- 불가능한 패턴 자동 검출 및 시각 경고 ---
-			var warning = _get_note_warnings(i) if current_time >= note_time else ""
+			var warning = _get_note_warnings(i) if current_time >= display_time else ""
 			if warning != "":
 				var w_font = get_theme_font("font")
 				if warning == "LIMIT_EXCEEDED":
@@ -1705,7 +1727,7 @@ func _draw_preview_canvas() -> void:
 			var lbl_font = get_theme_font("font")
 			var lbl_text_color = COLOR_TEXT_WINE
 			lbl_text_color.a = alpha * 0.8
-			preview_canvas.draw_string(lbl_font, pos + Vector2(15.0*sx, -15.0*sy), "%.2fs" % note_time, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, lbl_text_color)
+			preview_canvas.draw_string(lbl_font, pos + Vector2(15.0*sx, -15.0*sy), "%.2fs" % display_time, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, lbl_text_color)
 
 
 	# --- 오토플레이 리플 효과 렌더링 ---
@@ -1854,8 +1876,9 @@ func _draw_timeline() -> void:
 			continue
 		var note_time: float = float(note.get("time", 0.0))
 		var note_type: String = str(note.get("type", "normal"))
+		var display_time: float = _get_timeline_display_time(note)
 		
-		var dx: float = (note_time - current_time) * pixels_per_second
+		var dx: float = (display_time - current_time) * pixels_per_second
 		var lx: float = center_x + dx
 		
 		if lx < 0 or lx > timeline_w:
@@ -1879,7 +1902,7 @@ func _draw_timeline() -> void:
 		timeline.draw_colored_polygon(pts, color)
 
 		# 타임라인 내 오류 표시 기능 추가
-		var warning = _get_note_warnings(i) if current_time >= note_time else ""
+		var warning = _get_note_warnings(i) if current_time >= display_time else ""
 		if warning != "":
 			var border_pts = PackedVector2Array([
 				Vector2(lx, timeline_h / 2.0 - 10.0),
@@ -1892,7 +1915,7 @@ func _draw_timeline() -> void:
 		
 		if note_type == "hold":
 			var duration: float = float(note.get("duration", 3.0))
-			var end_dx: float = ((note_time + duration) - current_time) * pixels_per_second
+			var end_dx: float = ((display_time + duration) - current_time) * pixels_per_second
 			var end_lx: float = center_x + end_dx
 			
 			timeline.draw_line(Vector2(lx, timeline_h/2.0), Vector2(clamp(end_lx, 0.0, timeline_w), timeline_h/2.0), Color(0.788235, 0.0941176, 0.290196, 0.5), 4.0)
@@ -2301,7 +2324,7 @@ func _get_note_warnings(idx: int) -> String:
 			
 	# 1. 노래 길이 기준 초과 경고 (더 늦은 뒷 시간에 위치한 노트부터 우선적으로 오류 부여)
 	var max_notes = int(song_duration / Global.note_limit_seconds_interval)
-	if sorted_idx >= max_notes:
+	if _uses_difficulty_filter() and sorted_idx >= max_notes:
 		return "LIMIT_EXCEEDED"
 		
 	var note = notes[idx]
@@ -2318,7 +2341,7 @@ func _get_note_warnings(idx: int) -> String:
 		if abs(t - other_t) < 0.01:
 			return "SIMULTANEOUS"
 		# 3. 초고속 피지컬 경고 (0.07초 이내 타격 요구 - 80ms 미만)
-		elif abs(t - other_t) < Global.min_note_interval:
+		elif _uses_difficulty_filter() and abs(t - other_t) < Global.min_note_interval:
 			return "TOO_CLOSE"
 		# 4. 위치 및 시간 겹침 차폐 경고 (반경 65px 이내 및 시간차 0.4초 이내)
 		elif pos.distance_to(other_pos) < 65.0 and abs(t - other_t) < 0.4:
@@ -2331,7 +2354,7 @@ func _get_note_warnings(idx: int) -> String:
 	if sorted_idx > 0:
 		prev_note = indexed_notes[sorted_idx - 1]["note"]
 		
-	if prev_note != null:
+	if prev_note != null and _uses_difficulty_filter():
 		var t1 = float(prev_note.get("time", 0.0))
 		if str(prev_note.get("type", "normal")) == "hold":
 			t1 += float(prev_note.get("duration", 3.0))
